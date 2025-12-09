@@ -1,8 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
-<VideoView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/splashVideo"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
-    android:keepScreenOn="true"
-    android:fitsSystemWindows="true" />
+    android:background="@color/background">
+
+    <VideoView
+        android:id="@+id/splashVideo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:keepScreenOn="true" />
+</FrameLayout>
