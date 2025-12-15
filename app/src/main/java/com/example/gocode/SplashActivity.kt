@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.VideoView
 import androidx.core.net.toUri
+import com.google.firebase.auth.FirebaseAuth
 
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : AppCompatActivity() {
@@ -20,10 +21,21 @@ class SplashActivity : AppCompatActivity() {
         videoView.setVideoURI(videoPath.toUri())
 
         videoView.setOnCompletionListener {
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
+            navigateNext()
         }
 
         videoView.start()
+    }
+
+    private fun navigateNext() {
+        val user = FirebaseAuth.getInstance().currentUser
+
+        if (user != null) {
+            startActivity(Intent(this, MainActivity::class.java))
+        } else {
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
+
+        finish()
     }
 }
