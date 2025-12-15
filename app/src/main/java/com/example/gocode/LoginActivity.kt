@@ -17,6 +17,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.OAuthProvider
 
 @Suppress("DEPRECATION")
 class LoginActivity : AppCompatActivity() {
@@ -77,9 +78,7 @@ class LoginActivity : AppCompatActivity() {
 
         btnLogin.setOnClickListener { loginWithEmail() }
         btnGoogle.setOnClickListener { loginWithGoogle() }
-        btnGithub.setOnClickListener {
-            Toast.makeText(this, "GitHub login - next step", Toast.LENGTH_SHORT).show()
-        }
+        btnGithub.setOnClickListener { loginWithGithub() }
 
         tvForgot.setOnClickListener {
             Toast.makeText(this, "Forgot password - next step", Toast.LENGTH_SHORT).show()
@@ -117,6 +116,18 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    private fun loginWithGithub() {
+        val provider = OAuthProvider.newBuilder("github.com")
+            .addCustomParameter("allow_signup", "true")
+            .build()
+
+        auth.startActivityForSignInWithProvider(this, provider)
+            .addOnSuccessListener { goMain() }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "GitHub login failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+    }
+
     private fun goMain() {
         startActivity(Intent(this, MainActivity::class.java))
         finish()
@@ -127,4 +138,5 @@ class LoginActivity : AppCompatActivity() {
         player?.release()
         player = null
     }
+
 }
