@@ -9,6 +9,6 @@
     <string name="password">Password</string>
     <string name="email_address">Email Address</string>
     <string name="learn_code_compete">Learn. Code. Compete.</string>
-    <string name="gocode"><![CDATA[<GoCode>]]></string>
+    <string name="go_code">&lt;GoCode&gt;</string>
     <string name="continue_with_google">continue with google</string>
 </resources>
