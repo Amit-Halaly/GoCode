@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">GoCode</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="don_t_have_an_account">Don’t have an account?</string>
+    <string name="sign_up">Sign up</string>
+    <string name="continue_with_github">Continue with GitHub</string>
+    <string name="or">or</string>
+    <string name="login">Login</string>
+    <string name="password">Password</string>
+    <string name="email_address">Email Address</string>
+    <string name="learn_code_compete">Learn. Code. Compete.</string>
+    <string name="gocode"><![CDATA[<GoCode>]]></string>
+    <string name="continue_with_google">continue with google</string>
 </resources>
