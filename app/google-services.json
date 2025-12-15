@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1045683098120",
+    "project_id": "gocode-60734",
+    "storage_bucket": "gocode-60734.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1045683098120:android:41de47496fcc683d67b7bd",
+        "android_client_info": {
+          "package_name": "com.example.gocode"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1045683098120-g0q2rk6fhrv5kbv1oveqvfepeog76hu6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.gocode",
+            "certificate_hash": "fc08714734ceb12b5e19858eb3843c7810442aab"
+          }
+        },
+        {
+          "client_id": "1045683098120-sgljt1lc7df59bkfefr54il40vit65hh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDMroqYItoK0IiNjkMaxEwVkTFIuQ1Bock"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1045683098120-sgljt1lc7df59bkfefr54il40vit65hh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
