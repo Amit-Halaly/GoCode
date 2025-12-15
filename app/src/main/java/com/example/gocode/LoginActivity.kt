@@ -6,9 +6,15 @@ import android.widget.EditText
 import android.widget.TextView
 import com.google.android.material.button.MaterialButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.ui.PlayerView
+
 
 class LoginActivity : AppCompatActivity() {
 
+    private lateinit var player: ExoPlayer
     private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
     private lateinit var btnLogin: android.widget.Button
@@ -20,6 +26,20 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
+        val playerView = findViewById<PlayerView>(R.id.loginPlayerView)
+
+        player = ExoPlayer.Builder(this).build()
+        playerView.player = player
+
+        val videoUri = "android.resource://$packageName/${R.raw.leo_waving}"
+        val mediaItem = MediaItem.fromUri(videoUri)
+
+        player.setMediaItem(mediaItem)
+        player.repeatMode = Player.REPEAT_MODE_ONE
+        player.prepare()
+        player.playWhenReady = true
+
 
         etEmail = findViewById(R.id.etEmail)
         etPassword = findViewById(R.id.etPassword)
@@ -64,4 +84,11 @@ class LoginActivity : AppCompatActivity() {
             // TODO: open Sign Up screen
         }
     }
+    override fun onStop() {
+        super.onStop()
+        if (::player.isInitialized) {
+            player.release()
+        }
+    }
+
 }
