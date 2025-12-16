@@ -18,4 +18,7 @@
     <string name="confirm_password">Confirm Password</string>
     <string name="create_account">Create Account</string>
     <string name="todo">TODO</string>
+    <string name="enter_email_for_reset">Enter your email and we’ll send you a reset link.</string>
+    <string name="send_reset_link">Send Reset Link</string>
+
 </resources>
