@@ -81,7 +81,7 @@ class LoginActivity : AppCompatActivity() {
         btnGithub.setOnClickListener { loginWithGithub() }
 
         tvForgot.setOnClickListener {
-            Toast.makeText(this, "Forgot password - next step", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
         }
 
         tvSignUp.setOnClickListener {
