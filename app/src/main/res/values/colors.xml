@@ -9,4 +9,12 @@
     <color name="bottom_nav_gray">#8E97A6</color>
     <color name="bottom_nav_gray_active">#8F95A1</color>
 
+    <!-- User Progress Card -->
+    <color name="gc_bg">#071A2B</color>
+    <color name="gc_card">#0B1C2D</color>
+    <color name="gc_text_primary">#FFFFFF</color>
+    <color name="gc_text_secondary">#A3AAB6</color>
+    <color name="gc_accent">#2F80FF</color>
+    <color name="gc_progress_track">#334155</color>
+
 </resources>
