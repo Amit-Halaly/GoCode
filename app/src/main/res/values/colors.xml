@@ -4,4 +4,9 @@
     <color name="white">#FFFFFFFF</color>
     <color name="background">#132836</color>
 
+    <!-- Bottom Nav -->
+    <color name="bottom_nav_item_bg">#13273F</color>
+    <color name="bottom_nav_gray">#8E97A6</color>
+    <color name="bottom_nav_gray_active">#8F95A1</color>
+
 </resources>
