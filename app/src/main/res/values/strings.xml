@@ -12,4 +12,9 @@
     <string name="go_code">&lt;GoCode&gt;</string>
     <string name="continue_with_google">continue with google</string>
     <string name="default_web_client_id">1045683098120-sgljt1lc7df59bkfefr54il40vit65hh.apps.googleusercontent.com</string>
+    <string name="back_to_login">Back to Login</string>
+    <string name="email">Email</string>
+    <string name="create_your_gocode_account">Create your GoCode account</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="create_account">Create Account</string>
 </resources>
