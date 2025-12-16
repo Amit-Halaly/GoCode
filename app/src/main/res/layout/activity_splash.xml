@@ -1,4 +1,5 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/splashRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
@@ -9,4 +10,14 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:keepScreenOn="true" />
+
+    <ImageView
+        android:id="@+id/splashPlaceholder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/todo"
+        android:src="@drawable/splash_placeholder"
+        android:scaleType="centerCrop"
+        android:background="@color/background" />
+
 </FrameLayout>
