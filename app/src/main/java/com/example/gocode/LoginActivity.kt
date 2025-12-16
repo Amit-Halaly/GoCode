@@ -85,7 +85,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         tvSignUp.setOnClickListener {
-            Toast.makeText(this, "Sign up - next step", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, SignUpActivity::class.java))
         }
     }
 
