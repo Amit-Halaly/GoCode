@@ -28,14 +28,25 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun navigateNext() {
-        val user = FirebaseAuth.getInstance().currentUser
+        val auth = FirebaseAuth.getInstance()
+        val user = auth.currentUser
 
-        if (user != null) {
-            startActivity(Intent(this, MainActivity::class.java))
-        } else {
+        if (user == null) {
             startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
         }
 
-        finish()
+        user.reload()
+            .addOnSuccessListener {
+                startActivity(Intent(this, MainActivity::class.java))
+                finish()
+            }
+            .addOnFailureListener {
+                auth.signOut()
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+            }
     }
+
 }
