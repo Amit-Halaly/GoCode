@@ -16,7 +16,9 @@ import com.google.firebase.auth.FirebaseAuth
 class SignUpActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
+
     private var player: ExoPlayer? = null
+    private lateinit var playerView: PlayerView
 
     private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
@@ -30,27 +32,49 @@ class SignUpActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
 
-        val playerView = findViewById<PlayerView>(R.id.signupPlayerView)
-        player = ExoPlayer.Builder(this).build().also { exo ->
-            playerView.player = exo
-            val videoUri = "android.resource://$packageName/${R.raw.leo_waving}"
-            exo.setMediaItem(MediaItem.fromUri(videoUri))
-            exo.repeatMode = Player.REPEAT_MODE_ONE
-            exo.prepare()
-            exo.playWhenReady = true
-        }
-
+        playerView = findViewById(R.id.signupPlayerView)
         etEmail = findViewById(R.id.etEmail)
         etPassword = findViewById(R.id.etPassword)
         etConfirm = findViewById(R.id.etConfirmPassword)
         btnCreate = findViewById(R.id.btnCreateAccount)
         tvBack = findViewById(R.id.tvBackToLogin)
 
+        setupFrozenTopVideo(R.raw.signup_success)
+
         btnCreate.setOnClickListener { createAccount() }
         tvBack.setOnClickListener {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
+    }
+
+    private fun setupFrozenTopVideo(rawRes: Int) {
+        player = ExoPlayer.Builder(this).build().also { exo ->
+            playerView.player = exo
+
+            val uri = "android.resource://$packageName/$rawRes"
+            exo.setMediaItem(MediaItem.fromUri(uri))
+
+            exo.repeatMode = Player.REPEAT_MODE_OFF
+            exo.playWhenReady = false
+            exo.prepare()
+        }
+    }
+
+    private fun playSuccessVideoThenGoHome() {
+        val exo = player ?: return
+
+        exo.seekTo(0)
+        exo.playWhenReady = true
+
+        exo.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_ENDED) {
+                    exo.removeListener(this)
+                    goHome()
+                }
+            }
+        })
     }
 
     private fun createAccount() {
@@ -74,17 +98,17 @@ class SignUpActivity : AppCompatActivity() {
             return
         }
 
+        btnCreate.isEnabled = false
+
         auth.createUserWithEmailAndPassword(email, pass)
             .addOnSuccessListener {
-                Toast.makeText(this, "Account created!", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(this, MainActivity::class.java))
-                finish()
+                playSuccessVideoThenGoHome()
             }
             .addOnFailureListener { e ->
+                btnCreate.isEnabled = true
                 Toast.makeText(this, "Sign up failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
     }
-
 
     private fun isPasswordValid(password: String): String? {
         if (password.length < 8)
@@ -108,6 +132,10 @@ class SignUpActivity : AppCompatActivity() {
         return null
     }
 
+    private fun goHome() {
+        startActivity(Intent(this, MainActivity::class.java))
+        finish()
+    }
 
     override fun onDestroy() {
         super.onDestroy()
