@@ -20,5 +20,18 @@
     <string name="todo">TODO</string>
     <string name="enter_email_for_reset">Enter your email and we’ll send you a reset link.</string>
     <string name="send_reset_link">Send Reset Link</string>
+    <string name="cont">Continue</string>
+    <string name="choose_avatar">Choose Avatar</string>
+    <string name="advanced">Advanced</string>
+    <string name="intermediate">Intermediate</string>
+    <string name="beginner">Beginner</string>
+    <string name="skill_level">Skill Level</string>
+    <string name="c">C</string>
+    <string name="java">Java</string>
+    <string name="python">Python</string>
+    <string name="primary_language">Primary Language</string>
+    <string name="name">name</string>
+    <string name="username">Username</string>
+    <string name="onboarding">Onboarding</string>
 
 </resources>
