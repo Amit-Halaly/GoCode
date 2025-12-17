@@ -1,0 +1,6 @@
+[
+  { "id": "lion_robot", "drawableName": "lion_robot" },
+  { "id": "robot",      "drawableName": "robot" },
+  { "id": "boy",        "drawableName": "boy" },
+  { "id": "monkey",     "drawableName": "monkey" }
+]

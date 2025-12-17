@@ -61,7 +61,7 @@ class SignUpActivity : AppCompatActivity() {
         }
     }
 
-    private fun playSuccessVideoThenGoHome() {
+    private fun playSuccessVideoThenGoOnboarding() {
         val exo = player ?: return
 
         exo.seekTo(0)
@@ -71,7 +71,7 @@ class SignUpActivity : AppCompatActivity() {
             override fun onPlaybackStateChanged(state: Int) {
                 if (state == Player.STATE_ENDED) {
                     exo.removeListener(this)
-                    goHome()
+                    goOnboarding()
                 }
             }
         })
@@ -102,7 +102,7 @@ class SignUpActivity : AppCompatActivity() {
 
         auth.createUserWithEmailAndPassword(email, pass)
             .addOnSuccessListener {
-                playSuccessVideoThenGoHome()
+                playSuccessVideoThenGoOnboarding()
             }
             .addOnFailureListener { e ->
                 btnCreate.isEnabled = true
@@ -111,29 +111,19 @@ class SignUpActivity : AppCompatActivity() {
     }
 
     private fun isPasswordValid(password: String): String? {
-        if (password.length < 8)
-            return "Password must be at least 8 characters"
-
-        if (!password.any { it.isUpperCase() })
-            return "Password must contain at least one uppercase letter"
-
-        if (!password.any { it.isLowerCase() })
-            return "Password must contain at least one lowercase letter"
-
-        if (!password.any { it.isDigit() })
-            return "Password must contain at least one number"
-
-        if (!password.any { "!@#\$%^&*()-_=+[]{}|;:'\",.<>?/".contains(it) })
-            return "Password must contain at least one special character"
-
-        if (password.contains(" "))
-            return "Password must not contain spaces"
-
+        if (password.length < 8) return "Password must be at least 8 characters"
+        if (!password.any { it.isUpperCase() }) return "Password must contain at least one uppercase letter"
+        if (!password.any { it.isLowerCase() }) return "Password must contain at least one lowercase letter"
+        if (!password.any { it.isDigit() }) return "Password must contain at least one number"
+        if (!password.any { "!@#\$%^&*()-_=+[]{}|;:'\",.<>?/".contains(it) }) return "Password must contain at least one special character"
+        if (password.contains(" ")) return "Password must not contain spaces"
         return null
     }
 
-    private fun goHome() {
-        startActivity(Intent(this, MainActivity::class.java))
+    private fun goOnboarding() {
+        val intent = Intent(this, OnboardingActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
         finish()
     }
 
