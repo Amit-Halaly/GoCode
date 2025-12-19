@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.gocode.R
 import com.example.gocode.models.AvatarItem
 import com.example.gocode.repositories.AvatarRepository
+import androidx.core.graphics.drawable.toDrawable
 
 class AvatarAdapter(
     private val items: List<AvatarItem>,
@@ -25,18 +26,33 @@ class AvatarAdapter(
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = items[position]
 
-        val resId = AvatarRepository.resolveDrawableResId(holder.itemView.context, item.drawableName)
-        if (resId != 0) holder.img.setImageResource(resId)
+        holder.img.setImageDrawable(null)
 
-        holder.card.alpha = if (item.id == selectedId) 1f else 0.6f
+        val resId = AvatarRepository.resolveDrawableResId(holder.itemView.context, item.drawableName)
+        if (resId != 0) {
+            holder.img.setImageResource(resId)
+        } else {
+            holder.img.setImageDrawable(0x00000000.toDrawable())
+        }
+
+        val isSelected = item.id == selectedId
+        holder.card.setBackgroundResource(
+            if (isSelected) R.drawable.bg_avatar_selected else R.drawable.bg_avatar_card
+        )
 
         holder.card.setOnClickListener {
+            val pos = holder.bindingAdapterPosition
+            if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
+
+            val clicked = items[pos]
             val old = selectedId
-            selectedId = item.id
+            selectedId = clicked.id
+
             val oldIndex = items.indexOfFirst { it.id == old }
             if (oldIndex != -1) notifyItemChanged(oldIndex)
-            notifyItemChanged(position)
-            onSelected(item)
+
+            notifyItemChanged(pos)
+            onSelected(clicked)
         }
     }
 

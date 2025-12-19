@@ -67,14 +67,25 @@ class OnboardingActivity : AppCompatActivity() {
     }
 
     private fun setupAvatarsFromAssets() {
-        val avatars = AvatarRepository.load(this)
-        selectedAvatarId = avatars.firstOrNull()?.id ?: ""
+        val all = AvatarRepository.load(this)
+
+        val avatars = all.filter { item ->
+            AvatarRepository.resolveDrawableResId(this, item.drawableName) != 0
+        }
+
+        if (avatars.isEmpty()) {
+            Toast.makeText(this, "No avatars found in drawable", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        selectedAvatarId = avatars.first().id
 
         rvAvatars.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rvAvatars.adapter = AvatarAdapter(avatars, selectedAvatarId) { chosen ->
             selectedAvatarId = chosen.id
         }
     }
+
 
     private fun selectLanguage(lang: String) {
         selectedLanguage = lang
