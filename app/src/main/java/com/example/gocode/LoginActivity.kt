@@ -1,5 +1,6 @@
 package com.example.gocode
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.widget.EditText
@@ -18,12 +19,17 @@ import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.OAuthProvider
+import android.text.InputType
+import com.google.android.material.textfield.TextInputLayout
 
 @Suppress("DEPRECATION")
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private var player: ExoPlayer? = null
+
+    private lateinit var tilPassword: TextInputLayout
+    private var isPasswordVisible = false
 
     private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
@@ -52,6 +58,7 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -70,6 +77,24 @@ class LoginActivity : AppCompatActivity() {
 
         etEmail = findViewById(R.id.etEmail)
         etPassword = findViewById(R.id.etPassword)
+
+        tilPassword = findViewById(R.id.tilPassword)
+
+        tilPassword.setEndIconOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+
+            if (isPasswordVisible) {
+                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                tilPassword.endIconDrawable = getDrawable(R.drawable.ic_visibility)
+            } else {
+                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                tilPassword.endIconDrawable = getDrawable(R.drawable.ic_visibility_off)
+            }
+
+            etPassword.setSelection(etPassword.text?.length ?: 0)
+        }
+
+
         btnLogin = findViewById(R.id.btnLogin)
         btnGoogle = findViewById(R.id.btnGoogle)
         btnGithub = findViewById(R.id.btnGithub)
