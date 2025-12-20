@@ -58,11 +58,34 @@
                     android:textSize="13sp" />
             </LinearLayout>
 
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp">
+
+            <ProgressBar
+                android:id="@+id/xpProgress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="5dp"
+                android:max="1000"
+                android:progress="350"
+                android:progressDrawable="@drawable/progress_rounded"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
             <LinearLayout
+                android:id="@+id/xpContainer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toTopOf="@id/xpProgress"
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <TextView
                     android:id="@+id/tvXp"
@@ -73,27 +96,14 @@
                     android:textSize="13sp" />
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:layout_marginStart="4dp"
                     android:contentDescription="XP"
                     android:src="@drawable/xp" />
-
             </LinearLayout>
 
-        </LinearLayout>
-
-        <ProgressBar
-            android:id="@+id/xpProgress"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="5dp"
-            android:layout_marginTop="14dp"
-            android:backgroundTint="@color/gc_progress_track"
-            android:max="1000"
-            android:progress="350"
-            android:progressDrawable="@drawable/progress_rounded"
-            android:progressTint="@color/gc_accent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </LinearLayout>
 
