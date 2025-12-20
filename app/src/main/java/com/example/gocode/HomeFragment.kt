@@ -1,11 +1,13 @@
 package com.example.gocode
 
+import CoursesAdapter
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -34,7 +36,6 @@ class HomeFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
@@ -48,6 +49,67 @@ class HomeFragment : Fragment() {
             requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
                 R.id.bottom_navigation
             ).selectedItemId = R.id.learnFragment
+        }
+
+        val btnStartMission = view.findViewById<com.google.android.material.button.MaterialButton>(
+            R.id.btnStartMission
+        )
+
+        btnStartMission.setOnClickListener {
+            requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+                R.id.bottom_navigation
+            ).selectedItemId = R.id.learnFragment
+        }
+
+        val btnArena = view.findViewById<com.google.android.material.button.MaterialButton>(
+            R.id.btnArena
+        )
+
+        btnArena.setOnClickListener {
+            requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+                R.id.bottom_navigation
+            ).selectedItemId = R.id.arenaFragment
+        }
+
+        val rv = view.findViewById<RecyclerView>(R.id.rvNotifications)
+
+        val demoNotifications = listOf(
+            "You gained 40 XP yesterday!",
+            "Your friend just beat your Arena score!",
+            "New daily mission available",
+            "You reached Level 6 🎉",
+            "Arena match reward is waiting",
+            "Daily streak: 3 days 🔥"
+        )
+
+        rv.layoutManager = LinearLayoutManager(requireContext())
+        rv.adapter = NotificationsAdapter(demoNotifications)
+
+        val courses = listOf(
+            "Python Basics",
+            "Java Fundamentals",
+            "C Programming",
+            "Algorithms",
+            "Variables",
+            "Functions"
+        )
+
+        val rvCourses = view.findViewById<RecyclerView>(R.id.rvCourses)
+
+        rvCourses.layoutManager = LinearLayoutManager(requireContext())
+        rvCourses.adapter = CoursesAdapter(courses)
+
+        val bottomNav =
+            requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+                R.id.bottom_navigation
+            )
+
+        view.setOnApplyWindowInsetsListener { v, insets ->
+            val navHeight = bottomNav.height
+            v.setPadding(
+                v.paddingLeft, v.paddingTop, v.paddingRight, navHeight
+            )
+            insets
         }
 
 

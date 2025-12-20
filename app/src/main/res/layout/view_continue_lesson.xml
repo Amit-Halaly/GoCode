@@ -5,13 +5,15 @@
     android:layout_marginStart="16dp"
     android:layout_marginTop="12dp"
     android:layout_marginEnd="16dp"
-    app:cardBackgroundColor="@color/gc_card"
+    app:cardBackgroundColor="@color/gc_card_background"
     app:cardCornerRadius="20dp"
+    app:strokeWidth="0dp"
     app:cardElevation="6dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_cards"
         android:orientation="vertical"
         android:padding="16dp">
 
@@ -30,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:text="Introduction to Variables"
-            android:textColor="@color/gc_text_secondary"
+            android:textColor="@color/gc_text_primary"
             android:textSize="15sp"
             android:textStyle="bold" />
 
@@ -40,6 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="Lesson 3 • Python Basics"
+            android:textStyle="bold"
             android:textColor="@color/gc_text_secondary"
             android:textSize="13sp" />
 
@@ -81,8 +84,13 @@
             android:layout_marginTop="14dp"
             android:text="Continue"
             android:textAllCaps="false"
-            app:backgroundTint="@color/gc_accent"
-            app:cornerRadius="14dp" />
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            app:backgroundTint="@color/btn_primary"
+            app:cornerRadius="18dp"
+            app:elevation="8dp" />
+
 
     </LinearLayout>
 
