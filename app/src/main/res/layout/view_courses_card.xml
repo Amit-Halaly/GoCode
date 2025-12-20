@@ -13,7 +13,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_cards"
+        android:background="@drawable/bg_home_cards"
         android:orientation="vertical"
         android:padding="16dp">
 
@@ -23,7 +23,7 @@
             android:layout_marginBottom="12dp"
             android:text="Courses"
             android:textColor="@color/gc_text_primary"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textStyle="bold" />
 
         <androidx.recyclerview.widget.RecyclerView

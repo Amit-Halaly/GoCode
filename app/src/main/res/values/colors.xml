@@ -18,6 +18,9 @@
     <color name="gc_progress_track">#334155</color>
     <color name="gc_card_background">#081d3c</color>
     <color name="btn_primary">#0167ed</color>
+    <color name="titles_primary">#4DA3FF</color>
+
+
 
     <!-- Status bar -->
     <color name="status_bar_scrim">#B3001028</color>

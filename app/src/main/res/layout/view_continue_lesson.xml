@@ -13,7 +13,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_cards"
+        android:background="@drawable/bg_home_cards"
         android:orientation="vertical"
         android:padding="16dp">
 
@@ -23,17 +23,17 @@
             android:layout_height="wrap_content"
             android:text="Continue Learning"
             android:textColor="@color/gc_text_primary"
-            android:textSize="18sp"
+            android:textSize="12sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/lessonName"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:text="Introduction to Variables"
             android:textColor="@color/gc_text_primary"
-            android:textSize="15sp"
+            android:textSize="10sp"
             android:textStyle="bold" />
 
         <TextView
@@ -43,8 +43,8 @@
             android:layout_marginTop="2dp"
             android:text="Lesson 3 • Python Basics"
             android:textStyle="bold"
-            android:textColor="@color/gc_text_secondary"
-            android:textSize="13sp" />
+            android:textColor="@color/titles_primary"
+            android:textSize="8sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -72,7 +72,7 @@
                 android:layout_marginStart="10dp"
                 android:text="60%"
                 android:textColor="@color/gc_text_secondary"
-                android:textSize="13sp"
+                android:textSize="8sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
