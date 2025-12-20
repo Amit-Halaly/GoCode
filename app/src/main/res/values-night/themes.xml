@@ -5,6 +5,8 @@
         <item name="android:statusBarColor">@color/status_bar_scrim</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:enforceStatusBarContrast">false</item>
+        <item name="fontFamily">@font/poppins_medium</item>
+
 
     </style>
 
