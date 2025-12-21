@@ -9,12 +9,16 @@ import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : AppCompatActivity() {
 
     private lateinit var videoView: VideoView
     private lateinit var placeholder: View
+
+    private val auth by lazy { FirebaseAuth.getInstance() }
+    private val db by lazy { FirebaseFirestore.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,9 +44,7 @@ class SplashActivity : AppCompatActivity() {
                         .withEndAction { placeholder.visibility = View.GONE }
                         .start()
                     true
-                } else {
-                    false
-                }
+                } else false
             }
         }
 
@@ -54,24 +56,31 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun navigateNext() {
-        val auth = FirebaseAuth.getInstance()
         val user = auth.currentUser
-
         if (user == null) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
         }
 
-        user.reload()
-            .addOnSuccessListener {
-                startActivity(Intent(this, MainActivity::class.java))
+        val uid = user.uid
+
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { doc ->
+                val hasProfile = doc.exists()
+
+                val next = if (hasProfile) {
+                    MainActivity::class.java
+                } else {
+                    OnboardingActivity::class.java
+                }
+                startActivity(Intent(this, next))
                 finish()
             }
             .addOnFailureListener {
-                auth.signOut()
-                startActivity(Intent(this, LoginActivity::class.java))
+                startActivity(Intent(this, OnboardingActivity::class.java))
                 finish()
             }
     }
+
 }

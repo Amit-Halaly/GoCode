@@ -21,9 +21,13 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.OAuthProvider
 import android.text.InputType
 import com.google.android.material.textfield.TextInputLayout
+import kotlin.getValue
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Suppress("DEPRECATION")
 class LoginActivity : AppCompatActivity() {
+
+    private val db by lazy { FirebaseFirestore.getInstance() }
 
     private lateinit var auth: FirebaseAuth
     private var player: ExoPlayer? = null
@@ -48,7 +52,7 @@ class LoginActivity : AppCompatActivity() {
 
                 val credential = GoogleAuthProvider.getCredential(idToken, null)
                 auth.signInWithCredential(credential)
-                    .addOnSuccessListener { goMain() }
+                    .addOnSuccessListener { routeAfterLogin() }
                     .addOnFailureListener { e ->
                         Toast.makeText(this, "Google login failed: ${e.message}", Toast.LENGTH_LONG).show()
                     }
@@ -122,7 +126,7 @@ class LoginActivity : AppCompatActivity() {
         if (password.isEmpty()) { etPassword.error = "Password required"; return }
 
         auth.signInWithEmailAndPassword(email, password)
-            .addOnSuccessListener { goMain() }
+            .addOnSuccessListener { routeAfterLogin() }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Login failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
@@ -147,16 +151,40 @@ class LoginActivity : AppCompatActivity() {
             .build()
 
         auth.startActivityForSignInWithProvider(this, provider)
-            .addOnSuccessListener { goMain() }
+            .addOnSuccessListener { routeAfterLogin() }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "GitHub login failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
     }
 
-    private fun goMain() {
-        startActivity(Intent(this, MainActivity::class.java))
-        finish()
+    private fun routeAfterLogin() {
+        val uid = auth.currentUser?.uid ?: run {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { doc ->
+                val completed = doc.exists() && (doc.getBoolean("onboardingCompleted") == true)
+
+                val next = if (completed) {
+                    MainActivity::class.java
+                } else {
+                    OnboardingActivity::class.java
+                }
+
+                startActivity(Intent(this, next))
+                finish()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Failed to check onboarding: ${e.message}", Toast.LENGTH_LONG).show()
+                startActivity(Intent(this, OnboardingActivity::class.java))
+                finish()
+            }
     }
+
+
 
     override fun onDestroy() {
         super.onDestroy()

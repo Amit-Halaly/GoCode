@@ -11,10 +11,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.example.gocode.adapters.AvatarAdapter
 import com.example.gocode.repositories.AvatarRepository
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FieldValue
 
 class OnboardingActivity : AppCompatActivity() {
 
     private val auth by lazy { FirebaseAuth.getInstance() }
+    private val db by lazy { FirebaseFirestore.getInstance() }
 
     private lateinit var etUsername: EditText
 
@@ -102,7 +105,8 @@ class OnboardingActivity : AppCompatActivity() {
     }
 
     private fun continueNext() {
-        if (auth.currentUser == null) {
+        val user = auth.currentUser
+        if (user == null) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
@@ -118,7 +122,40 @@ class OnboardingActivity : AppCompatActivity() {
             return
         }
 
-        startActivity(Intent(this, MainActivity::class.java))
-        finish()
+        btnContinue.isEnabled = false
+
+        val uid = user.uid
+        val data = hashMapOf(
+            "username" to username,
+            "primaryLanguage" to selectedLanguage,
+            "skillLevel" to selectedSkill,
+            "avatarId" to selectedAvatarId,
+            "onboardingCompleted" to true,
+            "updatedAt" to FieldValue.serverTimestamp()
+        )
+
+        val userDoc = db.collection("users").document(uid)
+
+        userDoc.get()
+            .addOnSuccessListener { doc ->
+                if (!doc.exists()) {
+                    data["createdAt"] = FieldValue.serverTimestamp()
+                }
+
+                userDoc.set(data, com.google.firebase.firestore.SetOptions.merge())
+                    .addOnSuccessListener {
+                        startActivity(Intent(this, MainActivity::class.java))
+                        finish()
+                    }
+                    .addOnFailureListener { e ->
+                        btnContinue.isEnabled = true
+                        Toast.makeText(this, "Failed saving onboarding: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+            }
+            .addOnFailureListener { e ->
+                btnContinue.isEnabled = true
+                Toast.makeText(this, "Failed reading user profile: ${e.message}", Toast.LENGTH_LONG).show()
+            }
     }
+
 }
