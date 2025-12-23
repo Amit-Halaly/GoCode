@@ -1,3 +1,44 @@
 <resources>
     <string name="app_name">GoCode</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="don_t_have_an_account">Don’t have an account?</string>
+    <string name="sign_up">Sign up</string>
+    <string name="continue_with_github">Continue with GitHub</string>
+    <string name="or">or</string>
+    <string name="login">Login</string>
+    <string name="password">Password</string>
+    <string name="email_address">Email Address</string>
+    <string name="learn_code_compete">Learn. Code. Compete.</string>
+    <string name="go_code">&lt;GoCode&gt;</string>
+    <string name="continue_with_google">continue with google</string>
+    <string name="default_web_client_id">1045683098120-sgljt1lc7df59bkfefr54il40vit65hh.apps.googleusercontent.com</string>
+    <string name="back_to_login">Back to Login</string>
+    <string name="email">Email</string>
+    <string name="create_your_gocode_account">Create your GoCode account</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="create_account">Create Account</string>
+    <string name="todo">TODO</string>
+    <string name="enter_email_for_reset">Enter your email and we’ll send you a reset link.</string>
+    <string name="send_reset_link">Send Reset Link</string>
+    <string name="cont">Continue</string>
+    <string name="choose_avatar">Choose Avatar</string>
+    <string name="advanced">Advanced</string>
+    <string name="intermediate">Intermediate</string>
+    <string name="beginner">Beginner</string>
+    <string name="skill_level">Skill Level</string>
+    <string name="c">C</string>
+    <string name="java">Java</string>
+    <string name="python">Python</string>
+    <string name="primary_language">Primary Language</string>
+    <string name="name">name</string>
+    <string name="username">Username</string>
+    <string name="onboarding">Onboarding</string>
+    <string name="toggle_password_visibility">Toggle password visibility</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="profile">Profile</string>
+    <string name="arena">Arena</string>
+    <string name="learn">Learn</string>
+    <string name="home">Home</string>
 </resources>

@@ -1,7 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="background">#132836</color>
+    <color name="background">#162B39</color>
+    <color name="login_background">#1B2433</color>
+    <color name="text_color">#B8C1CC</color>
+    <color name="gray">#6E7785</color>
+    <color name="lite_blue">#256DFF</color>
+    <color name="signup_background">#1D2533</color>
+
+    <!-- Bottom Nav -->
+    <color name="bottom_nav_item_bg">#081d3c</color>
+    <color name="bottom_nav_gray">#8E97A6</color>
+    <color name="bottom_nav_gray_active">#8F95A1</color>
+
+    <!-- home screen cards -->
+    <color name="gc_bg">#03152d</color>
+    <color name="gc_card">#0B1C2D</color>
+    <color name="gc_text_primary">#FFFFFF</color>
+    <color name="gc_text_secondary">#A3AAB6</color>
+    <color name="gc_accent">#2F80FF</color>
+    <color name="gc_progress_track">#334155</color>
+    <color name="gc_card_background">#081d3c</color>
+    <color name="btn_primary">#0167ed</color>
+    <color name="titles_primary">#4DA3FF</color>
+
+
+
+    <!-- Status bar -->
+    <color name="status_bar_scrim">#B3001028</color>
+
 
 </resources>

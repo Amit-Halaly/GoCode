@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/txtNotification"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingVertical="6dp"
+    android:text="Notification text"
+    android:textColor="@color/gc_text_secondary"
+    android:textSize="10sp"
+    android:textStyle="bold" />

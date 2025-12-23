@@ -1,0 +1,14 @@
+[
+  { "id": "lion_robot", "drawableName": "avatar_lion_robot" },
+  { "id": "robot",      "drawableName": "avatar_robot" },
+  { "id": "boy",        "drawableName": "avatar_boy" },
+  { "id": "monkey",     "drawableName": "avatar_monkey" },
+  { "id": "cat",        "drawableName": "avatar_cat" },
+  { "id": "cat_woman",  "drawableName": "avatar_cat_woman" },
+  { "id": "ninja",      "drawableName": "avatar_ninja" },
+  { "id": "owl",        "drawableName": "avatar_owl" },
+  { "id": "alien",      "drawableName": "avatar_alien" },
+  { "id": "witch",      "drawableName": "avatar_witch" },
+  { "id": "panda",      "drawableName": "avatar_panda" },
+  { "id": "shark",      "drawableName": "avatar_shark" }
+]

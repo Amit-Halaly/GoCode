@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.gocode.HomeFragment"
+        android:label="Home" />
+
+    <fragment
+        android:id="@+id/learnFragment"
+        android:name="com.example.gocode.LearnFragment"
+        android:label="Learn" />
+
+    <fragment
+        android:id="@+id/arenaFragment"
+        android:name="com.example.gocode.ArenaFragment"
+        android:label="Arena" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.gocode.ProfileFragment"
+        android:label="Profile" />
+
+</navigation>
