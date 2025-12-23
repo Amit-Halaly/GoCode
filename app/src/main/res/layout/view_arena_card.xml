@@ -20,12 +20,17 @@
         android:padding="16dp">
 
 
-        <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginBottom="8dp"
-            android:contentDescription="Arena"
-            android:src="@drawable/versus" />
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/arenaLottie"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center_horizontal"
+            app:lottie_rawRes="@raw/compare"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:lottie_speed="1.2"
+            app:lottie_renderMode="hardware" />
+
 
         <TextView
             android:layout_width="wrap_content"

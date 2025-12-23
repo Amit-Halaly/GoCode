@@ -17,6 +17,17 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/arenaLottie"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_horizontal"
+            app:lottie_rawRes="@raw/list"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:lottie_speed="1.2"
+            app:lottie_renderMode="hardware" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -51,18 +62,33 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
                     android:scaleType="centerInside"
                     android:src="@drawable/xp" />
 
                 <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_marginStart="6dp"
                     android:text="+30 XP"
                     android:textColor="@color/gc_accent"
-                    android:textSize="11sp"
+                    android:textSize="9sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="12dp"
+                    android:src="@drawable/coin" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="+50 Coins"
+                    android:textColor="@color/gc_accent"
+                    android:textSize="9sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -73,20 +99,6 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/coin" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="+50 Coins"
-                    android:textColor="@color/gc_accent"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
             </LinearLayout>
 
         </LinearLayout>
