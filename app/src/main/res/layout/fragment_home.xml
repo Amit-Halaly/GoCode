@@ -13,10 +13,14 @@
 
         <include
             layout="@layout/view_user_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_margin="16dp" />
 
         <include
             layout="@layout/view_continue_lesson"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:layout_marginTop="8dp" />
 
