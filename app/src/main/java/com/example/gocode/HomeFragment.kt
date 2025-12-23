@@ -3,28 +3,28 @@ package com.example.gocode
 import CoursesAdapter
 import android.annotation.SuppressLint
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.gocode.repositories.AvatarRepository
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [HomeFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class HomeFragment : Fragment() {
-    // TODO: Rename and change types of parameters
+
     private var param1: String? = null
     private var param2: String? = null
+
+    private val auth by lazy { FirebaseAuth.getInstance() }
+    private val db by lazy { FirebaseFirestore.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,58 +36,48 @@ class HomeFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_home, container, false)
-    }
+    ): View = inflater.inflate(R.layout.fragment_home, container, false)
 
     @SuppressLint("CutPasteId")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val btnContinue = view.findViewById<com.google.android.material.button.MaterialButton>(
-            R.id.btnContinue
-        )
-        btnContinue.setOnClickListener {
-            requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
-                R.id.bottom_navigation
-            ).selectedItemId = R.id.learnFragment
-        }
+        view.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnContinue)
+            .setOnClickListener {
+                requireActivity()
+                    .findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
+                    .selectedItemId = R.id.learnFragment
+            }
 
-        val btnStartMission = view.findViewById<com.google.android.material.button.MaterialButton>(
-            R.id.btnStartMission
-        )
+        view.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnStartMission)
+            .setOnClickListener {
+                requireActivity()
+                    .findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
+                    .selectedItemId = R.id.learnFragment
+            }
 
-        btnStartMission.setOnClickListener {
-            requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
-                R.id.bottom_navigation
-            ).selectedItemId = R.id.learnFragment
-        }
+        view.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnArena)
+            .setOnClickListener {
+                requireActivity()
+                    .findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
+                    .selectedItemId = R.id.arenaFragment
+            }
 
-        val btnArena = view.findViewById<com.google.android.material.button.MaterialButton>(
-            R.id.btnArena
-        )
-
-        btnArena.setOnClickListener {
-            requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
-                R.id.bottom_navigation
-            ).selectedItemId = R.id.arenaFragment
-        }
-
-        val rv = view.findViewById<RecyclerView>(R.id.rvNotifications)
-
-        val demoNotifications = listOf(
-            "You gained 40 XP yesterday!",
-            "Your friend just beat your Arena score!",
-            "New daily mission available",
-            "You reached Level 6 🎉",
-            "Arena match reward is waiting",
-            "Daily streak: 3 days 🔥"
+        val rvNotifications = view.findViewById<RecyclerView>(R.id.rvNotifications)
+        rvNotifications.layoutManager = LinearLayoutManager(requireContext())
+        rvNotifications.adapter = NotificationsAdapter(
+            listOf(
+                "You gained 40 XP yesterday!",
+                "Your friend just beat your Arena score!",
+                "New daily mission available",
+                "Daily streak: 3 days 🔥"
+            )
         )
 
-        rv.layoutManager = LinearLayoutManager(requireContext())
-        rv.adapter = NotificationsAdapter(demoNotifications)
+        val rvCourses = view.findViewById<RecyclerView>(R.id.rvCourses)
+        rvCourses.layoutManager = LinearLayoutManager(requireContext())
 
-        val courses = listOf(
+        val defaultCourses = listOf(
             "Python Basics",
             "Java Fundamentals",
             "C Programming",
@@ -95,11 +85,45 @@ class HomeFragment : Fragment() {
             "Variables",
             "Functions"
         )
+        rvCourses.adapter = CoursesAdapter(defaultCourses)
 
-        val rvCourses = view.findViewById<RecyclerView>(R.id.rvCourses)
+        val userNameTv = view.findViewById<TextView>(R.id.userName)
+        val avatarIv = view.findViewById<ImageView>(R.id.avatarImage)
 
-        rvCourses.layoutManager = LinearLayoutManager(requireContext())
-        rvCourses.adapter = CoursesAdapter(courses)
+        val user = auth.currentUser
+        if (user != null) {
+            db.collection("users").document(user.uid).get()
+                .addOnSuccessListener { doc ->
+                    if (!doc.exists()) return@addOnSuccessListener
+
+                    doc.getString("username")
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { userNameTv.text = it }
+
+                    doc.getString("avatarId")
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { avatarId ->
+                            val avatars = AvatarRepository.load(requireContext())
+                            val avatarItem = avatars.firstOrNull { it.id == avatarId }
+                            if (avatarItem != null) {
+                                val resId = AvatarRepository.resolveDrawableResId(
+                                    requireContext(),
+                                    avatarItem.drawableName
+                                )
+                                if (resId != 0) avatarIv.setImageResource(resId)
+                            }
+                        }
+
+                    val lang = doc.getString("primaryLanguage")
+                    val coursesByLang = when (lang) {
+                        "Python" -> listOf("Python Basics", "Variables", "Conditions", "Loops", "Functions", "Lists")
+                        "Java" -> listOf("Java Fundamentals", "Variables", "OOP Basics", "Classes & Objects", "Methods", "Collections")
+                        "C" -> listOf("C Programming", "Pointers", "Arrays", "Functions", "Memory Basics", "Structs")
+                        else -> defaultCourses
+                    }
+                    rvCourses.adapter = CoursesAdapter(coursesByLang)
+                }
+        }
 
         val bottomNav =
             requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
@@ -108,24 +132,12 @@ class HomeFragment : Fragment() {
 
         view.setOnApplyWindowInsetsListener { v, insets ->
             val navHeight = bottomNav.height
-            v.setPadding(
-                v.paddingLeft, v.paddingTop, v.paddingRight, navHeight
-            )
+            v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, navHeight)
             insets
         }
-
-
     }
+
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment HomeFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) = HomeFragment().apply {
             arguments = Bundle().apply {
