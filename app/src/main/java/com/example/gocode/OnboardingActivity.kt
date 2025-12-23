@@ -8,11 +8,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.auth.FirebaseAuth
 import com.example.gocode.adapters.AvatarAdapter
 import com.example.gocode.repositories.AvatarRepository
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 class OnboardingActivity : AppCompatActivity() {
 
@@ -65,7 +66,6 @@ class OnboardingActivity : AppCompatActivity() {
         btnAdvanced.setOnClickListener { selectSkill("Advanced") }
 
         setupAvatarsFromAssets()
-
         btnContinue.setOnClickListener { continueNext() }
     }
 
@@ -88,7 +88,6 @@ class OnboardingActivity : AppCompatActivity() {
             selectedAvatarId = chosen.id
         }
     }
-
 
     private fun selectLanguage(lang: String) {
         selectedLanguage = lang
@@ -125,7 +124,9 @@ class OnboardingActivity : AppCompatActivity() {
         btnContinue.isEnabled = false
 
         val uid = user.uid
-        val data = hashMapOf(
+        val userDoc = db.collection("users").document(uid)
+
+        val data = hashMapOf<String, Any>(
             "username" to username,
             "primaryLanguage" to selectedLanguage,
             "skillLevel" to selectedSkill,
@@ -134,15 +135,19 @@ class OnboardingActivity : AppCompatActivity() {
             "updatedAt" to FieldValue.serverTimestamp()
         )
 
-        val userDoc = db.collection("users").document(uid)
-
         userDoc.get()
             .addOnSuccessListener { doc ->
                 if (!doc.exists()) {
                     data["createdAt"] = FieldValue.serverTimestamp()
+                    data["level"] = 1L
+                    data["xp"] = 0L
+                    data["xpToNext"] = 1000L
+                    data["coins"] = 0L
+                    data["streak"] = 0L
+                    data["rating"] = 0L
                 }
 
-                userDoc.set(data, com.google.firebase.firestore.SetOptions.merge())
+                userDoc.set(data, SetOptions.merge())
                     .addOnSuccessListener {
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
@@ -157,5 +162,4 @@ class OnboardingActivity : AppCompatActivity() {
                 Toast.makeText(this, "Failed reading user profile: ${e.message}", Toast.LENGTH_LONG).show()
             }
     }
-
 }
