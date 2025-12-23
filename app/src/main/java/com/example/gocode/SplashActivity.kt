@@ -63,24 +63,26 @@ class SplashActivity : AppCompatActivity() {
             return
         }
 
-        val uid = user.uid
-
-        db.collection("users").document(uid).get()
-            .addOnSuccessListener { doc ->
-                val hasProfile = doc.exists()
-
-                val next = if (hasProfile) {
-                    MainActivity::class.java
-                } else {
-                    OnboardingActivity::class.java
-                }
-                startActivity(Intent(this, next))
-                finish()
+        user.reload()
+            .addOnSuccessListener {
+                val uid = user.uid
+                db.collection("users").document(uid).get()
+                    .addOnSuccessListener { doc ->
+                        val next = if (doc.exists()) MainActivity::class.java else OnboardingActivity::class.java
+                        startActivity(Intent(this, next))
+                        finish()
+                    }
+                    .addOnFailureListener {
+                        startActivity(Intent(this, OnboardingActivity::class.java))
+                        finish()
+                    }
             }
             .addOnFailureListener {
-                startActivity(Intent(this, OnboardingActivity::class.java))
+                auth.signOut()
+                startActivity(Intent(this, LoginActivity::class.java))
                 finish()
             }
     }
+
 
 }
