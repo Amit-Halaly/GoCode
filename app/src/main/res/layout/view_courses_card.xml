@@ -28,7 +28,7 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvCourses"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="120dp"
             android:overScrollMode="never"
             tools:listitem="@layout/item_course_chip" />

@@ -78,9 +78,12 @@ class HomeFragment : Fragment() {
                 "You gained 40 XP yesterday!",
                 "Your friend just beat your Arena score!",
                 "New daily mission available",
-                "Daily streak: 3 days 🔥"
+                "Daily streak: 3 days 🔥",
+                "You have a new friend!",
+                "You are about to level up keep going!"
             )
         )
+        rvNotifications.isNestedScrollingEnabled = true
 
         val rvCourses = view.findViewById<RecyclerView>(R.id.rvCourses)
         rvCourses.layoutManager = LinearLayoutManager(requireContext())
@@ -94,6 +97,8 @@ class HomeFragment : Fragment() {
             "Functions"
         )
         rvCourses.adapter = CoursesAdapter(defaultCourses)
+        rvCourses.isNestedScrollingEnabled = true
+
 
         val userNameTv = view.findViewById<TextView>(R.id.userName)
         val avatarIv = view.findViewById<ImageView>(R.id.avatarImage)
@@ -162,16 +167,27 @@ class HomeFragment : Fragment() {
                 R.id.bottom_navigation
             )
 
-        view.setOnApplyWindowInsetsListener { v, insets ->
-            val navHeight = bottomNav.height
-            v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, navHeight)
-            insets
-        }
         val arenaLottie = view.findViewById<LottieAnimationView>(R.id.arenaLottie)
 
         arenaLottie.setOnClickListener {
             arenaLottie.playAnimation()
         }
+
+        view.post {
+            val bottomNav =
+                requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+                    R.id.bottom_navigation
+                )
+
+            val navHeight = bottomNav.height
+            view.setPadding(
+                view.paddingLeft,
+                view.paddingTop,
+                view.paddingRight,
+                navHeight
+            )
+        }
+
     }
 
     override fun onDestroyView() {
