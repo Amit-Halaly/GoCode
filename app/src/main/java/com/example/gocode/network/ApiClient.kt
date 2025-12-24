@@ -7,9 +7,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
 
-    // אמולטור: 10.0.2.2
-    // מכשיר פיזי: תחליף ל-IP של המחשב שלך
-    private const val BASE_URL = "http://72.20.17.70:8000/"
+    private const val BASE_URL =
+        "https://odious-eun-uncredulously.ngrok-free.dev/"
+
 
     val execApi: ExecApi by lazy {
         val logger = HttpLoggingInterceptor().apply {
