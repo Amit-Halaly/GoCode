@@ -42,4 +42,5 @@
     <string name="learn">Learn</string>
     <string name="home">Home</string>
     <string name="lesson_title">Lesson title</string>
+    <string name="java_path">Java Path</string>
 </resources>
