@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="120dp"
+    android:paddingVertical="12dp"
+    tools:background="@android:color/black">
+
+    <LinearLayout
+        android:id="@+id/leftContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginStart="32dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/leftCircle"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            app:cardBackgroundColor="@color/btn_primary"
+            app:cardCornerRadius="36dp"
+            app:cardElevation="6dp">
+
+            <ImageView
+                android:id="@+id/leftIcon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/todo"
+                android:src="@drawable/ic_star"
+                app:tint="@android:color/white" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tvTitleLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:text="Lesson title"
+            android:textColor="@color/gc_text_primary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            tools:text="Intro to Java" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/rightContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="32dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/rightCircle"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            app:cardBackgroundColor="@color/btn_primary"
+            app:cardCornerRadius="36dp"
+            app:cardElevation="6dp">
+
+            <ImageView
+                android:id="@+id/rightIcon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/todo"
+                android:src="@drawable/ic_star"
+                app:tint="@android:color/white" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tvTitleRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:text="@string/lesson_title"
+            android:textColor="@color/gc_text_primary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            tools:text="Variables &amp; Types"
+            tools:ignore="SmallSp" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
