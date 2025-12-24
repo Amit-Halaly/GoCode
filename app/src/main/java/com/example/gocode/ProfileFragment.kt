@@ -90,6 +90,19 @@ class ProfileFragment : Fragment() {
             val popup = PopupMenu(view.context, btnProfileMenu)
             popup.menuInflater.inflate(R.menu.profile_menu, popup.menu)
 
+            val logoutItem = popup.menu.findItem(R.id.action_logout)
+            val redTitle = android.text.SpannableString(logoutItem.title)
+            redTitle.setSpan(
+                android.text.style.ForegroundColorSpan(
+                    resources.getColor(R.color.profile_lo_red, null)
+                ),
+                0,
+                redTitle.length,
+                0
+            )
+            logoutItem.title = redTitle
+
+
             popup.setOnMenuItemClickListener { item ->
                 when (item.itemId) {
 
