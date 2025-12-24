@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.airbnb.lottie.LottieAnimationView
 import com.example.gocode.repositories.AvatarRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -48,23 +49,23 @@ class HomeFragment : Fragment() {
 
         view.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnContinue)
             .setOnClickListener {
-                requireActivity()
-                    .findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
-                    .selectedItemId = R.id.learnFragment
+                requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+                    R.id.bottom_navigation
+                ).selectedItemId = R.id.learnFragment
             }
 
         view.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnStartMission)
             .setOnClickListener {
-                requireActivity()
-                    .findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
-                    .selectedItemId = R.id.learnFragment
+                requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+                    R.id.bottom_navigation
+                ).selectedItemId = R.id.learnFragment
             }
 
         view.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnArena)
             .setOnClickListener {
-                requireActivity()
-                    .findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
-                    .selectedItemId = R.id.arenaFragment
+                requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+                    R.id.bottom_navigation
+                ).selectedItemId = R.id.arenaFragment
             }
 
         val arenaRatingTv = view.findViewById<TextView>(R.id.txtArenaRating)
@@ -77,9 +78,12 @@ class HomeFragment : Fragment() {
                 "You gained 40 XP yesterday!",
                 "Your friend just beat your Arena score!",
                 "New daily mission available",
-                "Daily streak: 3 days 🔥"
+                "Daily streak: 3 days 🔥",
+                "You have a new friend!",
+                "You are about to level up keep going!"
             )
         )
+        rvNotifications.isNestedScrollingEnabled = true
 
         val rvCourses = view.findViewById<RecyclerView>(R.id.rvCourses)
         rvCourses.layoutManager = LinearLayoutManager(requireContext())
@@ -93,6 +97,8 @@ class HomeFragment : Fragment() {
             "Functions"
         )
         rvCourses.adapter = CoursesAdapter(defaultCourses)
+        rvCourses.isNestedScrollingEnabled = true
+
 
         val userNameTv = view.findViewById<TextView>(R.id.userName)
         val avatarIv = view.findViewById<ImageView>(R.id.avatarImage)
@@ -102,62 +108,86 @@ class HomeFragment : Fragment() {
 
         val user = auth.currentUser ?: return
 
-        userListener = db.collection("users").document(user.uid)
-            .addSnapshotListener { doc, e ->
-                if (e != null || doc == null || !doc.exists()) return@addSnapshotListener
+        userListener = db.collection("users").document(user.uid).addSnapshotListener { doc, e ->
+            if (e != null || doc == null || !doc.exists()) return@addSnapshotListener
 
-                doc.getString("username")
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let { userNameTv.text = it }
+            doc.getString("username")?.takeIf { it.isNotBlank() }?.let { userNameTv.text = it }
 
-                doc.getString("avatarId")
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let { avatarId ->
-                        val avatars = AvatarRepository.load(requireContext())
-                        val avatarItem = avatars.firstOrNull { it.id == avatarId }
-                        if (avatarItem != null) {
-                            val resId = AvatarRepository.resolveDrawableResId(
-                                requireContext(),
-                                avatarItem.drawableName
-                            )
-                            if (resId != 0) avatarIv.setImageResource(resId)
-                        }
-                    }
-
-                val rating = doc.getLong("rating") ?: 0L
-                arenaRatingTv.text = "Rating: $rating"
-
-                val level = doc.getLong("level") ?: 1L
-                userLevelTv.text = "Level $level"
-
-                val xp = doc.getLong("xp") ?: 0L
-                val xpToNext = doc.getLong("xpToNext") ?: 1000L
-
-                tvXp.text = "$xp / $xpToNext"
-                val max = xpToNext.toInt().coerceAtLeast(1)
-                xpProgress.max = max
-                xpProgress.progress = xp.toInt().coerceIn(0, max)
-
-                val lang = doc.getString("primaryLanguage")
-                val coursesByLang = when (lang) {
-                    "Python" -> listOf("Python Basics", "Variables", "Conditions", "Loops", "Functions", "Lists")
-                    "Java" -> listOf("Java Fundamentals", "Variables", "OOP Basics", "Classes & Objects", "Methods", "Collections")
-                    "C" -> listOf("C Programming", "Pointers", "Arrays", "Functions", "Memory Basics", "Structs")
-                    else -> defaultCourses
+            doc.getString("avatarId")?.takeIf { it.isNotBlank() }?.let { avatarId ->
+                val avatars = AvatarRepository.load(requireContext())
+                val avatarItem = avatars.firstOrNull { it.id == avatarId }
+                if (avatarItem != null) {
+                    val resId = AvatarRepository.resolveDrawableResId(
+                        requireContext(), avatarItem.drawableName
+                    )
+                    if (resId != 0) avatarIv.setImageResource(resId)
                 }
-                rvCourses.adapter = CoursesAdapter(coursesByLang)
             }
+
+            val rating = doc.getLong("rating") ?: 0L
+            arenaRatingTv.text = "Rating: $rating"
+
+            val level = doc.getLong("level") ?: 1L
+            userLevelTv.text = "Level $level"
+
+            val xp = doc.getLong("xp") ?: 0L
+            val xpToNext = doc.getLong("xpToNext") ?: 1000L
+
+            tvXp.text = "$xp / $xpToNext"
+            val max = xpToNext.toInt().coerceAtLeast(1)
+            xpProgress.max = max
+            xpProgress.progress = xp.toInt().coerceIn(0, max)
+
+            val lang = doc.getString("primaryLanguage")
+            val coursesByLang = when (lang) {
+                "Python" -> listOf(
+                    "Python Basics", "Variables", "Conditions", "Loops", "Functions", "Lists"
+                )
+
+                "Java" -> listOf(
+                    "Java Fundamentals",
+                    "Variables",
+                    "OOP Basics",
+                    "Classes & Objects",
+                    "Methods",
+                    "Collections"
+                )
+
+                "C" -> listOf(
+                    "C Programming", "Pointers", "Arrays", "Functions", "Memory Basics", "Structs"
+                )
+
+                else -> defaultCourses
+            }
+            rvCourses.adapter = CoursesAdapter(coursesByLang)
+        }
 
         val bottomNav =
             requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
                 R.id.bottom_navigation
             )
 
-        view.setOnApplyWindowInsetsListener { v, insets ->
-            val navHeight = bottomNav.height
-            v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, navHeight)
-            insets
+        val arenaLottie = view.findViewById<LottieAnimationView>(R.id.arenaLottie)
+
+        arenaLottie.setOnClickListener {
+            arenaLottie.playAnimation()
         }
+
+        view.post {
+            val bottomNav =
+                requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+                    R.id.bottom_navigation
+                )
+
+            val navHeight = bottomNav.height
+            view.setPadding(
+                view.paddingLeft,
+                view.paddingTop,
+                view.paddingRight,
+                navHeight
+            )
+        }
+
     }
 
     override fun onDestroyView() {

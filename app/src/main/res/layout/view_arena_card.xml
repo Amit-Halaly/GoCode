@@ -20,19 +20,24 @@
         android:padding="16dp">
 
 
-        <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginBottom="8dp"
-            android:contentDescription="Arena"
-            android:src="@drawable/versus" />
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/arenaLottie"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center_horizontal"
+            app:lottie_rawRes="@raw/compare"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:lottie_speed="1.2"
+            app:lottie_renderMode="hardware" />
+
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Arena"
             android:textColor="@color/gc_text_primary"
-            android:textSize="12sp" />
+            android:textSize="13sp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -40,7 +45,7 @@
             android:layout_marginTop="4dp"
             android:text="Play Against Others"
             android:textColor="@color/gc_text_secondary"
-            android:textSize="8sp"
+            android:textSize="10sp"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -51,8 +56,8 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="12dp"
-                android:layout_height="12dp"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
                 android:layout_marginEnd="6dp"
                 android:src="@drawable/trophy" />
 
@@ -62,7 +67,7 @@
                 android:layout_height="wrap_content"
                 android:text="Rating: 1,035"
                 android:textColor="@color/gc_text_primary"
-                android:textSize="10sp"
+                android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -74,7 +79,7 @@
             android:text="Start Match"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
-            android:textSize="8sp"
+            android:textSize="11sp"
             android:textStyle="bold"
             app:backgroundTint="@color/btn_primary"
             app:cornerRadius="18dp"

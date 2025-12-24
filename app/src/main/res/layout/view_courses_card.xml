@@ -23,12 +23,12 @@
             android:layout_marginBottom="12dp"
             android:text="Courses"
             android:textColor="@color/gc_text_primary"
-            android:textSize="11sp"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvCourses"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="120dp"
             android:overScrollMode="never"
             tools:listitem="@layout/item_course_chip" />

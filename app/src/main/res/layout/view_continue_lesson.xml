@@ -7,92 +7,107 @@
     android:layout_marginEnd="16dp"
     app:cardBackgroundColor="@color/gc_card_background"
     app:cardCornerRadius="20dp"
-    app:strokeWidth="0dp"
-    app:cardElevation="6dp">
+    app:cardElevation="6dp"
+    app:strokeWidth="0dp">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_home_cards"
-        android:orientation="vertical"
         android:padding="16dp">
-
-        <TextView
-            android:id="@+id/continueTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Continue Learning"
-            android:textColor="@color/gc_text_primary"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/lessonName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Introduction to Variables"
-            android:textColor="@color/gc_text_primary"
-            android:textSize="10sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/lessonMeta"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="Lesson 3 • Python Basics"
-            android:textStyle="bold"
-            android:textColor="@color/titles_primary"
-            android:textSize="8sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ProgressBar
-                android:id="@+id/lessonProgress"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="0dp"
-                android:layout_height="5dp"
-                android:layout_weight="1"
-                android:backgroundTint="@color/gc_progress_track"
-                android:max="100"
-                android:progress="60"
-                android:progressDrawable="@drawable/progress_rounded"
-                android:progressTint="@color/gc_accent" />
+            android:layout_toStartOf="@id/continueLottie"
+            android:orientation="vertical"
+            android:paddingEnd="12dp">
 
             <TextView
-                android:id="@+id/lessonPercent"
+                android:id="@+id/continueTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:text="60%"
-                android:textColor="@color/gc_text_secondary"
-                android:textSize="8sp"
+                android:text="Continue Learning"
+                android:textColor="@color/gc_text_primary"
+                android:textSize="18sp"
                 android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/lessonName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Introduction to Variables"
+                android:textColor="@color/gc_text_primary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/lessonMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Lesson 3 • Python Basics"
+                android:textColor="@color/titles_primary"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ProgressBar
+                    android:id="@+id/lessonProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="5dp"
+                    android:layout_weight="1"
+                    android:max="100"
+                    android:progress="60"
+                    android:progressDrawable="@drawable/progress_rounded" />
+
+                <TextView
+                    android:id="@+id/lessonPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="60%"
+                    android:textColor="@color/gc_text_secondary"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnContinue"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="14dp"
+                android:text="Continue"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/btn_primary"
+                app:cornerRadius="18dp"
+                app:elevation="8dp" />
 
         </LinearLayout>
 
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/continueLottie"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            app:lottie_rawRes="@raw/learn"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:lottie_speed="1.2"
+            app:lottie_renderMode="hardware" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnContinue"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_marginTop="14dp"
-            android:text="Continue"
-            android:textAllCaps="false"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:textSize="10sp"
-            app:backgroundTint="@color/btn_primary"
-            app:cornerRadius="18dp"
-            app:elevation="8dp" />
-
-
-    </LinearLayout>
+    </RelativeLayout>
 
 </com.google.android.material.card.MaterialCardView>

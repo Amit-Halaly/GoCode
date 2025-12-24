@@ -43,4 +43,5 @@
     <string name="home">Home</string>
     <string name="lesson_title">Lesson title</string>
     <string name="java_path">Java Path</string>
+    <string name="lt_gocode_gt"><![CDATA[<GoCode>]]></string>
 </resources>

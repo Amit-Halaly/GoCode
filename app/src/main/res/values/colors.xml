@@ -26,6 +26,11 @@
     <color name="btn_primary">#0167ed</color>
     <color name="titles_primary">#4DA3FF</color>
 
+    <!-- profile screen  -->
+    <color name="profile_lo_red">#E34B43</color>
+
+    <!-- danger / destructive actions -->
+    <color name="gc_danger">@color/profile_lo_red</color>
 
 
     <!-- Status bar -->
