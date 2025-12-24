@@ -237,24 +237,22 @@
             app:backgroundTint="@color/profile_lo_red"
             app:cornerRadius="18dp" />
 
-        <!-- Courses Card (Static) -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/profileCoursesCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
             app:cardCornerRadius="22dp"
+            app:cardBackgroundColor="@android:color/transparent"
             app:cardElevation="0dp"
-            app:strokeWidth="1dp">
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_home_cards"
                 android:orientation="vertical"
                 android:padding="12dp">
 
-                <!-- Title -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -263,7 +261,6 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
-                <!-- Subtitle -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -315,6 +312,97 @@
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
+
+        <!-- Achievements Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/profileAchievementsCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            app:cardCornerRadius="22dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <!-- Title -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Achievements"
+                    android:textColor="@android:color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <!-- Horizontal scroll -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/achFirstLogin"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:layout_marginEnd="12dp"
+                            android:src="@drawable/ach_first_login" />
+
+                        <ImageView
+                            android:id="@+id/achFirstCourse"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:layout_marginEnd="12dp"
+                            android:src="@drawable/ach_first_course" />
+
+                        <ImageView
+                            android:id="@+id/achFirstChallenge"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:layout_marginEnd="12dp"
+                            android:src="@drawable/ach_first_challenge" />
+
+                        <ImageView
+                            android:id="@+id/achChallenges10"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:layout_marginEnd="12dp"
+                            android:src="@drawable/ach_challenges_10"
+                            android:alpha="0.3" />
+
+                        <ImageView
+                            android:id="@+id/achArenaFirstWin"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:layout_marginEnd="12dp"
+                            android:src="@drawable/ach_arena_first_win"
+                            android:alpha="0.3" />
+
+                        <ImageView
+                            android:id="@+id/achStreak7"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:layout_marginEnd="12dp"
+                            android:src="@drawable/ach_streak_7"
+                            android:alpha="0.3" />
+
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
 
 
     </LinearLayout>

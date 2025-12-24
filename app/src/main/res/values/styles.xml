@@ -12,4 +12,11 @@
         <item name="android:background">@drawable/bg_course_chip</item>
     </style>
 
+    <style name="ThemeOverlay_GoCode_BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/GoCodeBottomSheetStyle</item>
+    </style>
+
+    <style name="GoCodeBottomSheetStyle" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="android:background">@drawable/bg_home_cards</item>
+    </style>
 </resources>
