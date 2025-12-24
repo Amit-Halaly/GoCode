@@ -6,13 +6,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.example.gocode.repositories.AvatarRepository
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -39,6 +40,7 @@ class ProfileFragment : Fragment() {
         val achArenaFirstWin = view.findViewById<ImageView>(R.id.achArenaFirstWin)
         val achStreak7 = view.findViewById<ImageView>(R.id.achStreak7)
 
+        val btnProfileMenu = view.findViewById<ImageButton>(R.id.btnProfileMenu)
 
         val avatarIv = view.findViewById<ImageView>(R.id.avatarImage)
         val usernameTv = view.findViewById<TextView>(R.id.profileUsername)
@@ -49,10 +51,6 @@ class ProfileFragment : Fragment() {
         val coursesCompletedTv = view.findViewById<TextView>(R.id.profileCoursesCompleted)
         val challengesSolvedTv = view.findViewById<TextView>(R.id.profileChallengesSolved)
         val arenaWinsTv = view.findViewById<TextView>(R.id.profileArenaWins)
-
-        val btnEditProfile = view.findViewById<MaterialButton>(R.id.btnEditProfile)
-        val btnSettings = view.findViewById<MaterialButton>(R.id.btnSettings)
-        val btnLogout = view.findViewById<MaterialButton>(R.id.btnLogout)
 
         coursesCompletedTv.text = "0"
         challengesSolvedTv.text = "0"
@@ -88,19 +86,37 @@ class ProfileFragment : Fragment() {
             xpProgress.progress = xp.toInt().coerceIn(0, max)
         }
 
-        btnEditProfile.setOnClickListener {}
+        btnProfileMenu.setOnClickListener {
+            val popup = PopupMenu(view.context, btnProfileMenu)
+            popup.menuInflater.inflate(R.menu.profile_menu, popup.menu)
 
-        btnSettings.setOnClickListener {
-            requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation).selectedItemId =
-                R.id.profileFragment
-        }
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
 
-        btnLogout.setOnClickListener {
-            auth.signOut()
+                    R.id.action_edit_profile -> {
+                        // TODO: Navigate to EditProfileFragment / Activity
+                        true
+                    }
 
-            val intent = Intent(requireContext(), LoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+                    R.id.action_settings -> {
+                        // TODO: Navigate to SettingsFragment / Activity
+                        true
+                    }
+
+                    R.id.action_logout -> {
+                        auth.signOut()
+                        val intent = Intent(requireContext(), LoginActivity::class.java)
+                        intent.flags =
+                            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        true
+                    }
+
+                    else -> false
+                }
+            }
+
+            popup.show()
         }
 
 

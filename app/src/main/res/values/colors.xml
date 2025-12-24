@@ -29,6 +29,10 @@
     <!-- profile screen  -->
     <color name="profile_lo_red">#E34B43</color>
 
+    <!-- danger / destructive actions -->
+    <color name="gc_danger">@color/profile_lo_red</color>
+
+
     <!-- Status bar -->
     <color name="status_bar_scrim">#B3001028</color>
 
