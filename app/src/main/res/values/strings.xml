@@ -41,4 +41,5 @@
     <string name="arena">Arena</string>
     <string name="learn">Learn</string>
     <string name="home">Home</string>
+    <string name="lt_gocode_gt"><![CDATA[<GoCode>]]></string>
 </resources>

@@ -26,7 +26,8 @@
     <color name="btn_primary">#0167ed</color>
     <color name="titles_primary">#4DA3FF</color>
 
-
+    <!-- profile screen  -->
+    <color name="profile_lo_red">#E34B43</color>
 
     <!-- Status bar -->
     <color name="status_bar_scrim">#B3001028</color>

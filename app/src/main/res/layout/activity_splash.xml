@@ -4,7 +4,6 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- Video -->
     <VideoView
         android:id="@+id/splashVideo"
         android:layout_width="match_parent"
@@ -12,7 +11,6 @@
         android:layout_gravity="center"
         android:keepScreenOn="true" />
 
-    <!-- Placeholder -->
     <ImageView
         android:id="@+id/splashPlaceholder"
         android:layout_width="match_parent"
@@ -35,7 +33,7 @@
             android:id="@+id/splashTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="&lt;GoCode&gt;"
+            android:text="@string/lt_gocode_gt"
             android:textSize="36sp"
             android:textStyle="bold"
             android:textColor="@android:color/white"
