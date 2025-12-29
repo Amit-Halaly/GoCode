@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiClient {
 
     private const val BASE_URL =
-        "https://odious-eun-uncredulously.ngrok-free.dev/"
+        "http://localhost:9080/"
 
 
     val execApi: ExecApi by lazy {

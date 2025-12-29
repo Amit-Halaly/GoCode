@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.models import LintRequest, RunRequest, LintResponse, RunResponse
-from app.services.java_runner import lint_java, run_java
+from models import LintRequest, RunRequest, LintResponse, RunResponse
+from services.java_runner import lint_java, run_java
 
 app = FastAPI(title="GoCode Execution API", version="0.1.0")
 
@@ -15,3 +15,9 @@ def lint(req: LintRequest):
 @app.post("/run", response_model=RunResponse)
 def run(req: RunRequest):
     return run_java(req.code, req.input or "")
+
+if __name__ == "__main__":
+    import os
+    import uvicorn
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug")
