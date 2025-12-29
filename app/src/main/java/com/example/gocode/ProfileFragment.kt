@@ -18,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 
+
 class ProfileFragment : Fragment() {
 
     private val auth by lazy { FirebaseAuth.getInstance() }
@@ -189,7 +190,7 @@ class ProfileFragment : Fragment() {
     private fun showAchievement(
         icon: Int, title: String, desc: String
     ) {
-        AchievementBottomSheet.newInstance(icon, title, desc)
+        AchievementInfoBottomSheet.newInstance(icon, title, desc)
             .show(parentFragmentManager, "achievement_bs")
     }
 

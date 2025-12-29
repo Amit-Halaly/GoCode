@@ -44,7 +44,7 @@
             android:exported="false"/>
 
         <activity
-            android:name=".RunTestActivity"
+            android:name=".ExerciseRunActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
