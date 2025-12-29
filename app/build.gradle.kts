@@ -56,7 +56,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.play.services.auth)
-    implementation("com.airbnb.android:lottie:6.4.0")
+    implementation(libs.lottie)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.logging.interceptor)
