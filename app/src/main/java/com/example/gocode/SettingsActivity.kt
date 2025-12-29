@@ -4,15 +4,15 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.switchmaterial.SwitchMaterial
 import android.widget.ImageView
+import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import com.example.gocode.repositories.AvatarRepository
+import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.example.gocode.repositories.AvatarRepository
-
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -21,126 +21,122 @@ class SettingsActivity : AppCompatActivity() {
     private var userListener: ListenerRegistration? = null
 
     private lateinit var prefs: SharedPreferences
+    private lateinit var avatarIv: ImageView
+
+    // ─────────────────────────────
+    // Avatar picker result
+    // ─────────────────────────────
+    private val avatarPickerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != RESULT_OK) return@registerForActivityResult
+
+            val avatarId = result.data?.getStringExtra("selectedAvatarId") ?: return@registerForActivityResult
+            updateAvatarUI(avatarId)
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
-        // init prefs
         prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        avatarIv = findViewById(R.id.settingsAvatar)
 
         setupBackButton()
         setupTitles()
         setupSwitches()
-        setupAvatarListener()
-
-        // TODO: לחבר ניווט למסכים:
-        // setupNavigationItems()
+        setupNavigationItems()
+        attachAvatarListener()
     }
 
     // ─────────────────────────────
-    // Back button
+    // Back
     // ─────────────────────────────
     private fun setupBackButton() {
-        findViewById<android.view.View>(R.id.btnBack).setOnClickListener {
-            finish()
-        }
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
     }
 
     // ─────────────────────────────
-    // Switches logic
+    // Switches
     // ─────────────────────────────
     private fun setupSwitches() {
 
-        // Notifications switch
         val notificationsSwitch =
-            findViewById<android.view.View>(R.id.itemNotifications).findViewById<SwitchMaterial>(R.id.switchItem)
+            findViewById<View>(R.id.itemNotifications)
+                .findViewById<SwitchMaterial>(R.id.switchItem)
 
-        // Learning mode switch
         val learningModeSwitch =
-            findViewById<android.view.View>(R.id.itemLearningMode).findViewById<SwitchMaterial>(R.id.switchItem)
+            findViewById<View>(R.id.itemLearningMode)
+                .findViewById<SwitchMaterial>(R.id.switchItem)
 
-        // Load saved values
-        notificationsSwitch.isChecked = prefs.getBoolean("notifications_enabled", true)
+        notificationsSwitch.isChecked =
+            prefs.getBoolean("notifications_enabled", true)
 
-        learningModeSwitch.isChecked = prefs.getBoolean("learning_mode", false)
+        learningModeSwitch.isChecked =
+            prefs.getBoolean("learning_mode", false)
 
-        // Save on change
-        notificationsSwitch.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("notifications_enabled", isChecked).apply()
+        notificationsSwitch.setOnCheckedChangeListener { _, v ->
+            prefs.edit().putBoolean("notifications_enabled", v).apply()
         }
 
-        learningModeSwitch.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("learning_mode", isChecked).apply()
-        }
-    }
-
-    /*
-    ─────────────────────────────
-    TODO – Navigation items (בהמשך)
-    ─────────────────────────────
-
-    private fun setupNavigationItems() {
-
-        findViewById<View>(R.id.itemEditProfile).setOnClickListener {
-            startActivity(Intent(this, EditProfileActivity::class.java))
-        }
-
-        findViewById<View>(R.id.itemChangeAvatar).setOnClickListener {
-            startActivity(Intent(this, AvatarPickerActivity::class.java))
-        }
-
-        findViewById<View>(R.id.itemAbout).setOnClickListener {
-            startActivity(Intent(this, AboutActivity::class.java))
+        learningModeSwitch.setOnCheckedChangeListener { _, v ->
+            prefs.edit().putBoolean("learning_mode", v).apply()
         }
     }
-    */
 
+    // ─────────────────────────────
+    // Titles
+    // ─────────────────────────────
     private fun setupTitles() {
+        findViewById<View>(R.id.itemEditProfile)
+            .findViewById<TextView>(R.id.title).text = "Edit Profile"
 
-        // Edit Profile
-        findViewById<View>(R.id.itemEditProfile).findViewById<TextView>(R.id.title).text =
-            "Edit Profile"
+        findViewById<View>(R.id.itemChangeAvatar)
+            .findViewById<TextView>(R.id.title).text = "Change Avatar"
 
-        // Change Avatar
-        findViewById<View>(R.id.itemChangeAvatar).findViewById<TextView>(R.id.title).text =
-            "Change Avatar"
+        findViewById<View>(R.id.itemNotifications)
+            .findViewById<TextView>(R.id.title).text = "Notifications"
 
-        // Notifications
-        findViewById<View>(R.id.itemNotifications).findViewById<TextView>(R.id.title).text =
-            "Notifications"
+        findViewById<View>(R.id.itemLearningMode)
+            .findViewById<TextView>(R.id.title).text = "Learning Mode"
 
-        // Learning Mode
-        findViewById<View>(R.id.itemLearningMode).findViewById<TextView>(R.id.title).text =
-            "Learning Mode"
-
-        // About
-        findViewById<View>(R.id.itemAbout).findViewById<TextView>(R.id.title).text = "About"
+        findViewById<View>(R.id.itemAbout)
+            .findViewById<TextView>(R.id.title).text = "About"
     }
 
-    private fun setupAvatarListener() {
+    // ─────────────────────────────
+    // Navigation
+    // ─────────────────────────────
+    private fun setupNavigationItems() {
+        findViewById<View>(R.id.itemChangeAvatar).setOnClickListener {
+            avatarPickerLauncher.launch(
+                Intent(this, AvatarPickerActivity::class.java)
+            )
+        }
+    }
+
+    // ─────────────────────────────
+    // Firestore listener
+    // ─────────────────────────────
+    private fun attachAvatarListener() {
         val user = auth.currentUser ?: return
 
-        val avatarIv = findViewById<ImageView>(R.id.settingsAvatar)
-
-        userListener = db.collection("users").document(user.uid).addSnapshotListener { doc, e ->
-            if (e != null || doc == null || !doc.exists()) return@addSnapshotListener
-
-            doc.getString("avatarId")?.takeIf { it.isNotBlank() }?.let { avatarId ->
-
-                val avatars = AvatarRepository.load(this)
-                val avatarItem = avatars.firstOrNull { it.id == avatarId }
-
-                if (avatarItem != null) {
-                    val resId = AvatarRepository.resolveDrawableResId(
-                        this, avatarItem.drawableName
-                    )
-                    if (resId != 0) {
-                        avatarIv.setImageResource(resId)
-                    }
-                }
+        userListener = db.collection("users")
+            .document(user.uid)
+            .addSnapshotListener { doc, _ ->
+                val avatarId = doc?.getString("avatarId") ?: return@addSnapshotListener
+                updateAvatarUI(avatarId)
             }
-        }
+    }
+
+    // ─────────────────────────────
+    // UI update
+    // ─────────────────────────────
+    private fun updateAvatarUI(avatarId: String) {
+        val avatars = AvatarRepository.load(this)
+        val avatar = avatars.firstOrNull { it.id == avatarId } ?: return
+
+        val resId = AvatarRepository.resolveDrawableResId(this, avatar.drawableName)
+        if (resId != 0) avatarIv.setImageResource(resId)
     }
 
     override fun onDestroy() {
@@ -148,6 +144,4 @@ class SettingsActivity : AppCompatActivity() {
         userListener?.remove()
         userListener = null
     }
-
-
 }

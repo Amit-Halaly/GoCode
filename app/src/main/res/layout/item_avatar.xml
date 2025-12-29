@@ -3,7 +3,7 @@
     android:id="@+id/avatarCard"
     android:layout_width="92dp"
     android:layout_height="92dp"
-    android:layout_marginEnd="14dp"
+    android:layout_margin="8dp"
     android:background="@drawable/bg_avatar_card"
     android:padding="8dp">
 
