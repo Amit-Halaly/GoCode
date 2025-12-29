@@ -112,9 +112,12 @@ class ProfileFragment : Fragment() {
                     }
 
                     R.id.action_settings -> {
-                        // TODO: Navigate to SettingsFragment / Activity
+                        startActivity(
+                            Intent(requireContext(), SettingsActivity::class.java)
+                        )
                         true
                     }
+
 
                     R.id.action_logout -> {
                         auth.signOut()
