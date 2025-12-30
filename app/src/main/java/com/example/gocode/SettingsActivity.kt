@@ -92,6 +92,13 @@ class SettingsActivity : AppCompatActivity() {
 
 
     private fun setupNavigationItems() {
+
+        findViewById<View>(R.id.itemEditProfile).setOnClickListener {
+            startActivity(
+                Intent(this, EditProfileActivity::class.java)
+            )
+        }
+
         findViewById<View>(R.id.itemChangeAvatar).setOnClickListener {
             avatarPickerLauncher.launch(
                 Intent(this, AvatarPickerActivity::class.java)
