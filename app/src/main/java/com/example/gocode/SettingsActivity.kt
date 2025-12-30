@@ -23,14 +23,12 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var prefs: SharedPreferences
     private lateinit var avatarIv: ImageView
 
-    // ─────────────────────────────
-    // Avatar picker result
-    // ─────────────────────────────
     private val avatarPickerLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode != RESULT_OK) return@registerForActivityResult
 
-            val avatarId = result.data?.getStringExtra("selectedAvatarId") ?: return@registerForActivityResult
+            val avatarId =
+                result.data?.getStringExtra("selectedAvatarId") ?: return@registerForActivityResult
             updateAvatarUI(avatarId)
         }
 
@@ -48,31 +46,23 @@ class SettingsActivity : AppCompatActivity() {
         attachAvatarListener()
     }
 
-    // ─────────────────────────────
-    // Back
-    // ─────────────────────────────
+
     private fun setupBackButton() {
         findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
     }
 
-    // ─────────────────────────────
-    // Switches
-    // ─────────────────────────────
+
     private fun setupSwitches() {
 
         val notificationsSwitch =
-            findViewById<View>(R.id.itemNotifications)
-                .findViewById<SwitchMaterial>(R.id.switchItem)
+            findViewById<View>(R.id.itemNotifications).findViewById<SwitchMaterial>(R.id.switchItem)
 
         val learningModeSwitch =
-            findViewById<View>(R.id.itemLearningMode)
-                .findViewById<SwitchMaterial>(R.id.switchItem)
+            findViewById<View>(R.id.itemLearningMode).findViewById<SwitchMaterial>(R.id.switchItem)
 
-        notificationsSwitch.isChecked =
-            prefs.getBoolean("notifications_enabled", true)
+        notificationsSwitch.isChecked = prefs.getBoolean("notifications_enabled", true)
 
-        learningModeSwitch.isChecked =
-            prefs.getBoolean("learning_mode", false)
+        learningModeSwitch.isChecked = prefs.getBoolean("learning_mode", false)
 
         notificationsSwitch.setOnCheckedChangeListener { _, v ->
             prefs.edit().putBoolean("notifications_enabled", v).apply()
@@ -83,29 +73,24 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    // ─────────────────────────────
-    // Titles
-    // ─────────────────────────────
+
     private fun setupTitles() {
-        findViewById<View>(R.id.itemEditProfile)
-            .findViewById<TextView>(R.id.title).text = "Edit Profile"
+        findViewById<View>(R.id.itemEditProfile).findViewById<TextView>(R.id.title).text =
+            "Edit Profile"
 
-        findViewById<View>(R.id.itemChangeAvatar)
-            .findViewById<TextView>(R.id.title).text = "Change Avatar"
+        findViewById<View>(R.id.itemChangeAvatar).findViewById<TextView>(R.id.title).text =
+            "Change Avatar"
 
-        findViewById<View>(R.id.itemNotifications)
-            .findViewById<TextView>(R.id.title).text = "Notifications"
+        findViewById<View>(R.id.itemNotifications).findViewById<TextView>(R.id.title).text =
+            "Notifications"
 
-        findViewById<View>(R.id.itemLearningMode)
-            .findViewById<TextView>(R.id.title).text = "Learning Mode"
+        findViewById<View>(R.id.itemLearningMode).findViewById<TextView>(R.id.title).text =
+            "Learning Mode"
 
-        findViewById<View>(R.id.itemAbout)
-            .findViewById<TextView>(R.id.title).text = "About"
+        findViewById<View>(R.id.itemAbout).findViewById<TextView>(R.id.title).text = "About"
     }
 
-    // ─────────────────────────────
-    // Navigation
-    // ─────────────────────────────
+
     private fun setupNavigationItems() {
         findViewById<View>(R.id.itemChangeAvatar).setOnClickListener {
             avatarPickerLauncher.launch(
@@ -114,23 +99,17 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    // ─────────────────────────────
-    // Firestore listener
-    // ─────────────────────────────
+
     private fun attachAvatarListener() {
         val user = auth.currentUser ?: return
 
-        userListener = db.collection("users")
-            .document(user.uid)
-            .addSnapshotListener { doc, _ ->
-                val avatarId = doc?.getString("avatarId") ?: return@addSnapshotListener
-                updateAvatarUI(avatarId)
-            }
+        userListener = db.collection("users").document(user.uid).addSnapshotListener { doc, _ ->
+            val avatarId = doc?.getString("avatarId") ?: return@addSnapshotListener
+            updateAvatarUI(avatarId)
+        }
     }
 
-    // ─────────────────────────────
-    // UI update
-    // ─────────────────────────────
+
     private fun updateAvatarUI(avatarId: String) {
         val avatars = AvatarRepository.load(this)
         val avatar = avatars.firstOrNull { it.id == avatarId } ?: return
