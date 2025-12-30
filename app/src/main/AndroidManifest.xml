@@ -54,6 +54,11 @@
             android:name=".AvatarPickerActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".AboutActivity"
+            android:exported="false" />
+
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

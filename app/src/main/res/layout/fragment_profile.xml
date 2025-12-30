@@ -8,7 +8,7 @@
 
     <ImageButton
         android:id="@+id/btnProfileMenu"
-        android:layout_width="44dp"
+        android:layout_width="48dp"
         android:layout_height="55dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="12dp"
@@ -307,7 +307,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:scrollbars="none">
+                        android:scrollbars="none"
+                        android:importantForAccessibility="no">
 
                         <LinearLayout
                             android:layout_width="wrap_content"

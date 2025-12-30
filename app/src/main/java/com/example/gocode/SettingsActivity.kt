@@ -97,6 +97,13 @@ class SettingsActivity : AppCompatActivity() {
                 Intent(this, AvatarPickerActivity::class.java)
             )
         }
+
+        findViewById<View>(R.id.itemAbout).setOnClickListener {
+            startActivity(
+                Intent(this, AboutActivity::class.java)
+            )
+        }
+
     }
 
 

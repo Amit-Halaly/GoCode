@@ -106,11 +106,6 @@ class ProfileFragment : Fragment() {
             popup.setOnMenuItemClickListener { item ->
                 when (item.itemId) {
 
-                    R.id.action_edit_profile -> {
-                        // TODO: Navigate to EditProfileFragment / Activity
-                        true
-                    }
-
                     R.id.action_settings -> {
                         startActivity(
                             Intent(requireContext(), SettingsActivity::class.java)
