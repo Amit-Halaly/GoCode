@@ -14,8 +14,8 @@
         android:layout_marginEnd="12dp"
         android:background="@android:color/transparent"
         android:contentDescription="Profile menu"
-        android:padding="10dp"
         android:elevation="16dp"
+        android:padding="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_more_vert"
@@ -27,12 +27,12 @@
         android:layout_height="match_parent"
         android:fillViewport="true"
         android:overScrollMode="never"
-        app:layout_constraintTop_toBottomOf="@id/btnProfileMenu"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/btnProfileMenu">
 
-    <LinearLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -202,7 +202,6 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Courses Card -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/profileCoursesCard"
                 android:layout_width="match_parent"
@@ -278,7 +277,6 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Achievements Card -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/profileAchievementsCard"
                 android:layout_width="match_parent"
@@ -307,8 +305,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:scrollbars="none"
-                        android:importantForAccessibility="no">
+                        android:importantForAccessibility="no"
+                        android:scrollbars="none">
 
                         <LinearLayout
                             android:layout_width="wrap_content"

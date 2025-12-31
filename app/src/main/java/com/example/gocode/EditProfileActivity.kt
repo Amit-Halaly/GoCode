@@ -54,14 +54,11 @@ class EditProfileActivity : AppCompatActivity() {
         userListener = db.collection("users").document(user.uid).addSnapshotListener { doc, e ->
             if (e != null || doc == null || !doc.exists()) return@addSnapshotListener
 
-            // Username
             etUsername.setText(doc.getString("username") ?: "")
 
-            // Language
             selectedLanguage = doc.getString("primaryLanguage") ?: "Python"
             updateLanguageUI()
 
-            // Avatar
             doc.getString("avatarId")?.let { avatarId ->
                 val avatar = AvatarRepository.load(this).firstOrNull { it.id == avatarId }
 
