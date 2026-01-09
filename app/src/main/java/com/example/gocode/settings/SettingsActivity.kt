@@ -18,8 +18,6 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.SetOptions
-import com.google.firebase.messaging.FirebaseMessaging
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -30,23 +28,13 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var prefs: SharedPreferences
     private lateinit var avatarIv: ImageView
 
-    private val requestNotificationsPermission =
+    private val requestNotificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
-                fetchAndSaveFcmToken()
-                setNotificationsEnabled(true)
+                enableNotifications(true)
             } else {
-                setNotificationsEnabled(false)
-                updateNotificationsSwitchUi(false)
+                updateNotificationsSwitch(false)
             }
-        }
-
-    private val avatarPickerLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode != RESULT_OK) return@registerForActivityResult
-            val avatarId =
-                result.data?.getStringExtra("selectedAvatarId") ?: return@registerForActivityResult
-            updateAvatarUI(avatarId)
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,113 +51,92 @@ class SettingsActivity : AppCompatActivity() {
         attachAvatarListener()
     }
 
-    private fun setupBackButton() {
-        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
-    }
-
     private fun setupSwitches() {
 
         val notificationsSwitch =
             findViewById<View>(R.id.itemNotifications).findViewById<SwitchMaterial>(R.id.switchItem)
 
-        val learningModeSwitch =
-            findViewById<View>(R.id.itemLearningMode).findViewById<SwitchMaterial>(R.id.switchItem)
-
         notificationsSwitch.isChecked = prefs.getBoolean("notifications_enabled", false)
-
-        learningModeSwitch.isChecked = prefs.getBoolean("learning_mode", false)
 
         notificationsSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                enableNotificationsFlow()
+                requestPermissionIfNeeded()
             } else {
-                setNotificationsEnabled(false)
+                enableNotifications(false)
             }
-        }
-
-        learningModeSwitch.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("learning_mode", isChecked).apply()
         }
     }
 
-    private fun enableNotificationsFlow() {
+    private fun requestPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val granted = ContextCompat.checkSelfPermission(
                 this, Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
 
             if (granted) {
-                fetchAndSaveFcmToken()
-                setNotificationsEnabled(true)
+                enableNotifications(true)
             } else {
-                requestNotificationsPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                requestNotificationPermission.launch(
+                    Manifest.permission.POST_NOTIFICATIONS
+                )
             }
         } else {
-            fetchAndSaveFcmToken()
-            setNotificationsEnabled(true)
+            enableNotifications(true)
         }
     }
 
-    private fun fetchAndSaveFcmToken() {
-        val user = auth.currentUser ?: return
-
-        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-            db.collection("users").document(user.uid).set(
-                mapOf("fcmToken" to token), SetOptions.merge()
-            )
-        }
-    }
-
-    private fun setNotificationsEnabled(enabled: Boolean) {
+    private fun enableNotifications(enabled: Boolean) {
         prefs.edit().putBoolean("notifications_enabled", enabled).apply()
 
-        val user = auth.currentUser ?: return
-        db.collection("users").document(user.uid).set(
-            mapOf("notificationsEnabled" to enabled), SetOptions.merge()
-        )
+        if (enabled) {
+            NotificationScheduler.enable(this)
+        } else {
+            NotificationScheduler.disable(this)
+        }
     }
 
-    private fun updateNotificationsSwitchUi(checked: Boolean) {
+    private fun updateNotificationsSwitch(checked: Boolean) {
         val notificationsSwitch =
             findViewById<View>(R.id.itemNotifications).findViewById<SwitchMaterial>(R.id.switchItem)
 
         notificationsSwitch.setOnCheckedChangeListener(null)
         notificationsSwitch.isChecked = checked
         notificationsSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) enableNotificationsFlow()
-            else setNotificationsEnabled(false)
+            if (isChecked) requestPermissionIfNeeded()
+            else enableNotifications(false)
         }
+    }
+
+    private fun setupBackButton() {
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
     }
 
     private fun setupTitles() {
         findViewById<View>(R.id.itemEditProfile).findViewById<TextView>(R.id.title).text =
             "Edit Profile"
+
         findViewById<View>(R.id.itemChangeAvatar).findViewById<TextView>(R.id.title).text =
             "Change Avatar"
+
         findViewById<View>(R.id.itemNotifications).findViewById<TextView>(R.id.title).text =
-            "settings"
-        findViewById<View>(R.id.itemLearningMode).findViewById<TextView>(R.id.title).text =
-            "Learning Mode"
-        findViewById<View>(R.id.itemAbout).findViewById<TextView>(R.id.title).text =
-            "About"
+            "Notifications"
+
+        findViewById<View>(R.id.itemAbout).findViewById<TextView>(R.id.title).text = "About"
     }
 
-
     private fun setupNavigationItems() {
-
         findViewById<View>(R.id.itemEditProfile).setOnClickListener {
             startActivity(Intent(this, EditProfileActivity::class.java))
         }
 
         findViewById<View>(R.id.itemChangeAvatar).setOnClickListener {
-            avatarPickerLauncher.launch(Intent(this, AvatarPickerActivity::class.java))
+            startActivity(Intent(this, AvatarPickerActivity::class.java))
         }
 
         findViewById<View>(R.id.itemAbout).setOnClickListener {
             startActivity(Intent(this, AboutActivity::class.java))
         }
     }
-
 
     private fun attachAvatarListener() {
         val user = auth.currentUser ?: return
@@ -184,12 +151,12 @@ class SettingsActivity : AppCompatActivity() {
         val avatar = AvatarRepository.load(this).firstOrNull { it.id == avatarId } ?: return
 
         val resId = AvatarRepository.resolveDrawableResId(this, avatar.drawableName)
+
         if (resId != 0) avatarIv.setImageResource(resId)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         userListener?.remove()
-        userListener = null
     }
 }
