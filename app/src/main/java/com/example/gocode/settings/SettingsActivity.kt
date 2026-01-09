@@ -65,6 +65,7 @@ class SettingsActivity : AppCompatActivity() {
                 enableNotifications(false)
             }
         }
+
     }
 
     private fun requestPermissionIfNeeded() {
@@ -120,6 +121,9 @@ class SettingsActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.itemNotifications).findViewById<TextView>(R.id.title).text =
             "Notifications"
+
+        findViewById<View>(R.id.itemLearningMode).findViewById<TextView>(R.id.title).text =
+            "Learning Mode"
 
         findViewById<View>(R.id.itemAbout).findViewById<TextView>(R.id.title).text = "About"
     }
