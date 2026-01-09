@@ -1,11 +1,12 @@
-package com.example.gocode
+package com.example.gocode.settings
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.gocode.R
 import com.example.gocode.adapters.AvatarAdapter
 import com.example.gocode.repositories.AvatarRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -20,7 +21,7 @@ class AvatarPickerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_avatar_picker)
 
-        findViewById<android.view.View>(R.id.btnBack).setOnClickListener {
+        findViewById<View>(R.id.btnBack).setOnClickListener {
             finish()
         }
 
@@ -50,7 +51,7 @@ class AvatarPickerActivity : AppCompatActivity() {
                         putExtra("selectedAvatarId", selectedAvatar.id)
                     }
 
-                    setResult(Activity.RESULT_OK, result)
+                    setResult(RESULT_OK, result)
                     finish()
                 }
             }

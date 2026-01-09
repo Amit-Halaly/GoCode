@@ -47,20 +47,28 @@
             android:exported="false" />
 
         <activity
-            android:name=".SettingsActivity"
+            android:name=".settings.SettingsActivity"
             android:exported="false" />
 
         <activity
-            android:name=".AvatarPickerActivity"
+            android:name=".settings.AvatarPickerActivity"
             android:exported="false" />
 
         <activity
-            android:name=".AboutActivity"
+            android:name=".settings.AboutActivity"
             android:exported="false" />
 
         <activity
-            android:name=".EditProfileActivity"
+            android:name=".settings.EditProfileActivity"
             android:exported="false" />
+
+        <service
+            android:name=".settings.GoCodeMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
 
         <meta-data

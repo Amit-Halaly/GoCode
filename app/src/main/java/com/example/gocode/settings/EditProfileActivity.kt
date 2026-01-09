@@ -1,4 +1,4 @@
-package com.example.gocode
+package com.example.gocode.settings
 
 import android.os.Bundle
 import android.widget.EditText
@@ -6,6 +6,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
+import com.example.gocode.R
 import com.example.gocode.repositories.AvatarRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
