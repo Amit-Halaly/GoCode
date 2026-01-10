@@ -43,7 +43,10 @@ class ProfileFragment : Fragment() {
 
         val btnProfileMenu = view.findViewById<ImageButton>(R.id.btnProfileMenu)
 
-        val avatarIv = view.findViewById<ImageView>(R.id.avatarImage)
+        val avatarWithStatus = view.findViewById<View>(R.id.avatarWithStatus)
+        val avatarIv = avatarWithStatus.findViewById<ImageView>(R.id.avatarImage)
+        val statusDot = avatarWithStatus.findViewById<View>(R.id.avatarStatusDot)
+
         val usernameTv = view.findViewById<TextView>(R.id.profileUsername)
         val levelTv = view.findViewById<TextView>(R.id.profileLevelText)
         val xpTv = view.findViewById<TextView>(R.id.profileXpText)
@@ -62,14 +65,17 @@ class ProfileFragment : Fragment() {
         userListener = db.collection("users").document(user.uid).addSnapshotListener { doc, e ->
             if (e != null || doc == null || !doc.exists()) return@addSnapshotListener
 
+            // Username
             doc.getString("username")?.takeIf { it.isNotBlank() }?.let { usernameTv.text = it }
 
-            doc.getString("avatarId")?.takeIf { it.isNotBlank() }?.let { avatarId ->
-                val avatars = AvatarRepository.load(requireContext())
-                val avatarItem = avatars.firstOrNull { it.id == avatarId }
-                if (avatarItem != null) {
+            // Avatar
+            doc.getString("avatarId")?.let { avatarId ->
+                val avatarItem =
+                    AvatarRepository.load(requireContext()).firstOrNull { it.id == avatarId }
+
+                avatarItem?.let {
                     val resId = AvatarRepository.resolveDrawableResId(
-                        requireContext(), avatarItem.drawableName
+                        requireContext(), it.drawableName
                     )
                     if (resId != 0) avatarIv.setImageResource(resId)
                 }
@@ -85,6 +91,12 @@ class ProfileFragment : Fragment() {
             val max = xpToNext.toInt().coerceAtLeast(1)
             xpProgress.max = max
             xpProgress.progress = xp.toInt().coerceIn(0, max)
+
+            val status = doc.getString("onlineStatus") ?: "offline"
+            statusDot.setBackgroundResource(
+                if (status == "online") R.drawable.bg_status_online
+                else R.drawable.bg_status_offline
+            )
         }
 
         btnProfileMenu.setOnClickListener {
@@ -96,24 +108,18 @@ class ProfileFragment : Fragment() {
             redTitle.setSpan(
                 android.text.style.ForegroundColorSpan(
                     resources.getColor(R.color.profile_lo_red, null)
-                ),
-                0,
-                redTitle.length,
-                0
+                ), 0, redTitle.length, 0
             )
             logoutItem.title = redTitle
 
-
             popup.setOnMenuItemClickListener { item ->
                 when (item.itemId) {
-
                     R.id.action_settings -> {
                         startActivity(
                             Intent(requireContext(), SettingsActivity::class.java)
                         )
                         true
                     }
-
 
                     R.id.action_logout -> {
                         auth.signOut()
@@ -131,10 +137,10 @@ class ProfileFragment : Fragment() {
             popup.show()
         }
 
-
         view.post {
-            val bottomNav =
-                requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation)
+            val bottomNav = requireActivity().findViewById<BottomNavigationView>(
+                R.id.bottom_navigation
+            )
             val navHeight = bottomNav.height
             view.setPadding(
                 view.paddingLeft, view.paddingTop, view.paddingRight, navHeight
@@ -182,16 +188,12 @@ class ProfileFragment : Fragment() {
                 R.drawable.ach_streak_7, "7 Day Streak", "Log in 7 days in a row."
             )
         }
-
     }
 
-    private fun showAchievement(
-        icon: Int, title: String, desc: String
-    ) {
+    private fun showAchievement(icon: Int, title: String, desc: String) {
         AchievementBottomSheet.newInstance(icon, title, desc)
             .show(parentFragmentManager, "achievement_bs")
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()

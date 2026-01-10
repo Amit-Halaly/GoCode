@@ -52,13 +52,13 @@
         </LinearLayout>
 
 
-        <ImageView
-            android:id="@+id/settingsAvatar"
+        <include
+            android:id="@+id/avatarWithStatus"
+            layout="@layout/view_avatar_with_status"
             android:layout_width="96dp"
             android:layout_height="96dp"
-            android:elevation="4dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/avatar_alien"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 

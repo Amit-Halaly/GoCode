@@ -1,6 +1,7 @@
 package com.example.gocode.settings
 
 import android.os.Bundle
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
@@ -20,7 +21,9 @@ class EditProfileActivity : AppCompatActivity() {
     private var userListener: ListenerRegistration? = null
 
     private lateinit var etUsername: EditText
-    private lateinit var avatarImage: ImageView
+
+    private lateinit var avatarIv: ImageView
+    private lateinit var statusDot: View
 
     private lateinit var btnPython: AppCompatButton
     private lateinit var btnJava: AppCompatButton
@@ -41,13 +44,17 @@ class EditProfileActivity : AppCompatActivity() {
 
     private fun bindViews() {
         etUsername = findViewById(R.id.etUsername)
-        avatarImage = findViewById(R.id.avatarImage)
+
+        val avatarWithStatus = findViewById<View>(R.id.editAvatarWithStatus)
+        avatarIv = avatarWithStatus.findViewById(R.id.avatarImage)
+        statusDot = avatarWithStatus.findViewById(R.id.avatarStatusDot)
 
         btnPython = findViewById(R.id.btnPython)
         btnJava = findViewById(R.id.btnJava)
         btnC = findViewById(R.id.btnC)
         btnSave = findViewById(R.id.btnSave)
     }
+
 
     private fun listenToUser() {
         val user = auth.currentUser ?: return
@@ -68,25 +75,28 @@ class EditProfileActivity : AppCompatActivity() {
                         this, it.drawableName
                     )
                     if (resId != 0) {
-                        avatarImage.setImageResource(resId)
+                        avatarIv.setImageResource(resId)
                     }
                 }
             }
+
+            val status = doc.getString("onlineStatus") ?: "offline"
+            statusDot.setBackgroundResource(
+                if (status == "online") R.drawable.bg_status_online
+                else R.drawable.bg_status_offline
+            )
         }
     }
 
     private fun setupLanguageButtons() {
-
         btnPython.setOnClickListener {
             selectedLanguage = "Python"
             updateLanguageUI()
         }
-
         btnJava.setOnClickListener {
             selectedLanguage = "Java"
             updateLanguageUI()
         }
-
         btnC.setOnClickListener {
             selectedLanguage = "C"
             updateLanguageUI()
@@ -114,7 +124,9 @@ class EditProfileActivity : AppCompatActivity() {
 
             val username = etUsername.text.toString().trim()
             if (username.isEmpty()) {
-                Toast.makeText(this, "Username cannot be empty", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this, "Username cannot be empty", Toast.LENGTH_SHORT
+                ).show()
                 return@setOnClickListener
             }
 
@@ -123,7 +135,9 @@ class EditProfileActivity : AppCompatActivity() {
             )
 
             db.collection("users").document(user.uid).update(updates).addOnSuccessListener {
-                Toast.makeText(this, "Profile updated", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this, "Profile updated", Toast.LENGTH_SHORT
+                ).show()
                 finish()
             }
         }

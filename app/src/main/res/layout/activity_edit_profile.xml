@@ -114,17 +114,15 @@
                     app:backgroundTint="@null" />
             </LinearLayout>
 
-            <ImageView
-                android:id="@+id/avatarImage"
+            <include
+                android:id="@+id/editAvatarWithStatus"
+                layout="@layout/view_avatar_with_status"
                 android:layout_width="250dp"
                 android:layout_height="250dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="32dp"
-                android:layout_marginBottom="24dp"
-                android:elevation="12dp"
-                android:padding="10dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/avatar_alien" />
+                android:layout_marginBottom="24dp" />
+
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

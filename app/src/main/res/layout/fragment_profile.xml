@@ -41,17 +41,15 @@
             android:paddingEnd="20dp"
             android:paddingBottom="22dp">
 
-            <ImageView
-                android:id="@+id/avatarImage"
-                android:layout_width="140dp"
-                android:layout_height="140dp"
+            <include
+                android:id="@+id/avatarWithStatus"
+                layout="@layout/view_avatar_with_status"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="12dp"
-                android:elevation="12dp"
-                android:padding="6dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/avatar_alien" />
+                android:layout_marginTop="12dp" />
+
+
 
             <TextView
                 android:id="@+id/profileUsername"
