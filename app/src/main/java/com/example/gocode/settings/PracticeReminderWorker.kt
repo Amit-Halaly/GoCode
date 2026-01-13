@@ -32,11 +32,12 @@ class PracticeReminderWorker(
         createChannel()
 
         val messages = listOf(
-            "Time to practice 🚀",
-            "One challenge a day keeps bugs away 🧠",
-            "Your streak is waiting 🔥",
-            "Sharpen your coding skills today 💻",
-            "5 minutes of practice goes a long way ⏱️"
+            "wallac Time to practice 🚀",
+            "wallac One challenge a day keeps the bugs away 🧠",
+            "wallac Your streak is waiting 🔥",
+            "wallac Sharpen your coding skills today 💻",
+            "wallac 5 minutes of practice goes a long way ⏱️",
+            "wallac i miss you pls come back to me"
         )
 
         val notification =
