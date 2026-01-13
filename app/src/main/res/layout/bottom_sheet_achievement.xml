@@ -10,7 +10,7 @@
         android:layout_width="44dp"
         android:layout_height="5dp"
         android:layout_gravity="center_horizontal"
-        android:background="#2E3E58" />
+        android:background="@drawable/bg_sheet_handle" />
 
     <ImageView
         android:id="@+id/bsIcon"
