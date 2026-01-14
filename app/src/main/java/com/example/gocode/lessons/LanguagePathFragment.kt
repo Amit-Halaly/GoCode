@@ -31,14 +31,24 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
         rvPathNodes.itemAnimator = null
 
         val template = CurriculumRepository.section1(language)
-        val completedIds = emptySet<String>() // בהמשך יבוא מ-Firestore
+        val completedIds = emptySet<String>()
         val nodes = CurriculumRepository.applyProgress(template, completedIds)
 
         val adapter = PathNodesAdapter(nodes) { node ->
-            NodeStartBottomSheet.newInstance(node).show(
-                childFragmentManager, "NodeStartBottomSheet"
-            )
+
+            NodeStartBottomSheet.newInstance(node, xp = 20) { clickedNode ->
+
+                if (clickedNode.type == PathNodeType.LESSON) {
+                    startActivity(
+                        android.content.Intent(
+                            requireContext(),
+                            com.example.gocode.lessons.LessonFlowActivity::class.java
+                        )
+                    )
+                }
+            }.show(childFragmentManager, "NodeStartBottomSheet")
         }
+
 
         rvPathNodes.layoutManager = LinearLayoutManager(requireContext())
         rvPathNodes.adapter = adapter

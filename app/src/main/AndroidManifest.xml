@@ -65,6 +65,10 @@
             android:name=".settings.EditProfileActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".lessons.LessonFlowActivity"
+            android:exported="false" />
+
 <!--        <activity-->
 <!--            android:name=".RunTestActivity"-->
 <!--            android:exported="true">-->
