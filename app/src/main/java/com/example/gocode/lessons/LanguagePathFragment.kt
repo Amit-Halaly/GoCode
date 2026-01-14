@@ -4,10 +4,10 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gocode.R
 import com.example.gocode.adapters.PathNodesAdapter
-import com.google.android.material.snackbar.Snackbar
 
 class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
 
@@ -23,23 +23,33 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
 
         val tvUnitTop = view.findViewById<TextView>(R.id.tvUnitTop)
         val tvUnitTitle = view.findViewById<TextView>(R.id.tvUnitTitle)
+        val rvPathNodes = view.findViewById<RecyclerView>(R.id.rvPathNodes)
 
         tvUnitTop.text = "SECTION 1 • ${language.uppercase()}"
         tvUnitTitle.text = "Getting Started"
 
-        val rvPathNodes = view.findViewById<RecyclerView>(R.id.rvPathNodes)
         rvPathNodes.itemAnimator = null
+
         val template = CurriculumRepository.section1(language)
-        val completedIds = setOf<String>(
-
-        )
-
+        val completedIds = emptySet<String>() // בהמשך יבוא מ-Firestore
         val nodes = CurriculumRepository.applyProgress(template, completedIds)
 
-
-        rvPathNodes.adapter = PathNodesAdapter(nodes) { node ->
-            Snackbar.make(view, "Clicked: ${node.type} (${node.id})", Snackbar.LENGTH_SHORT).show()
+        val adapter = PathNodesAdapter(nodes) { node ->
+            NodeStartBottomSheet.newInstance(node).show(
+                childFragmentManager, "NodeStartBottomSheet"
+            )
         }
+
+        rvPathNodes.layoutManager = LinearLayoutManager(requireContext())
+        rvPathNodes.adapter = adapter
+
+        rvPathNodes.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    adapter.kickActivePulse()
+                }
+            }
+        })
     }
 
     companion object {

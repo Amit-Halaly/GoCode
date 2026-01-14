@@ -1,10 +1,9 @@
 package com.example.gocode.adapters
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
 import com.example.gocode.R
@@ -27,19 +26,33 @@ class PathNodesAdapter(
     }
 
     override fun onBindViewHolder(holder: NodeVH, position: Int) {
-        holder.bind(
-            item = items[position],
-            isActive = position == activeIndex && !items[position].locked,
-            onNodeClick = onNodeClick
-        )
+        val item = items[position]
+        val lockedNow = item.locked
+        val isActive = (position == activeIndex) && !lockedNow
+
+        holder.bind(item = item, isActive = isActive, onNodeClick = onNodeClick)
+    }
+
+
+    override fun onViewAttachedToWindow(holder: NodeVH) {
+        super.onViewAttachedToWindow(holder)
+
+        val pos = holder.bindingAdapterPosition
+        if (pos == RecyclerView.NO_POSITION) return
+
+        val item = items[pos]
+        val isActive = (pos == activeIndex) && !item.locked
+        holder.applyPulse(isActive)
+    }
+
+
+    fun kickActivePulse() {
+        if (activeIndex in items.indices) {
+            notifyItemChanged(activeIndex)
+        }
     }
 
     override fun getItemCount(): Int = items.size
-
-    override fun onViewRecycled(holder: NodeVH) {
-        super.onViewRecycled(holder)
-        holder.stopAnimations()
-    }
 
     class NodeVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
@@ -49,14 +62,11 @@ class PathNodesAdapter(
             itemView.findViewById(R.id.progressRing)
         private val lottieNodeIcon: LottieAnimationView = itemView.findViewById(R.id.lottieNodeIcon)
 
-        private var pulseAnimX: ObjectAnimator? = null
-        private var pulseAnimY: ObjectAnimator? = null
+        private var lastLottieRes: Int? = null
 
         fun bind(
             item: PathNodeItem, isActive: Boolean, onNodeClick: (PathNodeItem) -> Unit
         ) {
-            val lockedNow = item.locked
-
             val lottieRes = when (item.type) {
                 PathNodeType.LESSON -> R.raw.lesson
                 PathNodeType.PRACTICE -> R.raw.practice
@@ -64,75 +74,52 @@ class PathNodesAdapter(
                 PathNodeType.CODE -> R.raw.code
             }
 
-            lottieNodeIcon.cancelAnimation()
-            lottieNodeIcon.setAnimation(lottieRes)
-            lottieNodeIcon.progress = 0f
-            lottieNodeIcon.playAnimation()
+            if (lastLottieRes != lottieRes) {
+                lastLottieRes = lottieRes
+                lottieNodeIcon.cancelAnimation()
+                lottieNodeIcon.setAnimation(lottieRes)
+                lottieNodeIcon.progress = 0f
+            }
+
+            if (!lottieNodeIcon.isAnimating) {
+                lottieNodeIcon.playAnimation()
+            }
 
             progressRing.progress = item.progressPercent.coerceIn(0, 100)
 
-            if (lockedNow) {
+            if (item.locked) {
                 cardNode.alpha = 0.35f
                 progressRing.alpha = 0.18f
-                lottieNodeIcon.alpha = 0.35f
-                cardNode.isClickable = false
+                lottieNodeIcon.alpha = 0.55f
             } else {
                 cardNode.alpha = 1f
                 progressRing.alpha = 1f
                 lottieNodeIcon.alpha = 1f
-                cardNode.isClickable = true
             }
 
             val lp = nodeWrapper.layoutParams as ViewGroup.MarginLayoutParams
             lp.leftMargin = dp(itemView, item.offsetDp)
             lp.rightMargin = 0
             nodeWrapper.layoutParams = lp
-
-            if (isActive && !lockedNow) {
-                startPulse()
-            } else {
-                stopPulse()
-            }
-
+            applyPulse(isActive)
             cardNode.setOnClickListener {
-                if (!lockedNow) onNodeClick(item)
+                onNodeClick(item)
             }
         }
 
-        private fun startPulse() {
-            if (pulseAnimX?.isRunning == true && pulseAnimY?.isRunning == true) return
+        fun applyPulse(isActive: Boolean) {
+            nodeWrapper.clearAnimation()
 
-            stopPulse()
-
-            pulseAnimX = ObjectAnimator.ofFloat(nodeWrapper, View.SCALE_X, 1f, 1.08f).apply {
-                duration = 550
-                repeatCount = ValueAnimator.INFINITE
-                repeatMode = ValueAnimator.REVERSE
+            if (isActive) {
+                nodeWrapper.startAnimation(
+                    AnimationUtils.loadAnimation(itemView.context, R.anim.pulse)
+                )
+                progressRing.scaleX = 1.06f
+                progressRing.scaleY = 1.06f
+            } else {
+                progressRing.scaleX = 1f
+                progressRing.scaleY = 1f
             }
-
-            pulseAnimY = ObjectAnimator.ofFloat(nodeWrapper, View.SCALE_Y, 1f, 1.08f).apply {
-                duration = 550
-                repeatCount = ValueAnimator.INFINITE
-                repeatMode = ValueAnimator.REVERSE
-            }
-
-            pulseAnimX?.start()
-            pulseAnimY?.start()
-        }
-
-        private fun stopPulse() {
-            pulseAnimX?.cancel()
-            pulseAnimY?.cancel()
-            pulseAnimX = null
-            pulseAnimY = null
-
-            nodeWrapper.scaleX = 1f
-            nodeWrapper.scaleY = 1f
-        }
-
-        fun stopAnimations() {
-            stopPulse()
-            lottieNodeIcon.cancelAnimation()
         }
 
         private fun dp(view: View, value: Int): Int {
