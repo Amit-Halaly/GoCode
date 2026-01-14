@@ -65,4 +65,7 @@ dependencies {
     implementation(libs.editor)
     implementation(libs.language.textmate)
     implementation(libs.language.java)
+    implementation(libs.editor.lsp)
+    implementation(libs.okhttp)
+    implementation(libs.json)
 }

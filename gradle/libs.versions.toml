@@ -2,8 +2,10 @@
 agp = "8.9.3"
 converterGson = "2.11.0"
 desugar_jdk_libs = "2.1.5"
-editor = "0.23.4"
+editor = "0.23.6"
+editorLsp = "0.23.6"
 firebaseBom = "34.7.0"
+json = "20240303"
 kotlin = "2.0.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
@@ -21,6 +23,7 @@ playServicesAuth = "21.4.0"
 navigationFragmentKtx = "2.9.6"
 navigationUiKtx = "2.9.6"
 retrofit = "2.11.0"
+okhttp = "4.12.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -29,10 +32,12 @@ androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "medi
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 editor = { module = "io.github.Rosemoe.sora-editor:editor", version.ref = "editor" }
+editor-lsp = { module = "io.github.Rosemoe.sora-editor:editor-lsp", version.ref = "editorLsp" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+json = { module = "org.json:json", version.ref = "json" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -48,6 +53,7 @@ play-services-auth = { module = "com.google.android.gms:play-services-auth", ver
 androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
 androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtx" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

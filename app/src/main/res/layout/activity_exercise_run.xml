@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Java Code"
+        android:text="@string/java_code"
         android:textStyle="bold" />
 
     <LinearLayout
@@ -23,7 +23,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="🌙 Theme" />
+            android:text="@string/theme" />
 
         <Button
             android:id="@+id/btnClear"
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="🧹 Clear" />
+            android:text="@string/clear" />
     </LinearLayout>
 
     <io.github.rosemoe.sora.widget.CodeEditor
@@ -45,16 +45,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="12dp"
-        android:text="Input (optional)"
+        android:text="@string/input_optional"
         android:textStyle="bold" />
 
     <EditText
         android:id="@+id/etInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:autofillHints=""
         android:minLines="2"
         android:gravity="top|start"
-        android:hint="stdin..."
+        android:hint="@string/stdin"
         android:inputType="textMultiLine|textNoSuggestions"
         android:padding="12dp" />
 
@@ -63,21 +64,29 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:text="Run" />
+        android:text="@string/run" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="12dp"
-        android:text="Result"
+        android:text="@string/result"
         android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/tvResult"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fontFamily="monospace"
-        android:padding="12dp"
-        android:text="—" />
+        android:layout_height="160dp"
+        android:layout_marginTop="6dp"
+        android:fillViewport="true">
+
+        <TextView
+            android:id="@+id/tvResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:padding="12dp"
+            android:text="@string/dash"
+            android:background="#12000000" />
+    </ScrollView>
 
 </LinearLayout>
