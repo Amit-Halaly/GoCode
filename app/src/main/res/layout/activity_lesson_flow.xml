@@ -25,22 +25,22 @@
         android:text="1/5"
         android:textColor="@color/gc_text_secondary"
         android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="@id/btnBack"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/btnBack"
-        app:layout_constraintBottom_toBottomOf="@id/btnBack" />
+        app:layout_constraintTop_toTopOf="@id/btnBack" />
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/stepProgress"
         android:layout_width="0dp"
         android:layout_height="6dp"
         android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/btnBack"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnBack"
         app:trackCornerRadius="999dp"
         app:trackThickness="6dp"
         app:indicatorColor="@color/btn_primary"
-        app:trackColor="#33FFFFFF"/>
+        app:trackColor="@color/pb_bg"/>
 
     <TextView
         android:id="@+id/tvLessonTitle"
@@ -74,9 +74,9 @@
         android:layout_marginTop="14dp"
         app:cardCornerRadius="18dp"
         app:cardElevation="0dp"
-        app:cardBackgroundColor="#151A24"
+        app:cardBackgroundColor="@color/lesson_code_box"
         app:strokeWidth="1dp"
-        app:strokeColor="#33FFFFFF"
+        app:strokeColor="@color/gc_text_secondary"
         app:layout_constraintTop_toBottomOf="@id/tvLessonBody"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -87,88 +87,10 @@
             android:layout_height="wrap_content"
             android:padding="14dp"
             android:text="code here"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/gc_text_primary"
             android:textSize="14sp"
             android:fontFamily="monospace" />
-
     </com.google.android.material.card.MaterialCardView>
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardTip"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        app:cardCornerRadius="18dp"
-        app:cardElevation="0dp"
-        app:cardBackgroundColor="@android:color/transparent"
-        app:strokeWidth="0dp"
-        app:layout_constraintTop_toBottomOf="@id/cardCode"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp">
-
-            <ImageView
-                android:id="@+id/ivLeoStanding"
-                android:layout_width="86dp"
-                android:layout_height="86dp"
-                android:src="@drawable/avatar_lion_robot"
-                android:scaleType="centerInside"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
-
-            <View
-                android:id="@+id/tipTail"
-                android:layout_width="14dp"
-                android:layout_height="14dp"
-                android:background="@drawable/bg_tip_tail"
-                android:rotation="45"
-                app:layout_constraintStart_toEndOf="@id/ivLeoStanding"
-                app:layout_constraintBottom_toBottomOf="@id/tipBubble"
-                app:layout_constraintVertical_bias="0.65" />
-
-            <LinearLayout
-                android:id="@+id/tipBubble"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/bg_tip_bubble"
-                android:orientation="vertical"
-                android:padding="14dp"
-                app:layout_constraintStart_toEndOf="@id/ivLeoStanding"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent">
-
-                <TextView
-                    android:id="@+id/tvTipTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tip from Leo"
-                    android:textStyle="bold"
-                    android:textSize="15sp"
-                    android:textColor="@android:color/white" />
-
-                <TextView
-                    android:id="@+id/tvTipText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="Variables make your code reusable!"
-                    android:textSize="14sp"
-                    android:textColor="#BFD3FF" />
-
-            </LinearLayout>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </com.google.android.material.card.MaterialCardView>
-
 
     <LinearLayout
         android:id="@+id/bottomButtons"
@@ -189,7 +111,7 @@
             android:text="Back"
             android:textAllCaps="false"
             android:textColor="@color/gc_text_primary"
-            android:backgroundTint="#33FFFFFF"
+            android:backgroundTint="@color/gc_text_secondary"
             app:cornerRadius="16dp"/>
 
         <Space
@@ -208,5 +130,75 @@
             android:backgroundTint="@color/btn_primary"
             app:cornerRadius="16dp"/>
     </LinearLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/leoTipGroup"
+        android:layout_width="0dp"
+        android:layout_height="250dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/bottomButtons"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/ivLeoOverlay"
+            android:layout_width="150dp"
+            android:layout_height="0dp"
+            android:src="@drawable/ic_standing_lion"
+            android:scaleType="fitCenter"
+            android:elevation="30dp"
+            android:translationX="-6dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/tipBubble"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_tip_bubble"
+            android:orientation="vertical"
+            android:padding="12dp"
+            app:layout_constraintStart_toEndOf="@id/ivLeoOverlay"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/ivLeoOverlay"
+            app:layout_constraintBottom_toBottomOf="@id/ivLeoOverlay"
+            app:layout_constraintVertical_bias="0.1">
+
+            <TextView
+                android:id="@+id/tvTipTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tip from Leo"
+                android:textColor="@color/gc_text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvTipText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Variables make your code reusable!"
+                android:textColor="@color/gc_text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/tipTail"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:background="@drawable/bg_tip_tail"
+            android:rotation="45"
+            android:translationX="-6dp"
+            android:elevation="20dp"
+            app:layout_constraintEnd_toStartOf="@id/tipBubble"
+            app:layout_constraintTop_toTopOf="@id/tipBubble"
+            app:layout_constraintBottom_toBottomOf="@id/tipBubble"
+            app:layout_constraintVertical_bias="0.42" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -17,13 +17,17 @@ class LessonFlowActivity : AppCompatActivity() {
     private lateinit var stepProgress: LinearProgressIndicator
     private lateinit var tvLessonTitle: TextView
     private lateinit var tvLessonBody: TextView
+
     private lateinit var cardCode: View
     private lateinit var tvLessonCode: TextView
-    private lateinit var cardTip: View
+
+    private lateinit var leoTipGroup: View
     private lateinit var tvTipTitle: TextView
     private lateinit var tvTipText: TextView
+
     private lateinit var btnPrev: MaterialButton
     private lateinit var btnNext: MaterialButton
+
     private var steps: List<LessonStep> = emptyList()
     private var currentIndex = 0
 
@@ -41,7 +45,7 @@ class LessonFlowActivity : AppCompatActivity() {
         cardCode = findViewById(R.id.cardCode)
         tvLessonCode = findViewById(R.id.tvLessonCode)
 
-        cardTip = findViewById(R.id.cardTip)
+        leoTipGroup = findViewById(R.id.leoTipGroup)
         tvTipTitle = findViewById(R.id.tvTipTitle)
         tvTipText = findViewById(R.id.tvTipText)
 
@@ -95,19 +99,14 @@ class LessonFlowActivity : AppCompatActivity() {
         }
 
         if (step.tip.isNullOrBlank()) {
-            cardTip.visibility = View.GONE
+            leoTipGroup.visibility = View.GONE
         } else {
-            cardTip.visibility = View.VISIBLE
+            leoTipGroup.visibility = View.VISIBLE
             tvTipTitle.text = "Tip from Leo"
             tvTipText.text = step.tip
         }
 
         btnPrev.isEnabled = currentIndex > 0
-
-        if (currentIndex == steps.size - 1) {
-            btnNext.text = "Finish"
-        } else {
-            btnNext.text = "Next"
-        }
+        btnNext.text = if (currentIndex == steps.size - 1) "Finish" else "Next"
     }
 }
