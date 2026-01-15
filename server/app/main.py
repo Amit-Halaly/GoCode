@@ -1,7 +1,7 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI
 from models import LintRequest, RunRequest, LintResponse, RunResponse
 from services.java_runner import lint_java, run_java
-import asyncio
+
 
 
 app = FastAPI(title="GoCode Execution API", version="0.1.0")

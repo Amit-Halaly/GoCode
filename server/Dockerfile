@@ -4,16 +4,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openjdk-17-jdk-headless \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install uv
-
 WORKDIR /app
 
 COPY requirements.txt .
-RUN uv init
-RUN uv add -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
 EXPOSE 8080
+
 WORKDIR /app/app
-CMD ["uv", "run", "main.py"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
