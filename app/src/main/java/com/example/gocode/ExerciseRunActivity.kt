@@ -56,6 +56,15 @@ class ExerciseRunActivity : AppCompatActivity() {
         themeButton = findViewById(R.id.themeButton)
         clearButton = findViewById(R.id.clearButton)
 
+        val symbolInput = findViewById<io.github.rosemoe.sora.widget.SymbolInputView>(R.id.symbolInput)
+        symbolInput.bindEditor(editor)
+
+        symbolInput.addSymbols(
+            arrayOf("&&", "{", "}", "(", ")", "||", "!", ";" ),
+            arrayOf("&&", "{}", "}", "()", ")", "||", "!", ";")
+        )
+
+
         val savedCode = prefs.getString(KEY_CODE, null)
         val savedInput = prefs.getString(KEY_INPUT, "") ?: ""
         isDarkTheme = prefs.getBoolean(KEY_DARK, true)
