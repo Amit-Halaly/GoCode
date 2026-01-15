@@ -65,10 +65,8 @@ class ProfileFragment : Fragment() {
         userListener = db.collection("users").document(user.uid).addSnapshotListener { doc, e ->
             if (e != null || doc == null || !doc.exists()) return@addSnapshotListener
 
-            // Username
             doc.getString("username")?.takeIf { it.isNotBlank() }?.let { usernameTv.text = it }
 
-            // Avatar
             doc.getString("avatarId")?.let { avatarId ->
                 val avatarItem =
                     AvatarRepository.load(requireContext()).firstOrNull { it.id == avatarId }

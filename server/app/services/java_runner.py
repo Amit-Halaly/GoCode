@@ -2,12 +2,12 @@ import os
 import re
 import subprocess
 import tempfile
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 COMPILE_TIMEOUT_SEC = 3
 RUN_TIMEOUT_SEC = 3
 
-JAVAC_ERR_RE = re.compile(r"Main\.java:(\d+):(?:\s*error:)?\s*(.*)")
+JAVAC_ERR_RE = re.compile(r"(?:^|/|\\)Main\.java:(\d+):(?:\s*error:)?\s*(.*)")
 
 def _write_main_java(tmp_dir: str, code: str) -> str:
     path = os.path.join(tmp_dir, "Main.java")
@@ -29,11 +29,30 @@ def lint_java(code: str) -> Dict[str, Any]:
         except subprocess.TimeoutExpired:
             return {"errors": [{"line": 0, "col": None, "message": "Compilation timed out"}]}
 
+        lines = proc.stderr.splitlines()
         errors = []
-        for line in proc.stderr.splitlines():
-            m = JAVAC_ERR_RE.search(line)
-            if m:
-                errors.append({"line": int(m.group(1)), "col": None, "message": m.group(2).strip()})
+
+        i = 0
+        while i < len(lines):
+            line_text = lines[i]
+            m = JAVAC_ERR_RE.search(line_text)
+            if not m:
+                i += 1
+                continue
+
+            line_no = int(m.group(1))
+            msg = m.group(2).strip()
+
+            col: Optional[int] = None
+
+            if i + 2 < len(lines):
+                caret_line = lines[i + 2]
+                caret_pos = caret_line.find("^")
+                if caret_pos >= 0:
+                    col = caret_pos + 1  # 1-based
+
+            errors.append({"line": line_no, "col": col, "message": msg})
+            i += 1
 
         return {"errors": errors}
 

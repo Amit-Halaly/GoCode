@@ -44,4 +44,13 @@
     <string name="lesson_title">Lesson title</string>
     <string name="java_path">Java Path</string>
     <string name="lt_gocode_gt"><![CDATA[<GoCode>]]></string>
+    <string name="java_code">Java Code</string>
+    <string name="theme">🌙 Theme</string>
+    <string name="clear">🧹 Clear</string>
+    <string name="input_optional">Input (optional)</string>
+    <string name="stdin">stdin…</string>
+    <string name="run">Run</string>
+    <string name="result">Result</string>
+    <string name="dash">—</string>
+    <string name="output">Output</string>
 </resources>
