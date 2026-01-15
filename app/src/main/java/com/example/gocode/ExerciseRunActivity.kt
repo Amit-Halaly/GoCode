@@ -3,6 +3,7 @@ package com.example.gocode
 import android.annotation.SuppressLint
 import android.graphics.Typeface
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -58,11 +59,11 @@ class ExerciseRunActivity : AppCompatActivity() {
 
         val symbolInput = findViewById<io.github.rosemoe.sora.widget.SymbolInputView>(R.id.symbolInput)
         symbolInput.bindEditor(editor)
-
         symbolInput.addSymbols(
             arrayOf("&&", "{", "}", "(", ")", "||", "!", ";" ),
             arrayOf("&&", "{}", "}", "()", ")", "||", "!", ";")
         )
+        observeKeyboard(symbolInput)
 
 
         val savedCode = prefs.getString(KEY_CODE, null)
@@ -250,6 +251,23 @@ class ExerciseRunActivity : AppCompatActivity() {
             runButton.isEnabled = true
         }
     }
+
+    private fun observeKeyboard(symbolInput: View) {
+        val root = findViewById<View>(android.R.id.content)
+
+        root.viewTreeObserver.addOnGlobalLayoutListener {
+            val rect = android.graphics.Rect()
+            root.getWindowVisibleDisplayFrame(rect)
+
+            val screenHeight = root.rootView.height
+            val keyboardHeight = screenHeight - rect.bottom
+
+            val keyboardOpen = keyboardHeight > screenHeight * 0.15
+
+            symbolInput.visibility = if (keyboardOpen) View.VISIBLE else View.GONE
+        }
+    }
+
 
     private fun defaultJavaTemplate(): String = """
         public class Main {
