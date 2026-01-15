@@ -61,6 +61,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".settings.EditProfileActivity"
+            android:exported="false" />
+
+
+        <activity
             android:name=".ExerciseRunActivity"
             android:exported="true">
             <intent-filter>
