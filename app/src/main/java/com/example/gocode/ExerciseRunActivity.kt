@@ -1,6 +1,7 @@
 package com.example.gocode
 
 import android.annotation.SuppressLint
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
@@ -18,6 +19,7 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.SymbolInputView
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.schemes.SchemeDarcula
@@ -57,22 +59,14 @@ class ExerciseRunActivity : AppCompatActivity() {
         themeButton = findViewById(R.id.themeButton)
         clearButton = findViewById(R.id.clearButton)
 
-        val symbolInput = findViewById<io.github.rosemoe.sora.widget.SymbolInputView>(R.id.symbolInput)
-        symbolInput.bindEditor(editor)
-        symbolInput.addSymbols(
-            arrayOf("&&", "{", "}", "(", ")", "||", "!", ";" ),
-            arrayOf("&&", "{}", "}", "()", ")", "||", "!", ";")
-        )
-        observeKeyboard(symbolInput)
-
+        setupSymbolBar()
+        setupEditor()
 
         val savedCode = prefs.getString(KEY_CODE, null)
         val savedInput = prefs.getString(KEY_INPUT, "") ?: ""
         isDarkTheme = prefs.getBoolean(KEY_DARK, true)
 
-        setupEditor()
         applyTheme(isDarkTheme)
-
         editor.setText(savedCode ?: defaultJavaTemplate())
         inputField.setText(savedInput)
 
@@ -95,9 +89,7 @@ class ExerciseRunActivity : AppCompatActivity() {
             persistDraft()
         }
 
-        runButton.setOnClickListener {
-            runCode()
-        }
+        runButton.setOnClickListener { runCode() }
 
         scheduleLint()
     }
@@ -121,13 +113,23 @@ class ExerciseRunActivity : AppCompatActivity() {
         editor.isHighlightCurrentLine = true
         editor.isUndoEnabled = true
         editor.isWordwrap = true
-
         editor.getComponent<EditorAutoCompletion>().setEnabledAnimation(true)
 
         runCatching {
-            val typeface = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
-            editor.typefaceText = typeface
+            editor.typefaceText = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
         }
+    }
+
+    private fun setupSymbolBar() {
+        val symbolInput = findViewById<SymbolInputView>(R.id.symbolInput)
+        symbolInput.bindEditor(editor)
+
+        symbolInput.addSymbols(
+            arrayOf("&&", "{", "}", "(", ")", "||", ";"),
+            arrayOf("&&", "{}", "}", "()", ")", "||", ";")
+        )
+
+        observeKeyboard(symbolInput)
     }
 
     private fun applyTheme(dark: Boolean) {
@@ -153,6 +155,7 @@ class ExerciseRunActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private suspend fun runLint() {
         val code = editor.text.toString()
+
         runCatching {
             ApiClient.execApi.lint(LintRequest(code = code))
         }.onSuccess { res ->
@@ -165,6 +168,7 @@ class ExerciseRunActivity : AppCompatActivity() {
 
             val lineZeroBased = (first.line - 1).coerceAtLeast(0)
             val msg = first.message
+
             lintStatus.text = "Lint: line ${lineZeroBased + 1} — $msg"
             applyLineDiagnostic(findErrorIndex(lineZeroBased))
         }.onFailure {
@@ -174,39 +178,43 @@ class ExerciseRunActivity : AppCompatActivity() {
 
     private fun applyLineDiagnostic(result: Pair<Int, Int>?) {
         if (result == null) {
-            editor.diagnostics = null
-            editor.invalidate()
+            clearDiagnostics()
             return
         }
-        val (start, len) = result
-        val region = DiagnosticRegion(
-            start,
-            len,
-            DiagnosticRegion.SEVERITY_ERROR
-        )
+
+        val (start, end) = result
+        if (end <= start) {
+            clearDiagnostics()
+            return
+        }
 
         val container = DiagnosticsContainer().apply {
-            addDiagnostic(region)
+            addDiagnostic(DiagnosticRegion(start, end, DiagnosticRegion.SEVERITY_ERROR))
         }
 
         editor.diagnostics = container
         editor.invalidate()
     }
 
-    private fun findErrorIndex(lineZeroBased: Int):Pair<Int, Int>? {
+    private fun findErrorIndex(lineZeroBased: Int): Pair<Int, Int>? {
         val text = editor.text
-        val line = lineZeroBased.coerceIn(0, (text.lineCount - 1).coerceAtLeast(0))
+        if (text.lineCount <= 0) return null
+
+        val line = lineZeroBased.coerceIn(0, text.lineCount - 1)
         var len = text.getColumnCount(line).coerceAtLeast(1)
         var start = text.getCharIndex(line, 0)
-        for (c in text.getLineString(line)){
-            if(c == ' ' || c == '\t'){
+
+        for (c in text.getLineString(line)) {
+            if (c == ' ' || c == '\t') {
                 start++
                 len--
-            }
-            else
+            } else {
                 break
+            }
         }
-        return Pair(start, start + len)
+
+        if (len <= 0) return null
+        return start to (start + len)
     }
 
     private fun clearDiagnostics() {
@@ -256,18 +264,16 @@ class ExerciseRunActivity : AppCompatActivity() {
         val root = findViewById<View>(android.R.id.content)
 
         root.viewTreeObserver.addOnGlobalLayoutListener {
-            val rect = android.graphics.Rect()
+            val rect = Rect()
             root.getWindowVisibleDisplayFrame(rect)
 
             val screenHeight = root.rootView.height
             val keyboardHeight = screenHeight - rect.bottom
-
             val keyboardOpen = keyboardHeight > screenHeight * 0.15
 
             symbolInput.visibility = if (keyboardOpen) View.VISIBLE else View.GONE
         }
     }
-
 
     private fun defaultJavaTemplate(): String = """
         public class Main {
@@ -278,7 +284,7 @@ class ExerciseRunActivity : AppCompatActivity() {
     """.trimIndent()
 
     companion object {
-        private const val PREFS_NAME = "gocode_prefs"
+        private const val PREFS_NAME = "goCode_prefs"
         private const val KEY_CODE = "playground_code"
         private const val KEY_INPUT = "playground_input"
         private const val KEY_DARK = "playground_dark"
