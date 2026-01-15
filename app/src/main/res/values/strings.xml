@@ -48,7 +48,7 @@
     <string name="theme">🌙 Theme</string>
     <string name="clear">🧹 Clear</string>
     <string name="input_optional">Input (optional)</string>
-    <string name="stdin">stdin...</string>
+    <string name="stdin">stdin…</string>
     <string name="run">Run</string>
     <string name="result">Result</string>
     <string name="dash">—</string>
