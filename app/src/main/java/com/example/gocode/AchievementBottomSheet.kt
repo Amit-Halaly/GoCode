@@ -8,7 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class AchievementInfoBottomSheet : BottomSheetDialogFragment() {
+class AchievementBottomSheet : BottomSheetDialogFragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -33,8 +33,8 @@ class AchievementInfoBottomSheet : BottomSheetDialogFragment() {
         private const val ARG_TITLE = "title"
         private const val ARG_DESC = "desc"
 
-        fun newInstance(icon: Int, title: String, desc: String): AchievementInfoBottomSheet {
-            return AchievementInfoBottomSheet().apply {
+        fun newInstance(icon: Int, title: String, desc: String): AchievementBottomSheet {
+            return AchievementBottomSheet().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_ICON, icon)
                     putString(ARG_TITLE, title)
