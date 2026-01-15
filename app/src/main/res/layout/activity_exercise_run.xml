@@ -6,61 +6,70 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/java_code"
-        android:textStyle="bold" />
-
     <LinearLayout
+        style="?android:attr/buttonBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp">
+        android:orientation="horizontal">
 
         <Button
-            android:id="@+id/btnTheme"
+            android:id="@+id/themeButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/theme" />
 
         <Button
-            android:id="@+id/btnClear"
+            android:id="@+id/clearButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="8dp"
+            android:layout_weight="1"
             android:text="@string/clear" />
     </LinearLayout>
 
-    <io.github.rosemoe.sora.widget.CodeEditor
-        android:id="@+id/codeEditor"
+    <TextView
+        android:id="@+id/lintStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/dash"
+        android:textStyle="bold" />
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        android:layout_weight="1" />
+        android:layout_weight="1">
+
+        <io.github.rosemoe.sora.widget.CodeEditor
+            android:id="@+id/codeEditor"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="12dp"
+        android:layout_marginTop="12dp"
         android:text="@string/input_optional"
         android:textStyle="bold" />
 
     <EditText
-        android:id="@+id/etInput"
+        android:id="@+id/inputField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:autofillHints=""
-        android:minLines="2"
         android:gravity="top|start"
         android:hint="@string/stdin"
         android:inputType="textMultiLine|textNoSuggestions"
+        android:minLines="2"
         android:padding="12dp" />
 
     <Button
-        android:id="@+id/btnRun"
+        android:id="@+id/runButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
@@ -69,8 +78,8 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="12dp"
-        android:text="@string/result"
+        android:layout_marginTop="12dp"
+        android:text="@string/output"
         android:textStyle="bold" />
 
     <ScrollView
@@ -80,13 +89,13 @@
         android:fillViewport="true">
 
         <TextView
-            android:id="@+id/tvResult"
+            android:id="@+id/outputView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="#12000000"
             android:fontFamily="monospace"
             android:padding="12dp"
-            android:text="@string/dash"
-            android:background="#12000000" />
+            android:text="@string/dash" />
     </ScrollView>
 
 </LinearLayout>

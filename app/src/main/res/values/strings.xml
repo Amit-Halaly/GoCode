@@ -52,4 +52,5 @@
     <string name="run">Run</string>
     <string name="result">Result</string>
     <string name="dash">—</string>
+    <string name="output">Output</string>
 </resources>
