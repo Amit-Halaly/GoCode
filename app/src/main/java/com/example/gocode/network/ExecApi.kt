@@ -1,5 +1,7 @@
 package com.example.gocode.network
 
+import com.example.gocode.network.models.hintModels.HintRequest
+import com.example.gocode.network.models.hintModels.HintResponse
 import com.example.gocode.network.models.lintModels.LintRequest
 import com.example.gocode.network.models.lintModels.LintResponse
 import com.example.gocode.network.models.runModels.RunRequest
@@ -14,4 +16,6 @@ interface ExecApi {
     @POST("/lint")
     suspend fun lint(@Body req: LintRequest): LintResponse
 
+    @POST("/hint")
+    suspend fun hint(@Body req: HintRequest): HintResponse
 }
