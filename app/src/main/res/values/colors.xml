@@ -35,6 +35,8 @@
 
     <!-- Status bar -->
     <color name="status_bar_scrim">#B3001028</color>
+    <color name="lesson_code_box">#151A24</color>
+    <color name="pb_bg">#33FFFFFF</color>
 
 
 </resources>

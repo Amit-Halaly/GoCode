@@ -12,7 +12,7 @@
 
     <fragment
         android:id="@+id/learnFragment"
-        android:name="com.example.gocode.LearnFragment"
+        android:name="com.example.gocode.lessons.LessonsFragment"
         android:label="Learn" />
 
     <fragment
