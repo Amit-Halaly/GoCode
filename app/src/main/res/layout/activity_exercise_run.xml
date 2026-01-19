@@ -32,6 +32,23 @@
             android:text="@string/clear" />
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/taskText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/task"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/hintText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="@string/dash"
+        android:visibility="gone" />
+
+
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/lintStatus"
         android:layout_width="match_parent"

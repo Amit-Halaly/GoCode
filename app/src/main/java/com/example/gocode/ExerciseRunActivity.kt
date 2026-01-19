@@ -46,6 +46,13 @@ class ExerciseRunActivity : AppCompatActivity() {
     private var lintJob: Job? = null
     private var runJob: Job? = null
 
+    private lateinit var taskText: TextView
+    private lateinit var hintText: TextView
+
+    private var currentTask: String = "Task: —"
+
+
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_exercise_run)
@@ -58,6 +65,13 @@ class ExerciseRunActivity : AppCompatActivity() {
         runButton = findViewById(R.id.runButton)
         themeButton = findViewById(R.id.themeButton)
         clearButton = findViewById(R.id.clearButton)
+
+        taskText = findViewById(R.id.taskText)
+        hintText = findViewById(R.id.hintText)
+
+        currentTask = "Print Hello World"
+        taskText.text = "Task: $currentTask"
+
 
         setupSymbolBar()
         setupEditor()
@@ -252,6 +266,32 @@ class ExerciseRunActivity : AppCompatActivity() {
                     appendLine("error:")
                     appendLine(res.error)
                 }
+                val failed = (res.exitCode != 0) || res.error.isNotBlank()
+                if (failed) {
+                    runCatching {
+                        ApiClient.execApi.hint(
+                            com.example.gocode.network.models.hintModels.HintRequest(
+                                task = currentTask,
+                                language = "java",
+                                code = code,
+                                input = input,
+                                output = res.output,
+                                error = res.error,
+                                exitCode = res.exitCode
+                            )
+                        )
+                    }.onSuccess { hintRes ->
+                        hintText.text = hintRes.hint
+                        hintText.visibility = View.VISIBLE
+                    }.onFailure {
+                        hintText.text = "—"
+                        hintText.visibility = View.GONE
+                    }
+                } else {
+                    hintText.text = "—"
+                    hintText.visibility = View.GONE
+                }
+
             }.onFailure { e ->
                 outputView.text = "Request failed: ${e.message}"
             }
