@@ -149,6 +149,7 @@ docker run --rm -p 8080:8080 \
   gocode-server
 ```
 
+---
 
 
 ### 🔒 Security Considerations
@@ -161,6 +162,7 @@ docker run --rm -p 8080:8080 \
 
 - All communication is performed over HTTP APIs
 
+---
 
 ### 🗺️ Future Work
 
@@ -174,12 +176,16 @@ docker run --rm -p 8080:8080 \
 
 - Arena compete
 
+---
+
 ### 👤 Authors
 
 - [@Ben-Aharoni](https://github.com/Ben-Aharoni)
 - [@Amit-Halaly](https://github.com/Amit-Halaly)
   
 Final Project – Software Engineering
+
+---
 
 ### 📄 License
 
