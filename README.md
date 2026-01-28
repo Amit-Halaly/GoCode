@@ -130,8 +130,6 @@ Base URL (local): `http://localhost:8080`
 ---
 
 
----
-
 ## ▶️ Running the Server Locally
 
 ```bash
