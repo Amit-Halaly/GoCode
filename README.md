@@ -139,7 +139,7 @@ docker build -t gocode-server .
 docker run --rm -p 8080:8080 gocode-server
 ```
 
-# Swagger UI: http://localhost:8080/docs
+Swagger UI: http://localhost:8080/docs
 
 
 ## 🤖 Enabling AI Hints
@@ -151,7 +151,7 @@ docker run --rm -p 8080:8080 \
 
 
 
-###🔒 Security Considerations
+### 🔒 Security Considerations
 
 - Code execution is isolated inside Docker containers
 
@@ -162,7 +162,7 @@ docker run --rm -p 8080:8080 \
 - All communication is performed over HTTP APIs
 
 
-###🗺️ Future Work
+### 🗺️ Future Work
 
 - Output validation against expected results
 
@@ -174,7 +174,7 @@ docker run --rm -p 8080:8080 \
 
 - Arena compete
 
-###👤 Authors
+### 👤 Authors
 
 - [@Ben-Aharoni](https://github.com/Ben-Aharoni)
 - [@Amit-Halaly](https://github.com/Amit-Halaly)
