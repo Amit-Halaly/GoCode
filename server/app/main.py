@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from models import LintRequest, RunRequest, LintResponse, RunResponse, HintRequest, HintResponse
 from services.java_runner import lint_java, run_java
 from openai import OpenAI
+from typing import Literal
 
 
 
@@ -22,7 +23,13 @@ def lint(req: LintRequest):
 
 @app.post("/run", response_model=RunResponse)
 def run(req: RunRequest):
-    return run_java(req.code, req.input or "")
+    return run_java(
+        req.code,
+        req.input or "",
+        expected_output=req.expectedOutput,
+        compare_mode=req.compareMode,
+        )
+
 
 @app.post("/hint", response_model=HintResponse)
 def hint(req: HintRequest):

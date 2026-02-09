@@ -56,7 +56,12 @@ def lint_java(code: str) -> Dict[str, Any]:
 
         return {"errors": errors}
 
-def run_java(code: str, input_data: str) -> Dict[str, Any]:
+def run_java(
+        code: str,
+        input_data: str,
+        expected_output: Optional[str] = None,
+        compare_mode: str = "normalize",
+) -> Dict[str, Any]:
     with tempfile.TemporaryDirectory() as tmp:
         file_path = _write_main_java(tmp, code)
 
@@ -68,10 +73,24 @@ def run_java(code: str, input_data: str) -> Dict[str, Any]:
                 timeout=COMPILE_TIMEOUT_SEC,
             )
         except subprocess.TimeoutExpired:
-            return {"output": "", "error": "Compilation timed out", "exitCode": 124}
+            return {
+                "output": "",
+                "error": "Compilation timed out",
+                "exitCode": 124,
+                "passed": False if expected_output is not None else None,
+                "expectedOutput": expected_output,
+                "actualOutput": "",
+            }
 
         if compile_proc.returncode != 0:
-            return {"output": "", "error": compile_proc.stderr, "exitCode": compile_proc.returncode}
+            return {
+                "output": "",
+                "error": compile_proc.stderr,
+                "exitCode": compile_proc.returncode,
+                "passed": False if expected_output is not None else None,
+                "expectedOutput": expected_output,
+                "actualOutput": "",
+            }
 
         try:
             run_proc = subprocess.run(
@@ -82,9 +101,28 @@ def run_java(code: str, input_data: str) -> Dict[str, Any]:
                 timeout=RUN_TIMEOUT_SEC,
             )
         except subprocess.TimeoutExpired:
-            return {"output": "", "error": "Execution timed out", "exitCode": 124}
+            return {
+                "output": "",
+                "error": "Execution timed out",
+                "exitCode": 124,
+                "passed": False if expected_output is not None else None,
+                "expectedOutput": expected_output,
+                "actualOutput": "",
+            }
 
-        return {"output": run_proc.stdout, "error": run_proc.stderr, "exitCode": run_proc.returncode}
+        actual = run_proc.stdout
+        passed = None
+        if expected_output is not None:
+            passed = normalize_output(actual, compare_mode) == normalize_output(expected_output, compare_mode)
+
+        return {
+            "output": actual,
+            "error": run_proc.stderr,
+            "exitCode": run_proc.returncode,
+            "passed": passed,
+            "expectedOutput": expected_output,
+            "actualOutput": actual,
+        }
 
 def normalize_output(s: str, mode: str) -> str:
     if s is None:
