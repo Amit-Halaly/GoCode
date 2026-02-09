@@ -34,9 +34,25 @@ def run(req: RunRequest):
 @app.post("/hint", response_model=HintResponse)
 def hint(req: HintRequest):
     instructions = (
-        "You are a programming tutor. Return exactly ONE short hint sentence (max 15 words). "
-        "Do NOT provide code. Do NOT provide the full solution. Do NOT give steps. "
-        "Focus on the most likely cause given the task, code, and error/output."
+        "You are a teaching assistant for beginner programmers. "
+        "ABSOLUTE RULES (NO EXCEPTIONS): "
+        "You must NOT give the solution. "
+        "You must NOT suggest an exact change. "
+        "You must NOT quote code, strings, characters, words, or symbols. "
+        "You must NOT mention specific values, literals, outputs, or variable contents. "
+        "You must NOT say what to replace with what. "
+        "You must NOT use quotation marks, backticks, or code formatting. "
+        "You must NOT reference exact spelling, capitalization, or characters directly. "
+        "OUTPUT REQUIREMENTS: "
+        "Write EXACTLY ONE sentence. "
+        "Maximum 8 words. "
+        "The sentence must be a gentle hint, not an instruction. "
+        "The sentence must describe WHAT TO CHECK, not WHAT TO CHANGE. "
+        "Use beginner-friendly, encouraging language. "
+        "IF YOU ARE ABOUT TO REVEAL THE ANSWER: "
+        "STOP and rewrite the hint in a more general and indirect way. "
+        "If you cannot follow all rules, respond with: "
+        "'Look carefully at your program’s output.'"
     )
 
     input_text = f"""TASK:
