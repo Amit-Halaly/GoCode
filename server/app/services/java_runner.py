@@ -85,3 +85,16 @@ def run_java(code: str, input_data: str) -> Dict[str, Any]:
             return {"output": "", "error": "Execution timed out", "exitCode": 124}
 
         return {"output": run_proc.stdout, "error": run_proc.stderr, "exitCode": run_proc.returncode}
+
+def normalize_output(s: str, mode: str) -> str:
+    if s is None:
+        return ""
+    s = s.replace("\r\n", "\n").replace("\r", "\n")
+
+    if mode == "exact":
+        return s
+    if mode == "trim":
+        return s.strip()
+
+    # normalize (default)
+    return s.rstrip()
