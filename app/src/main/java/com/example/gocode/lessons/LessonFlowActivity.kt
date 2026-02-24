@@ -1,5 +1,6 @@
 package com.example.gocode.lessons
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
@@ -80,6 +81,7 @@ class LessonFlowActivity : AppCompatActivity() {
         renderStep()
     }
 
+    @SuppressLint("SetTextI18n")
     private fun renderStep() {
         val step = steps[currentIndex]
 

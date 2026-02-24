@@ -1,11 +1,13 @@
 package com.example.gocode.lessons
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.gocode.ExercisePlayActivity
 import com.example.gocode.ExerciseRunActivity
 import com.example.gocode.R
 import com.example.gocode.adapters.PathNodesAdapter
@@ -19,6 +21,7 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
         language = arguments?.getString(ARG_LANGUAGE) ?: "python"
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -59,7 +62,7 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
 
                     PathNodeType.CODE -> {
                         startActivity(
-                            android.content.Intent(requireContext(), ExerciseRunActivity::class.java)
+                            android.content.Intent(requireContext(), ExercisePlayActivity::class.java)
                         )
                     }
                 }

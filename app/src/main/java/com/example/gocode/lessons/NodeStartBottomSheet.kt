@@ -1,5 +1,6 @@
 package com.example.gocode.lessons
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -11,6 +12,7 @@ class NodeStartBottomSheet : BottomSheetDialogFragment(R.layout.bottomsheet_node
 
     private var onStartClicked: ((PathNodeItem) -> Unit)? = null
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
