@@ -28,6 +28,7 @@ def run(req: RunRequest):
         req.input or "",
         expected_output=req.expectedOutput,
         compare_mode=req.compareMode,
+        test_cases=[tc.model_dump() for tc in req.testCases] if req.testCases else None,
         )
 
 

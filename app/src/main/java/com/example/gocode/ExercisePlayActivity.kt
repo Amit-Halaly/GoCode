@@ -3,17 +3,18 @@ package com.example.gocode
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
-import android.graphics.Rect
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
-import android.view.ViewTreeObserver
 import android.view.animation.OvershootInterpolator
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.airbnb.lottie.LottieAnimationView
 import com.example.gocode.network.ApiClient
@@ -21,6 +22,8 @@ import com.example.gocode.network.models.hintModels.HintRequest
 import com.example.gocode.network.models.lintModels.LintRequest
 import com.example.gocode.network.models.runModels.RunRequest
 import com.example.gocode.network.models.runModels.RunResponse
+import com.example.gocode.network.models.runModels.RunTestCase
+import com.example.gocode.network.models.runModels.RunTestResult
 import com.google.android.material.button.MaterialButton
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
@@ -49,32 +52,59 @@ class ExercisePlayActivity : AppCompatActivity() {
     private lateinit var outputCard: View
     private lateinit var outputTitle: TextView
     private lateinit var outputText: TextView
+    private lateinit var statusPill: TextView
+    private lateinit var runProgress: ProgressBar
 
     private lateinit var leoTipGroup: View
     private lateinit var tvTipTitle: TextView
     private lateinit var tvTipText: TextView
+    private lateinit var editorTouchOverlay: View
 
     private lateinit var resultLottie: LottieAnimationView
-
     private lateinit var runButton: MaterialButton
     private lateinit var themeButton: MaterialButton
     private lateinit var resetButton: MaterialButton
+    private lateinit var consoleButton: MaterialButton
+    private lateinit var testsButton: MaterialButton
+    private lateinit var answerButton: MaterialButton
 
-    private var isDarkTheme = false
+    private lateinit var introOverlay: View
+    private lateinit var introReadyText: TextView
+    private lateinit var introTaskText: TextView
+
+    private lateinit var inputPromptOverlay: View
+    private lateinit var inputPromptCard: View
+    private lateinit var inputPromptTitle: TextView
+    private lateinit var inputPromptMessage: TextView
+    private lateinit var inputPromptField: EditText
+    private lateinit var inputPromptButton: MaterialButton
+    private lateinit var inputPromptCancel: MaterialButton
+
+    private var isDarkTheme = true
+    private var activePanel = Panel.CONSOLE
+    private var pendingRunCode: String = ""
+    private val promptedInputs = mutableListOf<Int>()
 
     private var lintJob: Job? = null
     private var runJob: Job? = null
     private var hintJob: Job? = null
 
+    private var hintLoadedForThisRun = false
+    private var hintRequestInFlight = false
     private var lastRun: RunResponse? = null
-    private var keyboardListener: ViewTreeObserver.OnGlobalLayoutListener? = null
 
-    // TODO: Replace with real task payload
-    private val taskTitleText = "Print Hello World"
-    private val expectedOutput = "Hello World"
+    private val taskTitleText = "Add two numbers"
+    private val taskSubtitleText = "Read two integers and print their sum."
 
+    private val exerciseTests = listOf(
+        RunTestCase(name = "Warm up", input = "1 2\n", expectedOutput = "3"),
+        RunTestCase(name = "Negative values", input = "10 -4\n", expectedOutput = "6"),
+        RunTestCase(name = "Hidden check", input = "41 1\n", expectedOutput = "42", hidden = true),
+    )
+
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
-        isDarkTheme = prefs.getBoolean(KEY_DARK, false)
+        isDarkTheme = prefs.getBoolean(KEY_DARK, true)
         AppCompatDelegate.setDefaultNightMode(
             if (isDarkTheme) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         )
@@ -83,6 +113,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         setContentView(R.layout.activity_exercise_play)
 
         findViewById<TextView>(R.id.taskTitle).text = taskTitleText
+        findViewById<TextView>(R.id.taskSubtitle).text = taskSubtitleText
 
         editor = findViewById(R.id.codeEditor)
         symbolInput = findViewById(R.id.symbolInput)
@@ -91,39 +122,108 @@ class ExercisePlayActivity : AppCompatActivity() {
         outputCard = findViewById(R.id.outputCard)
         outputTitle = findViewById(R.id.outputTitle)
         outputText = findViewById(R.id.outputView)
+        statusPill = findViewById(R.id.statusPill)
+        runProgress = findViewById(R.id.runProgress)
 
         leoTipGroup = findViewById(R.id.leoTipGroup)
         tvTipTitle = findViewById(R.id.tvTipTitle)
         tvTipText = findViewById(R.id.tvTipText)
+        editorTouchOverlay = findViewById(R.id.editorTouchOverlay)
 
         resultLottie = findViewById(R.id.resultLottie)
-
         runButton = findViewById(R.id.runButton)
         themeButton = findViewById(R.id.themeButton)
         resetButton = findViewById(R.id.resetButton)
+        consoleButton = findViewById(R.id.consoleButton)
+        testsButton = findViewById(R.id.testsButton)
+        answerButton = findViewById(R.id.answerButton)
+
+        introOverlay = findViewById(R.id.introOverlay)
+        introReadyText = findViewById(R.id.introReadyText)
+        introTaskText = findViewById(R.id.introTaskText)
+
+        inputPromptOverlay = findViewById(R.id.inputPromptOverlay)
+        inputPromptCard = findViewById(R.id.inputPromptCard)
+        inputPromptTitle = findViewById(R.id.inputPromptTitle)
+        inputPromptMessage = findViewById(R.id.inputPromptMessage)
+        inputPromptField = findViewById(R.id.inputPromptField)
+        inputPromptButton = findViewById(R.id.inputPromptButton)
+        inputPromptCancel = findViewById(R.id.inputPromptCancel)
 
         setupEditor()
         setupSymbolBar()
+        setupPanels()
 
-        val restoredCode = savedInstanceState?.getString(STATE_CODE)
-        val restoredInput = savedInstanceState?.getString(STATE_INPUT)
-        val savedCode = prefs.getString(KEY_CODE, null)
-        val savedInput = prefs.getString(KEY_INPUT, "") ?: ""
+        val savedCode = savedInstanceState?.getString(STATE_CODE) ?: prefs.getString(KEY_CODE, null)
+        val savedInput = savedInstanceState?.getString(STATE_INPUT) ?: prefs.getString(KEY_INPUT, "") ?: ""
 
-        editor.setText(restoredCode ?: savedCode ?: defaultTemplate())
-        inputField.setText(restoredInput ?: savedInput)
+        editor.setText(savedCode ?: defaultTemplate())
+        inputField.setText(savedInput)
 
-        outputCard.visibility = View.GONE
-        hideLeo(immediate = true)
+        hideLeoHard()
         hideLottie(immediate = true)
+        setStatus(Status.READY)
+        renderTestPreview()
+
+        setupHideLeoOnEditorTouch()
 
         runButton.setOnClickListener { runSolution() }
         resetButton.setOnClickListener { resetExercise() }
         themeButton.setOnClickListener { toggleTheme() }
         leoTipGroup.setOnClickListener { requestHint() }
+        answerButton.setOnClickListener { showLockedAnswerHint() }
+        inputPromptButton.setOnClickListener { submitPromptedInput() }
+        inputPromptCancel.setOnClickListener { cancelPromptedRun() }
 
-        editor.subscribeAlways<ContentChangeEvent> { scheduleLint() }
+        editor.subscribeAlways<ContentChangeEvent> {
+            setStatus(Status.READY)
+            scheduleLint()
+        }
         scheduleLint()
+
+        if (savedInstanceState == null) {
+            introOverlay.post { showIntroOverlay() }
+        }
+    }
+
+    private fun setupPanels() {
+        consoleButton.setOnClickListener {
+            activePanel = Panel.CONSOLE
+            renderRunResult(lastRun)
+        }
+        testsButton.setOnClickListener {
+            activePanel = Panel.TESTS
+            renderRunResult(lastRun)
+        }
+        updatePanelTabs()
+    }
+
+    private fun updatePanelTabs() {
+        consoleButton.alpha = if (activePanel == Panel.CONSOLE) 1f else 0.58f
+        testsButton.alpha = if (activePanel == Panel.TESTS) 1f else 0.58f
+    }
+
+    private fun setupSymbolBar() {
+        symbolInput.bindEditor(editor)
+
+        val display = arrayOf("TAB", "{", "}", "(", ")", "[", "]", ";")
+        val insert = arrayOf("\t", "{", "}", "(", ")", "[", "]", ";")
+
+        symbolInput.removeSymbols()
+        symbolInput.addSymbols(display, insert)
+        symbolInput.visibility = View.GONE
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { _, insets ->
+            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            symbolInput.visibility = if (imeVisible) View.VISIBLE else View.GONE
+            if (imeVisible && leoTipGroup.visibility == View.VISIBLE) hideLeoHard()
+            insets
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        hideLeoHard()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -139,15 +239,9 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-
         lintJob?.cancel()
         runJob?.cancel()
         hintJob?.cancel()
-
-        val root = findViewById<View>(android.R.id.content)
-        keyboardListener?.let { root.viewTreeObserver.removeOnGlobalLayoutListener(it) }
-        keyboardListener = null
-
         runCatching { editor.release() }
     }
 
@@ -162,34 +256,23 @@ class ExercisePlayActivity : AppCompatActivity() {
 
         editor.typefaceText = runCatching {
             Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
-        }.getOrElse {
-            Typeface.MONOSPACE
-        }
+        }.getOrElse { Typeface.MONOSPACE }
 
         applyThemeToEditor()
         editor.diagnostics = null
     }
 
-    private fun setupSymbolBar() {
-        symbolInput.bindEditor(editor)
-
-        val display = arrayOf(
-            "Tab", "{", "}", "(", ")", "[", "]",
-            ";", "\"", "=", "==", "!=", "<", ">",
-            "+", "-", "*", "/", "&&", "||",
-            "System.out.println()", "return"
-        )
-        val insert = arrayOf(
-            "\t", "{", "}", "(", ")", "[", "]",
-            ";", "\"", "=", "==", "!=", "<", ">",
-            "+", "-", "*", "/", "&&", "||",
-            "System.out.println()", "return "
-        )
-
-        symbolInput.removeSymbols()
-        symbolInput.addSymbols(display, insert)
-
-        observeKeyboard(symbolInput)
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupHideLeoOnEditorTouch() {
+        editorTouchOverlay.visibility = View.GONE
+        editorTouchOverlay.setOnTouchListener { v, _ ->
+            if (leoTipGroup.visibility == View.VISIBLE) hideLeoHard()
+            v.performClick()
+            false
+        }
+        inputField.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus && leoTipGroup.visibility == View.VISIBLE) hideLeoHard()
+        }
     }
 
     private fun toggleTheme() {
@@ -217,28 +300,30 @@ class ExercisePlayActivity : AppCompatActivity() {
         runButton.isEnabled = !busy
         resetButton.isEnabled = !busy
         themeButton.isEnabled = !busy
+        answerButton.isEnabled = !busy
         leoTipGroup.isEnabled = !busy
+        runProgress.visibility = if (busy) View.VISIBLE else View.GONE
+        runButton.text = if (busy) "Running" else "Run"
     }
 
     private fun resetExercise() {
         lintJob?.cancel()
         runJob?.cancel()
         hintJob?.cancel()
-
         lastRun = null
+        hintLoadedForThisRun = false
+        hintRequestInFlight = false
 
         editor.setText(defaultTemplate())
         inputField.setText("")
 
-        outputCard.visibility = View.GONE
-        outputTitle.text = "Output"
-        outputText.text = "—"
-
+        activePanel = Panel.TESTS
+        renderTestPreview()
         clearDiagnostics()
         hideLottie(immediate = true)
-        hideLeo(immediate = true)
-
+        hideLeoHard()
         setBusy(false)
+        setStatus(Status.READY)
         persistDraft()
         scheduleLint()
     }
@@ -246,35 +331,40 @@ class ExercisePlayActivity : AppCompatActivity() {
     private fun runSolution() {
         runJob?.cancel()
         hintJob?.cancel()
-
-        hideLeo(immediate = true)
+        hideLeoHard()
         hideLottie(immediate = true)
+        hintLoadedForThisRun = false
+        hintRequestInFlight = false
 
-        outputCard.visibility = View.VISIBLE
-        outputTitle.text = "Output"
-        outputText.text = "Checking..."
-
+        activePanel = Panel.TESTS
+        setStatus(Status.RUNNING)
+        outputTitle.text = "Tests"
+        outputText.text = "Executing checks..."
+        updatePanelTabs()
         setBusy(true)
 
-        val code = editor.text.toString()
-        val input = inputField.text.toString()
+        pendingRunCode = editor.text.toString()
+        promptedInputs.clear()
         persistDraft()
+        showInputPrompt(step = 0)
+    }
 
+    private fun executeRun(code: String, tests: List<RunTestCase>) {
         runJob = lifecycleScope.launch {
             val res = runCatching {
                 ApiClient.execApi.run(
                     RunRequest(
                         language = "java",
                         code = code,
-                        input = input,
-                        expectedOutput = expectedOutput,
-                        compareMode = "normalize"
+                        compareMode = "trim",
+                        testCases = tests
                     )
                 )
             }.getOrElse { null }
 
             if (res == null) {
                 lastRun = null
+                setStatus(Status.FAILED)
                 outputTitle.text = "Error"
                 outputText.text = "Server error"
                 showFailThenLeo()
@@ -285,64 +375,229 @@ class ExercisePlayActivity : AppCompatActivity() {
             lastRun = res
             renderRunResult(res)
 
-            val failedByRuntime = (res.exitCode != 0) || res.error.trim().isNotEmpty()
-            val failedByWrongOutput = (res.passed == false)
-            val failedByNoOutput = res.output.trim().isEmpty() && !failedByRuntime
+            val runtimeError = (res.exitCode != 0) || res.error.trim().isNotEmpty()
+            val passed = (res.passed == true) && !runtimeError
 
-            val passed = (res.passed == true) && !failedByRuntime
-
-            if (passed) {
-                playResultAnimation(pass = true) {
-                }
-            } else {
-                if (failedByRuntime || failedByWrongOutput || failedByNoOutput) {
-                    showFailThenLeo()
-                } else {
-                    showFailThenLeo()
-                }
-            }
-
+            setStatus(if (passed) Status.PASSED else Status.FAILED)
+            if (passed) playResultAnimation(pass = true) { } else showFailThenLeo()
             setBusy(false)
         }
     }
 
-    private fun showFailThenLeo() {
-        playResultAnimation(pass = false) {
-            showLeoPrompt()
+    private fun renderRunResult(res: RunResponse?) {
+        updatePanelTabs()
+        if (activePanel == Panel.TESTS) {
+            renderTests(res?.testResults, res?.summary)
+        } else {
+            renderConsole(res)
         }
     }
 
-    private fun renderRunResult(res: RunResponse) {
+    private fun renderConsole(res: RunResponse?) {
+        outputTitle.text = "Console"
+        if (res == null) {
+            outputText.text = "Run your code to see output here."
+            return
+        }
+
         val out = res.output.trim()
         val err = res.error.trim()
         val hasError = (res.exitCode != 0) || err.isNotBlank()
+        outputText.text = when {
+            hasError -> err.ifBlank { "Runtime error" }
+            out.isNotEmpty() -> out
+            else -> "(no output)"
+        }
+    }
 
-        when {
-            hasError -> {
-                outputTitle.text = "Error"
-                outputText.text = if (err.isNotBlank()) err else "Runtime error"
-            }
-            out.isNotEmpty() -> {
-                outputTitle.text = "Output"
-                outputText.text = out
-            }
-            else -> {
-                outputTitle.text = "Output"
-                outputText.text = "(no output)"
+    private fun renderTests(results: List<RunTestResult>?, summary: String?) {
+        outputTitle.text = summary ?: "Tests"
+        if (results.isNullOrEmpty()) {
+            renderTestPreview()
+            return
+        }
+
+        outputText.text = results.joinToString(separator = "\n\n") { result ->
+            val mark = if (result.passed) "PASS" else "FAIL"
+            val name = result.name ?: "Test"
+            if (result.hidden) {
+                "$mark  $name\nHidden test case"
+            } else {
+                val input = result.input.orEmpty().trim().ifBlank { "(empty)" }
+                val expected = result.expectedOutput.orEmpty().trim()
+                val actual = result.actualOutput.orEmpty().trim().ifBlank {
+                    result.error.trim().ifBlank { "(no output)" }
+                }
+                "$mark  $name\ninput: $input\nexpected: $expected\nactual: $actual"
             }
         }
     }
 
-    private fun showLeoPrompt() {
-        leoTipGroup.bringToFront()
-        leoTipGroup.translationZ = 50f
+    private fun renderTestPreview() {
+        updatePanelTabs()
+        outputTitle.text = "Tests"
+        outputText.text = exerciseTests.joinToString(separator = "\n\n") { test ->
+            if (test.hidden) {
+                "LOCK  ${test.name}\nHidden validation"
+            } else {
+                "READY  ${test.name}\ninput: ${test.input.trim()}\nexpected: ${test.expectedOutput}"
+            }
+        }
+    }
 
-        tvTipTitle.text = "Tip from Leo"
-        tvTipText.text = "For a hint, tap Leo"
+    private fun showIntroOverlay() {
+        introTaskText.text = taskTitleText
+        introOverlay.visibility = View.VISIBLE
+        introOverlay.alpha = 0f
+        introReadyText.scaleX = 0.72f
+        introReadyText.scaleY = 0.72f
+        introTaskText.alpha = 0f
+        introTaskText.translationY = 26f
+
+        introOverlay.animate()
+            .alpha(1f)
+            .setDuration(180)
+            .withEndAction {
+                introReadyText.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setInterpolator(OvershootInterpolator())
+                    .setDuration(360)
+                    .withEndAction {
+                        introTaskText.animate()
+                            .alpha(1f)
+                            .translationY(0f)
+                            .setDuration(260)
+                            .withEndAction {
+                                introOverlay.postDelayed({ hideIntroOverlay() }, 650L)
+                            }
+                            .start()
+                    }
+                    .start()
+            }
+            .start()
+    }
+
+    private fun hideIntroOverlay() {
+        introOverlay.animate()
+            .alpha(0f)
+            .translationY(-36f)
+            .setDuration(260)
+            .withEndAction {
+                introOverlay.visibility = View.GONE
+                introOverlay.translationY = 0f
+            }
+            .start()
+    }
+
+    private fun showInputPrompt(step: Int) {
+        val labels = listOf("first", "second")
+        inputPromptTitle.text = "Input ${step + 1} of 2"
+        inputPromptMessage.text = "Enter the ${labels[step]} number your program will read."
+        inputPromptField.setText("")
+        inputPromptField.error = null
+        inputPromptOverlay.visibility = View.VISIBLE
+        inputPromptOverlay.alpha = 0f
+        inputPromptCard.scaleX = 0.94f
+        inputPromptCard.scaleY = 0.94f
+
+        inputPromptOverlay.animate().alpha(1f).setDuration(150).start()
+        inputPromptCard.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .setInterpolator(OvershootInterpolator())
+            .setDuration(220)
+            .start()
+        inputPromptField.requestFocus()
+    }
+
+    private fun submitPromptedInput() {
+        val value = inputPromptField.text.toString().trim().toIntOrNull()
+        if (value == null) {
+            inputPromptField.error = "Enter a whole number"
+            return
+        }
+
+        promptedInputs += value
+        if (promptedInputs.size < 2) {
+            showInputPrompt(step = promptedInputs.size)
+            return
+        }
+
+        inputPromptOverlay.animate()
+            .alpha(0f)
+            .setDuration(130)
+            .withEndAction {
+                inputPromptOverlay.visibility = View.GONE
+                val first = promptedInputs[0]
+                val second = promptedInputs[1]
+                inputField.setText("$first $second")
+                executeRun(pendingRunCode, buildRunTests(first, second))
+            }
+            .start()
+    }
+
+    private fun cancelPromptedRun() {
+        inputPromptOverlay.visibility = View.GONE
+        pendingRunCode = ""
+        promptedInputs.clear()
+        setBusy(false)
+        setStatus(Status.READY)
+        renderTestPreview()
+    }
+
+    private fun buildRunTests(first: Int, second: Int): List<RunTestCase> {
+        val learnerTest = RunTestCase(
+            name = "Your input",
+            input = "$first $second\n",
+            expectedOutput = (first + second).toString()
+        )
+        return listOf(learnerTest) + exerciseTests.drop(1)
+    }
+
+    private fun showLockedAnswerHint() {
+        activePanel = Panel.CONSOLE
+        updatePanelTabs()
+        outputTitle.text = "Answer locked"
+        outputText.text = "The full answer is locked for a future unlock flow."
+        outputCard.animate()
+            .translationY(-8f)
+            .setDuration(110)
+            .withEndAction {
+                outputCard.animate().translationY(0f).setDuration(110).start()
+            }
+            .start()
+    }
+
+    private fun setStatus(status: Status) {
+        val (label, background) = when (status) {
+            Status.READY -> "Ready" to R.drawable.bg_status_idle
+            Status.RUNNING -> "Running tests" to R.drawable.bg_status_running
+            Status.PASSED -> "All tests passed" to R.drawable.bg_status_pass
+            Status.FAILED -> "Needs work" to R.drawable.bg_status_fail
+        }
+        statusPill.text = label
+        statusPill.setBackgroundResource(background)
+        statusPill.animate()
+            .scaleX(1.04f)
+            .scaleY(1.04f)
+            .setDuration(110)
+            .withEndAction {
+                statusPill.animate().scaleX(1f).scaleY(1f).setDuration(110).start()
+            }
+            .start()
+    }
+
+    private fun showFailThenLeo() = playResultAnimation(pass = false) { showLeoPrompt() }
+
+    private fun showLeoPrompt() {
+        tvTipTitle.text = "AI hint"
+        tvTipText.text = "Tap for a focused clue."
 
         leoTipGroup.visibility = View.VISIBLE
         leoTipGroup.alpha = 0f
-        leoTipGroup.translationY = 60f
+        leoTipGroup.translationY = 42f
+        editorTouchOverlay.visibility = View.VISIBLE
 
         leoTipGroup.animate()
             .alpha(1f)
@@ -352,76 +607,63 @@ class ExercisePlayActivity : AppCompatActivity() {
             .start()
     }
 
-    private fun hideLeo(immediate: Boolean = false) {
+    private fun hideLeoHard() {
         leoTipGroup.animate().cancel()
-
-        if (immediate) {
-            leoTipGroup.visibility = View.GONE
-            leoTipGroup.alpha = 0f
-            leoTipGroup.translationY = 0f
-            return
-        }
-
-        if (leoTipGroup.visibility != View.VISIBLE) return
-        leoTipGroup.animate()
-            .alpha(0f)
-            .translationY(40f)
-            .setDuration(160)
-            .withEndAction {
-                leoTipGroup.visibility = View.GONE
-                leoTipGroup.translationY = 0f
-            }
-            .start()
+        leoTipGroup.visibility = View.GONE
+        leoTipGroup.alpha = 0f
+        leoTipGroup.translationY = 0f
+        hintLoadedForThisRun = false
+        hintRequestInFlight = false
+        editorTouchOverlay.visibility = View.GONE
     }
 
     private fun requestHint() {
         val res = lastRun ?: return
+        val failed = (res.passed == false) || (res.exitCode != 0) ||
+                res.error.trim().isNotEmpty() || res.output.trim().isEmpty()
+        if (!failed || hintRequestInFlight || hintLoadedForThisRun) return
 
-        val failed = (res.passed == false) || (res.exitCode != 0) || res.error.trim().isNotEmpty() || res.output.trim().isEmpty()
-        if (!failed) return
-
-        hintJob?.cancel()
-        tvTipTitle.text = "Tip from Leo"
+        hintRequestInFlight = true
+        tvTipTitle.text = "AI hint"
         tvTipText.text = "Thinking..."
 
-        val code = editor.text.toString()
-        val input = inputField.text.toString()
-
+        hintJob?.cancel()
         hintJob = lifecycleScope.launch {
             runCatching {
                 ApiClient.execApi.hint(
                     HintRequest(
-                        task = taskTitleText,
+                        task = "$taskTitleText. $taskSubtitleText",
                         language = "java",
-                        code = code,
-                        input = input,
-                        output = res.output,
+                        code = editor.text.toString(),
+                        input = inputField.text.toString(),
+                        output = res.summary ?: res.output,
                         error = res.error,
                         exitCode = res.exitCode,
                         passed = res.passed,
                         expectedOutput = res.expectedOutput,
                         actualOutput = res.actualOutput,
-                        compareMode = "normalize"
+                        compareMode = "trim"
                     )
                 )
             }.onSuccess { hintRes ->
+                hintLoadedForThisRun = true
                 tvTipText.text = hintRes.hint
             }.onFailure {
-                tvTipText.text = "Try checking your output and prints."
+                hintLoadedForThisRun = true
+                tvTipText.text = "Check how your values are combined."
             }
+            hintRequestInFlight = false
         }
     }
 
     private fun playResultAnimation(pass: Boolean, onDone: () -> Unit) {
         val anim = if (pass) R.raw.lottie_pass else R.raw.lottie_fail
-
         runCatching { resultLottie.removeAllAnimatorListeners() }
         runCatching { resultLottie.cancelAnimation() }
 
         resultLottie.visibility = View.VISIBLE
         resultLottie.bringToFront()
         resultLottie.translationZ = 100f
-
         resultLottie.setAnimation(anim)
         resultLottie.repeatCount = 0
         resultLottie.progress = 0f
@@ -432,29 +674,23 @@ class ExercisePlayActivity : AppCompatActivity() {
                 onDone()
             }
         })
-
         resultLottie.playAnimation()
     }
 
     private fun hideLottie(immediate: Boolean = false) {
         runCatching { resultLottie.removeAllAnimatorListeners() }
         runCatching { resultLottie.cancelAnimation() }
-
         if (immediate) {
             resultLottie.visibility = View.GONE
             resultLottie.alpha = 1f
             return
         }
-
         if (resultLottie.visibility != View.VISIBLE) return
-        resultLottie.animate()
-            .alpha(0f)
-            .setDuration(120)
+        resultLottie.animate().alpha(0f).setDuration(120)
             .withEndAction {
                 resultLottie.visibility = View.GONE
                 resultLottie.alpha = 1f
-            }
-            .start()
+            }.start()
     }
 
     private fun scheduleLint() {
@@ -466,22 +702,15 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private suspend fun runLint() {
-        val code = editor.text.toString()
-
         runCatching {
-            ApiClient.execApi.lint(LintRequest(code = code))
+            ApiClient.execApi.lint(LintRequest(code = editor.text.toString()))
         }.onSuccess { res ->
-            val first = res.errors.firstOrNull()
-            if (first == null) {
+            val first = res.errors.firstOrNull() ?: run {
                 clearDiagnostics()
                 return
             }
-
-            val lineZeroBased = (first.line - 1).coerceAtLeast(0)
-            applyLineDiagnostic(findLineRegion(lineZeroBased))
-        }.onFailure {
-            clearDiagnostics()
-        }
+            applyLineDiagnostic(findLineRegion((first.line - 1).coerceAtLeast(0)))
+        }.onFailure { clearDiagnostics() }
     }
 
     private fun applyLineDiagnostic(region: Pair<Int, Int>?) {
@@ -489,29 +718,23 @@ class ExercisePlayActivity : AppCompatActivity() {
             clearDiagnostics()
             return
         }
-
         val (start, end) = region
         if (end <= start) {
             clearDiagnostics()
             return
         }
-
-        val container = DiagnosticsContainer().apply {
+        editor.diagnostics = DiagnosticsContainer().apply {
             addDiagnostic(DiagnosticRegion(start, end, DiagnosticRegion.SEVERITY_ERROR))
         }
-
-        editor.diagnostics = container
         editor.invalidate()
     }
 
     private fun findLineRegion(lineZeroBased: Int): Pair<Int, Int>? {
         val text = editor.text
         if (text.lineCount <= 0) return null
-
         val line = lineZeroBased.coerceIn(0, text.lineCount - 1)
         var len = text.getColumnCount(line).coerceAtLeast(1)
         var start = text.getCharIndex(line, 0)
-
         for (c in text.getLineString(line)) {
             if (c == ' ' || c == '\t') {
                 start++
@@ -520,7 +743,6 @@ class ExercisePlayActivity : AppCompatActivity() {
                 break
             }
         }
-
         if (len <= 0) return null
         return start to (start + len)
     }
@@ -530,41 +752,39 @@ class ExercisePlayActivity : AppCompatActivity() {
         editor.invalidate()
     }
 
-    private fun observeKeyboard(symbolBar: View) {
-        val root = findViewById<View>(android.R.id.content)
-
-        val listener = ViewTreeObserver.OnGlobalLayoutListener {
-            val rect = Rect()
-            root.getWindowVisibleDisplayFrame(rect)
-
-            val screenHeight = root.rootView.height
-            val keyboardHeight = screenHeight - rect.bottom
-            val keyboardOpen = keyboardHeight > screenHeight * 0.15f
-
-            symbolBar.visibility = if (keyboardOpen) View.VISIBLE else View.GONE
-        }
-
-        keyboardListener = listener
-        root.viewTreeObserver.addOnGlobalLayoutListener(listener)
-    }
-
     private fun defaultTemplate() = """
+        import java.util.Scanner;
+
         public class Main {
             public static void main(String[] args) {
-                System.out.println("Hello World");
+                Scanner scanner = new Scanner(System.in);
+                int first = scanner.nextInt();
+                int second = scanner.nextInt();
+
+                System.out.println(first + second);
             }
         }
     """.trimIndent()
+
+    private enum class Panel {
+        CONSOLE,
+        TESTS
+    }
+
+    private enum class Status {
+        READY,
+        RUNNING,
+        PASSED,
+        FAILED
+    }
 
     private companion object {
         private const val PREFS_NAME = "goCode_prefs"
         private const val KEY_CODE = "exercise_code"
         private const val KEY_INPUT = "exercise_input"
         private const val KEY_DARK = "exercise_dark"
-
         private const val STATE_CODE = "state_code"
         private const val STATE_INPUT = "state_input"
-
         private const val LINT_DEBOUNCE_MS = 850L
     }
 }
