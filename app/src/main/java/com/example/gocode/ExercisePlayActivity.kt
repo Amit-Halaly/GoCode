@@ -23,7 +23,6 @@ import com.example.gocode.network.models.lintModels.LintRequest
 import com.example.gocode.network.models.runModels.RunRequest
 import com.example.gocode.network.models.runModels.RunResponse
 import com.example.gocode.network.models.runModels.RunTestCase
-import com.example.gocode.network.models.runModels.RunTestResult
 import com.google.android.material.button.MaterialButton
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
@@ -64,8 +63,6 @@ class ExercisePlayActivity : AppCompatActivity() {
     private lateinit var runButton: MaterialButton
     private lateinit var themeButton: MaterialButton
     private lateinit var resetButton: MaterialButton
-    private lateinit var consoleButton: MaterialButton
-    private lateinit var testsButton: MaterialButton
     private lateinit var answerButton: MaterialButton
 
     private lateinit var introOverlay: View
@@ -81,7 +78,6 @@ class ExercisePlayActivity : AppCompatActivity() {
     private lateinit var inputPromptCancel: MaterialButton
 
     private var isDarkTheme = true
-    private var activePanel = Panel.CONSOLE
     private var pendingRunCode: String = ""
     private val promptedInputs = mutableListOf<Int>()
 
@@ -95,6 +91,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private val taskTitleText = "Add two numbers"
     private val taskSubtitleText = "Read two integers and print their sum."
+    private val exerciseNeedsInput = true
 
     private val exerciseTests = listOf(
         RunTestCase(name = "Warm up", input = "1 2\n", expectedOutput = "3"),
@@ -134,8 +131,6 @@ class ExercisePlayActivity : AppCompatActivity() {
         runButton = findViewById(R.id.runButton)
         themeButton = findViewById(R.id.themeButton)
         resetButton = findViewById(R.id.resetButton)
-        consoleButton = findViewById(R.id.consoleButton)
-        testsButton = findViewById(R.id.testsButton)
         answerButton = findViewById(R.id.answerButton)
 
         introOverlay = findViewById(R.id.introOverlay)
@@ -152,7 +147,6 @@ class ExercisePlayActivity : AppCompatActivity() {
 
         setupEditor()
         setupSymbolBar()
-        setupPanels()
 
         val savedCode = savedInstanceState?.getString(STATE_CODE) ?: prefs.getString(KEY_CODE, null)
         val savedInput = savedInstanceState?.getString(STATE_INPUT) ?: prefs.getString(KEY_INPUT, "") ?: ""
@@ -163,7 +157,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         hideLeoHard()
         hideLottie(immediate = true)
         setStatus(Status.READY)
-        renderTestPreview()
+        renderReadyState()
 
         setupHideLeoOnEditorTouch()
 
@@ -186,23 +180,6 @@ class ExercisePlayActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupPanels() {
-        consoleButton.setOnClickListener {
-            activePanel = Panel.CONSOLE
-            renderRunResult(lastRun)
-        }
-        testsButton.setOnClickListener {
-            activePanel = Panel.TESTS
-            renderRunResult(lastRun)
-        }
-        updatePanelTabs()
-    }
-
-    private fun updatePanelTabs() {
-        consoleButton.alpha = if (activePanel == Panel.CONSOLE) 1f else 0.58f
-        testsButton.alpha = if (activePanel == Panel.TESTS) 1f else 0.58f
-    }
-
     private fun setupSymbolBar() {
         symbolInput.bindEditor(editor)
 
@@ -212,10 +189,13 @@ class ExercisePlayActivity : AppCompatActivity() {
         symbolInput.removeSymbols()
         symbolInput.addSymbols(display, insert)
         symbolInput.visibility = View.GONE
+        symbolInput.elevation = 24f
+        symbolInput.translationZ = 24f
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { _, insets ->
             val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             symbolInput.visibility = if (imeVisible) View.VISIBLE else View.GONE
+            if (imeVisible) symbolInput.bringToFront()
             if (imeVisible && leoTipGroup.visibility == View.VISIBLE) hideLeoHard()
             insets
         }
@@ -247,7 +227,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private fun setupEditor() {
         editor.setEditorLanguage(JavaLanguage())
-        editor.setTextSize(14f)
+        editor.setTextSize(12f)
         editor.isLineNumberEnabled = true
         editor.isHighlightCurrentLine = true
         editor.isUndoEnabled = true
@@ -317,8 +297,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         editor.setText(defaultTemplate())
         inputField.setText("")
 
-        activePanel = Panel.TESTS
-        renderTestPreview()
+        renderReadyState()
         clearDiagnostics()
         hideLottie(immediate = true)
         hideLeoHard()
@@ -336,17 +315,24 @@ class ExercisePlayActivity : AppCompatActivity() {
         hintLoadedForThisRun = false
         hintRequestInFlight = false
 
-        activePanel = Panel.TESTS
         setStatus(Status.RUNNING)
-        outputTitle.text = "Tests"
-        outputText.text = "Executing checks..."
-        updatePanelTabs()
+        outputTitle.text = "Running"
+        outputText.text = "Checking your solution behind the scenes..."
         setBusy(true)
 
         pendingRunCode = editor.text.toString()
         promptedInputs.clear()
         persistDraft()
-        showInputPrompt(step = 0)
+        if (exerciseNeedsInput) {
+            showInputPrompt(step = 0)
+        } else {
+            executeRun(
+                code = pendingRunCode,
+                fallbackInput = "",
+                fallbackExpectedOutput = exerciseTests.first().expectedOutput,
+                tests = exerciseTests
+            )
+        }
     }
 
     private fun executeRun(
@@ -392,64 +378,27 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private fun renderRunResult(res: RunResponse?) {
-        updatePanelTabs()
-        if (activePanel == Panel.TESTS) {
-            renderTests(res?.testResults, res?.summary)
-        } else {
-            renderConsole(res)
-        }
-    }
-
-    private fun renderConsole(res: RunResponse?) {
-        outputTitle.text = "Console"
         if (res == null) {
-            outputText.text = "Run your code to see output here."
+            renderReadyState()
             return
         }
 
         val out = res.output.trim()
         val err = res.error.trim()
         val hasError = (res.exitCode != 0) || err.isNotBlank()
+        val passed = res.passed == true && !hasError
+        outputTitle.text = if (passed) "Great work" else "Needs work"
         outputText.text = when {
             hasError -> err.ifBlank { "Runtime error" }
-            out.isNotEmpty() -> out
-            else -> "(no output)"
+            passed -> "Your solution passed the checks."
+            out.isNotEmpty() -> "Your output:\n$out"
+            else -> "Your program finished without output."
         }
     }
 
-    private fun renderTests(results: List<RunTestResult>?, summary: String?) {
-        outputTitle.text = summary ?: "Tests"
-        if (results.isNullOrEmpty()) {
-            renderTestPreview()
-            return
-        }
-
-        outputText.text = results.joinToString(separator = "\n\n") { result ->
-            val mark = if (result.passed) "PASS" else "FAIL"
-            val name = result.name ?: "Test"
-            if (result.hidden) {
-                "$mark  $name\nHidden test case"
-            } else {
-                val input = result.input.orEmpty().trim().ifBlank { "(empty)" }
-                val expected = result.expectedOutput.orEmpty().trim()
-                val actual = result.actualOutput.orEmpty().trim().ifBlank {
-                    result.error.trim().ifBlank { "(no output)" }
-                }
-                "$mark  $name\ninput: $input\nexpected: $expected\nactual: $actual"
-            }
-        }
-    }
-
-    private fun renderTestPreview() {
-        updatePanelTabs()
-        outputTitle.text = "Tests"
-        outputText.text = exerciseTests.joinToString(separator = "\n\n") { test ->
-            if (test.hidden) {
-                "LOCK  ${test.name}\nHidden validation"
-            } else {
-                "READY  ${test.name}\ninput: ${test.input.trim()}\nexpected: ${test.expectedOutput}"
-            }
-        }
+    private fun renderReadyState() {
+        outputTitle.text = "Console"
+        outputText.text = "Press Run. If the program needs input, GoCode will ask for it step by step."
     }
 
     private fun showIntroOverlay() {
@@ -555,7 +504,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         promptedInputs.clear()
         setBusy(false)
         setStatus(Status.READY)
-        renderTestPreview()
+        renderReadyState()
     }
 
     private fun buildRunTests(first: Int, second: Int): List<RunTestCase> {
@@ -568,8 +517,6 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private fun showLockedAnswerHint() {
-        activePanel = Panel.CONSOLE
-        updatePanelTabs()
         outputTitle.text = "Answer locked"
         outputText.text = "The full answer is locked for a future unlock flow."
         outputCard.animate()
@@ -777,11 +724,6 @@ class ExercisePlayActivity : AppCompatActivity() {
             }
         }
     """.trimIndent()
-
-    private enum class Panel {
-        CONSOLE,
-        TESTS
-    }
 
     private enum class Status {
         READY,

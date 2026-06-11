@@ -176,33 +176,9 @@
                     android:orientation="horizontal">
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/testsButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="34dp"
-                        android:minWidth="72dp"
-                        android:text="Tests"
-                        android:textAllCaps="false"
-                        android:textSize="12sp"
-                        app:backgroundTint="#163A5A"
-                        app:cornerRadius="8dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/consoleButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="34dp"
-                        android:layout_marginStart="8dp"
-                        android:minWidth="82dp"
-                        android:text="Console"
-                        android:textAllCaps="false"
-                        android:textSize="12sp"
-                        app:backgroundTint="#142233"
-                        app:cornerRadius="8dp" />
-
-                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/answerButton"
                         android:layout_width="wrap_content"
                         android:layout_height="34dp"
-                        android:layout_marginStart="8dp"
                         android:minWidth="82dp"
                         android:text="Answer"
                         android:textAllCaps="false"
@@ -260,7 +236,9 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_exercise_input"
-                android:hint="Scratch stdin"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:hint="Input opens on Run"
                 android:imeOptions="actionDone"
                 android:paddingHorizontal="12dp"
                 android:singleLine="true"
@@ -313,7 +291,11 @@
         <io.github.rosemoe.sora.widget.SymbolInputView
             android:id="@+id/symbolInput"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="46dp"
+            android:background="#101C2B"
+            android:elevation="24dp"
+            android:minHeight="46dp"
+            android:paddingVertical="4dp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
