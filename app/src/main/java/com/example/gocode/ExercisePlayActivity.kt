@@ -349,13 +349,20 @@ class ExercisePlayActivity : AppCompatActivity() {
         showInputPrompt(step = 0)
     }
 
-    private fun executeRun(code: String, tests: List<RunTestCase>) {
+    private fun executeRun(
+        code: String,
+        fallbackInput: String,
+        fallbackExpectedOutput: String,
+        tests: List<RunTestCase>
+    ) {
         runJob = lifecycleScope.launch {
             val res = runCatching {
                 ApiClient.execApi.run(
                     RunRequest(
                         language = "java",
                         code = code,
+                        input = fallbackInput,
+                        expectedOutput = fallbackExpectedOutput,
                         compareMode = "trim",
                         testCases = tests
                     )
@@ -532,7 +539,12 @@ class ExercisePlayActivity : AppCompatActivity() {
                 val first = promptedInputs[0]
                 val second = promptedInputs[1]
                 inputField.setText("$first $second")
-                executeRun(pendingRunCode, buildRunTests(first, second))
+                executeRun(
+                    code = pendingRunCode,
+                    fallbackInput = "$first $second\n",
+                    fallbackExpectedOutput = (first + second).toString(),
+                    tests = buildRunTests(first, second)
+                )
             }
             .start()
     }
