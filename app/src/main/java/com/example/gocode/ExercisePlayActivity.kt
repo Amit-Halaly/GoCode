@@ -10,6 +10,7 @@ import android.view.animation.OvershootInterpolator
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
@@ -79,6 +80,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private var isDarkTheme = true
     private var pendingRunCode: String = ""
+    private var pendingInputCount = 0
     private val promptedInputs = mutableListOf<Int>()
 
     private var lintJob: Job? = null
@@ -91,7 +93,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private val taskTitleText = "Add two numbers"
     private val taskSubtitleText = "Read two integers and print their sum."
-    private val exerciseNeedsInput = true
+    private val requiredTaskInputCount = 2
 
     private val exerciseTests = listOf(
         RunTestCase(name = "Warm up", input = "1 2\n", expectedOutput = "3"),
@@ -147,6 +149,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
         setupEditor()
         setupSymbolBar()
+        updateThemeButtonIcon()
 
         val savedCode = savedInstanceState?.getString(STATE_CODE) ?: prefs.getString(KEY_CODE, null)
         val savedInput = savedInstanceState?.getString(STATE_INPUT) ?: prefs.getString(KEY_INPUT, "") ?: ""
@@ -258,10 +261,16 @@ class ExercisePlayActivity : AppCompatActivity() {
     private fun toggleTheme() {
         isDarkTheme = !isDarkTheme
         prefs.edit { putBoolean(KEY_DARK, isDarkTheme) }
+        updateThemeButtonIcon()
         AppCompatDelegate.setDefaultNightMode(
             if (isDarkTheme) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         )
         recreate()
+    }
+
+    private fun updateThemeButtonIcon() {
+        val icon = if (isDarkTheme) R.drawable.ic_sun else R.drawable.ic_moon
+        themeButton.icon = ContextCompat.getDrawable(this, icon)
     }
 
     private fun applyThemeToEditor() {
@@ -321,9 +330,10 @@ class ExercisePlayActivity : AppCompatActivity() {
         setBusy(true)
 
         pendingRunCode = editor.text.toString()
+        pendingInputCount = detectInputReadCount(pendingRunCode)
         promptedInputs.clear()
         persistDraft()
-        if (exerciseNeedsInput) {
+        if (pendingInputCount > 0) {
             showInputPrompt(step = 0)
         } else {
             executeRun(
@@ -447,9 +457,8 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private fun showInputPrompt(step: Int) {
-        val labels = listOf("first", "second")
-        inputPromptTitle.text = "Input ${step + 1} of 2"
-        inputPromptMessage.text = "Enter the ${labels[step]} number your program will read."
+        inputPromptTitle.text = "Input ${step + 1} of $pendingInputCount"
+        inputPromptMessage.text = "Enter value ${step + 1} for the next input read in your code."
         inputPromptField.setText("")
         inputPromptField.error = null
         inputPromptOverlay.visibility = View.VISIBLE
@@ -475,7 +484,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         }
 
         promptedInputs += value
-        if (promptedInputs.size < 2) {
+        if (promptedInputs.size < pendingInputCount) {
             showInputPrompt(step = promptedInputs.size)
             return
         }
@@ -485,14 +494,13 @@ class ExercisePlayActivity : AppCompatActivity() {
             .setDuration(130)
             .withEndAction {
                 inputPromptOverlay.visibility = View.GONE
-                val first = promptedInputs[0]
-                val second = promptedInputs[1]
-                inputField.setText("$first $second")
+                val inputText = promptedInputs.joinToString(separator = " ")
+                inputField.setText(inputText)
                 executeRun(
                     code = pendingRunCode,
-                    fallbackInput = "$first $second\n",
-                    fallbackExpectedOutput = (first + second).toString(),
-                    tests = buildRunTests(first, second)
+                    fallbackInput = "$inputText\n",
+                    fallbackExpectedOutput = expectedSum(promptedInputs).toString(),
+                    tests = buildRunTests(promptedInputs)
                 )
             }
             .start()
@@ -507,13 +515,34 @@ class ExercisePlayActivity : AppCompatActivity() {
         renderReadyState()
     }
 
-    private fun buildRunTests(first: Int, second: Int): List<RunTestCase> {
+    private fun buildRunTests(userInputs: List<Int>): List<RunTestCase> {
         val learnerTest = RunTestCase(
             name = "Your input",
-            input = "$first $second\n",
-            expectedOutput = (first + second).toString()
+            input = "${userInputs.joinToString(separator = " ")}\n",
+            expectedOutput = expectedSum(userInputs).toString()
         )
-        return listOf(learnerTest) + exerciseTests.drop(1)
+        return listOf(learnerTest) + exerciseTests.drop(1).map { test ->
+            test.copy(input = padTestInput(test.input))
+        }
+    }
+
+    private fun expectedSum(inputs: List<Int>): Int {
+        return inputs.take(requiredTaskInputCount).sum()
+    }
+
+    private fun padTestInput(input: String): String {
+        val values = input.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+        if (pendingInputCount <= values.size) return input
+        val padded = values + List(pendingInputCount - values.size) { "0" }
+        return "${padded.joinToString(separator = " ")}\n"
+    }
+
+    private fun detectInputReadCount(code: String): Int {
+        val scannerReads = Regex("""\.\s*next(Int|Long|Double|Float|Short|Byte|Line|Boolean)\s*\(""")
+            .findAll(code)
+            .count()
+        val bufferedReads = Regex("""\.readLine\s*\(""").findAll(code).count()
+        return scannerReads + bufferedReads
     }
 
     private fun showLockedAnswerHint() {
