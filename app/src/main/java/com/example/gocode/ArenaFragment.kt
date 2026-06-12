@@ -7,12 +7,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.gocode.repositories.AvatarRepository
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -33,15 +35,27 @@ class ArenaFragment : Fragment() {
     private lateinit var rankText: TextView
     private lateinit var languageText: TextView
     private lateinit var startButton: MaterialButton
+    private lateinit var battleTabButton: MaterialButton
+    private lateinit var leaderboardTabButton: MaterialButton
+    private lateinit var battleContent: View
+    private lateinit var leaderboardContent: View
 
     private lateinit var matchmakingPanel: View
     private lateinit var searchingText: TextView
     private lateinit var searchingProgress: ProgressBar
+    private lateinit var playerSearchAvatar: ImageView
+    private lateinit var opponentSearchAvatar: ImageView
     private lateinit var opponentNameText: TextView
     private lateinit var opponentMetaText: TextView
     private lateinit var opponentRatingText: TextView
 
     private lateinit var matchPanel: View
+    private lateinit var playerAvatarImage: ImageView
+    private lateinit var opponentAvatarImage: ImageView
+    private lateinit var playerCardName: TextView
+    private lateinit var opponentCardName: TextView
+    private lateinit var playerCardRank: TextView
+    private lateinit var opponentCardRank: TextView
     private lateinit var roundText: TextView
     private lateinit var timerText: TextView
     private lateinit var timerProgress: ProgressBar
@@ -60,10 +74,14 @@ class ArenaFragment : Fragment() {
     private lateinit var globalLeaderboard: TextView
     private lateinit var localLeaderboard: TextView
     private lateinit var friendsLeaderboard: TextView
+    private lateinit var questionIntroOverlay: View
+    private lateinit var questionIntroTitle: TextView
+    private lateinit var questionIntroSubtitle: TextView
 
     private var playerName = "You"
     private var playerRating = 1000
     private var playerLanguages = listOf("Java")
+    private var playerAvatarResId = 0
     private var activeOpponent: ArenaOpponent? = null
     private var activeQuestions = emptyList<ArenaQuestion>()
     private var questionIndex = 0
@@ -93,6 +111,8 @@ class ArenaFragment : Fragment() {
 
         startButton.setOnClickListener { startMatchmaking() }
         playAgainButton.setOnClickListener { startMatchmaking() }
+        battleTabButton.setOnClickListener { showArenaTab(ArenaTab.BATTLE) }
+        leaderboardTabButton.setOnClickListener { showArenaTab(ArenaTab.LEADERBOARD) }
     }
 
     override fun onDestroyView() {
@@ -108,15 +128,27 @@ class ArenaFragment : Fragment() {
         rankText = view.findViewById(R.id.arenaRank)
         languageText = view.findViewById(R.id.arenaLanguages)
         startButton = view.findViewById(R.id.startArenaButton)
+        battleTabButton = view.findViewById(R.id.battleTabButton)
+        leaderboardTabButton = view.findViewById(R.id.leaderboardTabButton)
+        battleContent = view.findViewById(R.id.battleContent)
+        leaderboardContent = view.findViewById(R.id.leaderboardContent)
 
         matchmakingPanel = view.findViewById(R.id.matchmakingPanel)
         searchingText = view.findViewById(R.id.searchingText)
         searchingProgress = view.findViewById(R.id.searchingProgress)
+        playerSearchAvatar = view.findViewById(R.id.playerSearchAvatar)
+        opponentSearchAvatar = view.findViewById(R.id.opponentSearchAvatar)
         opponentNameText = view.findViewById(R.id.opponentName)
         opponentMetaText = view.findViewById(R.id.opponentMeta)
         opponentRatingText = view.findViewById(R.id.opponentRating)
 
         matchPanel = view.findViewById(R.id.matchPanel)
+        playerAvatarImage = view.findViewById(R.id.playerAvatarImage)
+        opponentAvatarImage = view.findViewById(R.id.opponentAvatarImage)
+        playerCardName = view.findViewById(R.id.playerCardName)
+        opponentCardName = view.findViewById(R.id.opponentCardName)
+        playerCardRank = view.findViewById(R.id.playerCardRank)
+        opponentCardRank = view.findViewById(R.id.opponentCardRank)
         roundText = view.findViewById(R.id.roundText)
         timerText = view.findViewById(R.id.timerText)
         timerProgress = view.findViewById(R.id.timerProgress)
@@ -135,6 +167,9 @@ class ArenaFragment : Fragment() {
         globalLeaderboard = view.findViewById(R.id.globalLeaderboard)
         localLeaderboard = view.findViewById(R.id.localLeaderboard)
         friendsLeaderboard = view.findViewById(R.id.friendsLeaderboard)
+        questionIntroOverlay = view.findViewById(R.id.questionIntroOverlay)
+        questionIntroTitle = view.findViewById(R.id.questionIntroTitle)
+        questionIntroSubtitle = view.findViewById(R.id.questionIntroSubtitle)
     }
 
     @SuppressLint("SetTextI18n")
@@ -152,6 +187,8 @@ class ArenaFragment : Fragment() {
                     ?: user.displayName
                     ?: "You"
                 playerRating = (doc.getLong("rating") ?: 1000L).toInt()
+                val avatarId = doc.getString("avatarId")
+                playerAvatarResId = avatarDrawableForId(avatarId, R.drawable.avatar_robot)
                 val primaryLanguage = doc.getString("primaryLanguage") ?: "Java"
                 val knownLanguages = doc.get("knownLanguages") as? List<*>
                 playerLanguages = (knownLanguages?.filterIsInstance<String>().orEmpty() + primaryLanguage)
@@ -169,6 +206,7 @@ class ArenaFragment : Fragment() {
     }
 
     private fun renderIdle() {
+        showArenaTab(ArenaTab.BATTLE)
         matchmakingPanel.visibility = View.GONE
         matchPanel.visibility = View.GONE
         resultPanel.visibility = View.GONE
@@ -181,6 +219,25 @@ class ArenaFragment : Fragment() {
         ratingText.text = "$playerRating"
         rankText.text = rankName(playerRating)
         languageText.text = playerLanguages.joinToString(separator = " / ")
+        playerCardName.text = playerName
+        playerCardRank.text = "${rankName(playerRating)} - $playerRating"
+        val avatar = playerAvatarResId.takeIf { it != 0 } ?: R.drawable.avatar_robot
+        playerAvatarImage.setImageResource(avatar)
+        playerSearchAvatar.setImageResource(avatar)
+    }
+
+    private fun showArenaTab(tab: ArenaTab) {
+        battleContent.visibility = if (tab == ArenaTab.BATTLE) View.VISIBLE else View.GONE
+        leaderboardContent.visibility = if (tab == ArenaTab.LEADERBOARD) View.VISIBLE else View.GONE
+        battleTabButton.alpha = if (tab == ArenaTab.BATTLE) 1f else 0.58f
+        leaderboardTabButton.alpha = if (tab == ArenaTab.LEADERBOARD) 1f else 0.58f
+        startButton.visibility = if (tab == ArenaTab.BATTLE && isIdleBattleState()) View.VISIBLE else View.GONE
+    }
+
+    private fun isIdleBattleState(): Boolean {
+        return matchmakingPanel.visibility != View.VISIBLE &&
+                matchPanel.visibility != View.VISIBLE &&
+                resultPanel.visibility != View.VISIBLE
     }
 
     @SuppressLint("SetTextI18n")
@@ -211,6 +268,10 @@ class ArenaFragment : Fragment() {
             opponentNameText.text = opponent.name
             opponentMetaText.text = "${opponent.languages.joinToString(" / ")} - ${rankName(opponent.rating)}"
             opponentRatingText.text = "${opponent.rating}"
+            opponentSearchAvatar.setImageResource(opponent.avatarRes)
+            opponentAvatarImage.setImageResource(opponent.avatarRes)
+            opponentCardName.text = opponent.name
+            opponentCardRank.text = "${rankName(opponent.rating)} - ${opponent.rating}"
             searchingProgress.visibility = View.GONE
             searchingText.text = "Match found"
             matchmakingPanel.popIn()
@@ -272,6 +333,7 @@ class ArenaFragment : Fragment() {
         scoreText.text = "$playerName $playerScore  -  ${activeOpponent?.name ?: "Opponent"} $opponentScore"
         questionCourseText.text = "${question.language} - ${question.course}"
         questionPromptText.text = question.prompt
+        showQuestionIntro(question)
 
         question.options.forEachIndexed { index, option ->
             val button = MaterialButton(requireContext()).apply {
@@ -295,6 +357,46 @@ class ArenaFragment : Fragment() {
 
         startQuestionTimer()
         scheduleOpponentAnswer(question)
+    }
+
+    private fun showQuestionIntro(question: ArenaQuestion) {
+        questionIntroTitle.text = "WHAT IS THE OUTPUT?"
+        questionIntroSubtitle.text = "${question.language} - ${question.course}"
+        questionIntroOverlay.visibility = View.VISIBLE
+        questionIntroOverlay.alpha = 0f
+        questionIntroTitle.scaleX = 0.72f
+        questionIntroTitle.scaleY = 0.72f
+        questionIntroSubtitle.translationY = 22f
+        questionIntroSubtitle.alpha = 0f
+
+        questionIntroOverlay.animate()
+            .alpha(1f)
+            .setDuration(140)
+            .withEndAction {
+                questionIntroTitle.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(270)
+                    .setInterpolator(OvershootInterpolator())
+                    .withEndAction {
+                        questionIntroSubtitle.animate()
+                            .alpha(1f)
+                            .translationY(0f)
+                            .setDuration(170)
+                            .withEndAction {
+                                questionIntroOverlay.postDelayed({
+                                    questionIntroOverlay.animate()
+                                        .alpha(0f)
+                                        .setDuration(180)
+                                        .withEndAction { questionIntroOverlay.visibility = View.GONE }
+                                        .start()
+                                }, 420L)
+                            }
+                            .start()
+                    }
+                    .start()
+            }
+            .start()
     }
 
     private fun startQuestionTimer() {
@@ -342,6 +444,7 @@ class ArenaFragment : Fragment() {
         playerScore += delta
 
         colorAnswerButtons(selectedIndex)
+        scoreText.popIn()
         feedbackText.text = when {
             correct -> "+$delta quick points"
             selectedIndex == -1 -> "$delta timeout"
@@ -357,6 +460,7 @@ class ArenaFragment : Fragment() {
 
         val correct = selectedIndex == currentCorrectIndex
         opponentScore += scoreForAnswer(correct, elapsed)
+        opponentAvatarImage.pulse()
         maybeAdvanceQuestion()
     }
 
@@ -430,19 +534,21 @@ class ArenaFragment : Fragment() {
     }
 
     private fun renderLeaderboards() {
-        val global = (arenaOpponents + ArenaOpponent(playerName, playerRating, playerLanguages, 72))
+        val global = (arenaOpponents + ArenaOpponent(playerName, playerRating, playerLanguages, 72, playerAvatarResId))
             .sortedByDescending { it.rating }
             .take(5)
             .mapIndexed { index, player -> "${index + 1}. ${player.name} - ${player.rating}" }
             .joinToString("\n")
 
-        globalLeaderboard.text = global
+        globalLeaderboard.text = "Global\n$global"
         localLeaderboard.text = listOf(
+            "Local",
             "1. $playerName - $playerRating",
             "2. ByteRunner - 1180",
             "3. LoopMage - 1095"
         ).joinToString("\n")
         friendsLeaderboard.text = listOf(
+            "Friends",
             "1. Aviv - 1220",
             "2. $playerName - $playerRating",
             "3. Ben - 970"
@@ -480,6 +586,26 @@ class ArenaFragment : Fragment() {
             .start()
     }
 
+    private fun View.pulse() {
+        animate()
+            .scaleX(1.1f)
+            .scaleY(1.1f)
+            .setDuration(110L)
+            .withEndAction {
+                animate().scaleX(1f).scaleY(1f).setDuration(110L).start()
+            }
+            .start()
+    }
+
+    private fun avatarDrawableForId(avatarId: String?, fallback: Int): Int {
+        val avatar = AvatarRepository.load(requireContext()).firstOrNull { it.id == avatarId }
+        if (avatar != null) {
+            val resId = AvatarRepository.resolveDrawableResId(requireContext(), avatar.drawableName)
+            if (resId != 0) return resId
+        }
+        return fallback
+    }
+
     private fun LinearLayout.childrenAsButtons(): List<MaterialButton> {
         return (0 until childCount).mapNotNull { getChildAt(it) as? MaterialButton }
     }
@@ -496,8 +622,14 @@ class ArenaFragment : Fragment() {
         val name: String,
         val rating: Int,
         val languages: List<String>,
-        val skill: Int
+        val skill: Int,
+        val avatarRes: Int
     )
+
+    private enum class ArenaTab {
+        BATTLE,
+        LEADERBOARD
+    }
 
     private companion object {
         private const val QUESTION_COUNT = 5
@@ -505,11 +637,11 @@ class ArenaFragment : Fragment() {
         private const val WRONG_ANSWER_PENALTY = -180
 
         private val arenaOpponents = listOf(
-            ArenaOpponent("NullPointer", 1260, listOf("Java", "C"), 74),
-            ArenaOpponent("StackQueen", 1420, listOf("Java", "Python"), 78),
-            ArenaOpponent("ByteRunner", 1180, listOf("C", "Python"), 66),
-            ArenaOpponent("LoopMage", 1095, listOf("Java"), 62),
-            ArenaOpponent("AlgoNinja", 1610, listOf("Python", "Java", "C"), 84)
+            ArenaOpponent("NullPointer", 1260, listOf("Java", "C"), 74, R.drawable.avatar_alien),
+            ArenaOpponent("StackQueen", 1420, listOf("Java", "Python"), 78, R.drawable.avatar_witch),
+            ArenaOpponent("ByteRunner", 1180, listOf("C", "Python"), 66, R.drawable.avatar_robot),
+            ArenaOpponent("LoopMage", 1095, listOf("Java"), 62, R.drawable.avatar_owl),
+            ArenaOpponent("AlgoNinja", 1610, listOf("Python", "Java", "C"), 84, R.drawable.avatar_ninja)
         )
 
         private val arenaQuestions = listOf(
