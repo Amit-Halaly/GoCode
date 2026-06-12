@@ -134,6 +134,20 @@
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
+                        <TextView
+                            android:id="@+id/arenaTicker"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:background="@drawable/bg_arena_ticker"
+                            android:gravity="center"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="7dp"
+                            android:text="LIVE QUEUE  Java  Python  C"
+                            android:textColor="#37F2B6"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
                         <LinearLayout
                             android:id="@+id/idleVersusRow"
                             android:layout_width="match_parent"
@@ -435,6 +449,17 @@
                         android:text="You 0 - Opponent 0"
                         android:textColor="#EAF2FF"
                         android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/comboText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:minHeight="26dp"
+                        android:textColor="#37F2B6"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <TextView

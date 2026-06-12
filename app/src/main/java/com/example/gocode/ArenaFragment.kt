@@ -40,6 +40,9 @@ class ArenaFragment : Fragment() {
     private lateinit var leaderboardTabButton: MaterialButton
     private lateinit var battleContent: View
     private lateinit var leaderboardContent: View
+    private lateinit var stageTitle: TextView
+    private lateinit var stageSubtitle: TextView
+    private lateinit var arenaTicker: TextView
 
     private lateinit var matchmakingPanel: View
     private lateinit var searchingText: TextView
@@ -62,6 +65,7 @@ class ArenaFragment : Fragment() {
     private lateinit var timerText: TextView
     private lateinit var timerProgress: ProgressBar
     private lateinit var scoreText: TextView
+    private lateinit var comboText: TextView
     private lateinit var questionCourseText: TextView
     private lateinit var questionPromptText: TextView
     private lateinit var optionsContainer: LinearLayout
@@ -93,8 +97,10 @@ class ArenaFragment : Fragment() {
     private var playerAnswered = false
     private var opponentAnswered = false
     private var currentCorrectIndex = -1
+    private var correctStreak = 0
 
     private var matchmakingJob: Job? = null
+    private var idleAnimationJob: Job? = null
     private var searchAnimationJob: Job? = null
     private var opponentJob: Job? = null
     private var timer: CountDownTimer? = null
@@ -121,6 +127,7 @@ class ArenaFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         matchmakingJob?.cancel()
+        idleAnimationJob?.cancel()
         searchAnimationJob?.cancel()
         opponentJob?.cancel()
         timer?.cancel()
@@ -136,6 +143,9 @@ class ArenaFragment : Fragment() {
         leaderboardTabButton = view.findViewById(R.id.leaderboardTabButton)
         battleContent = view.findViewById(R.id.battleContent)
         leaderboardContent = view.findViewById(R.id.leaderboardContent)
+        stageTitle = view.findViewById(R.id.stageTitle)
+        stageSubtitle = view.findViewById(R.id.stageSubtitle)
+        arenaTicker = view.findViewById(R.id.arenaTicker)
 
         matchmakingPanel = view.findViewById(R.id.matchmakingPanel)
         searchingText = view.findViewById(R.id.searchingText)
@@ -158,6 +168,7 @@ class ArenaFragment : Fragment() {
         timerText = view.findViewById(R.id.timerText)
         timerProgress = view.findViewById(R.id.timerProgress)
         scoreText = view.findViewById(R.id.scoreText)
+        comboText = view.findViewById(R.id.comboText)
         questionCourseText = view.findViewById(R.id.questionCourse)
         questionPromptText = view.findViewById(R.id.questionPrompt)
         optionsContainer = view.findViewById(R.id.optionsContainer)
@@ -217,6 +228,10 @@ class ArenaFragment : Fragment() {
         resultPanel.visibility = View.GONE
         startButton.visibility = View.VISIBLE
         statusLabel.text = "Ready for a ranked code duel"
+        stageTitle.text = "Ranked Output Duel"
+        stageSubtitle.text = "Fast answers. Clean logic. Real rank."
+        arenaTicker.text = "LIVE QUEUE  ${playerLanguages.joinToString("  ")}"
+        startIdleAnimation()
     }
 
     @SuppressLint("SetTextI18n")
@@ -237,6 +252,7 @@ class ArenaFragment : Fragment() {
         battleTabButton.alpha = if (tab == ArenaTab.BATTLE) 1f else 0.58f
         leaderboardTabButton.alpha = if (tab == ArenaTab.LEADERBOARD) 1f else 0.58f
         startButton.visibility = if (tab == ArenaTab.BATTLE && isIdleBattleState()) View.VISIBLE else View.GONE
+        if (tab == ArenaTab.BATTLE && isIdleBattleState()) startIdleAnimation() else stopIdleAnimation()
     }
 
     private fun isIdleBattleState(): Boolean {
@@ -249,6 +265,7 @@ class ArenaFragment : Fragment() {
     private fun startMatchmaking() {
         timer?.cancel()
         matchmakingJob?.cancel()
+        stopIdleAnimation()
         searchAnimationJob?.cancel()
         opponentJob?.cancel()
 
@@ -262,6 +279,9 @@ class ArenaFragment : Fragment() {
         opponentRatingText.text = "Ranked"
         searchingText.text = "Finding opponent"
         statusLabel.text = "Searching arena"
+        stageTitle.text = "Scanning Arena"
+        stageSubtitle.text = "Looking for shared language power"
+        arenaTicker.text = "MATCHMAKING  Rank ${rankName(playerRating)}  Rating $playerRating"
 
         matchmakingPanel.popIn()
         startSearchAnimation()
@@ -269,6 +289,7 @@ class ArenaFragment : Fragment() {
         matchmakingJob = viewLifecycleOwner.lifecycleScope.launch {
             delay(950)
             searchingText.text = "Checking shared languages"
+            arenaTicker.flashText("SYNCING SKILLS  ${playerLanguages.joinToString("  ")}")
             delay(900)
             val opponent = findOpponent()
             activeOpponent = opponent
@@ -281,6 +302,9 @@ class ArenaFragment : Fragment() {
             opponentCardRank.text = "${rankName(opponent.rating)} - ${opponent.rating}"
             searchingProgress.visibility = View.GONE
             searchingText.text = "Match found"
+            stageTitle.text = "Match Found"
+            stageSubtitle.text = "${playerName} vs ${opponent.name}"
+            arenaTicker.flashText("LOCKED  ${opponent.languages.joinToString("  ")}  ${rankName(opponent.rating)}")
             stopSearchAnimation()
             opponentSearchAvatar.popIn()
             searchVsBadge.pulse()
@@ -313,11 +337,15 @@ class ArenaFragment : Fragment() {
         questionIndex = 0
         playerScore = 0
         opponentScore = 0
+        correctStreak = 0
 
         matchmakingPanel.visibility = View.GONE
         matchPanel.visibility = View.VISIBLE
         resultPanel.visibility = View.GONE
         statusLabel.text = "Ranked match live"
+        stageTitle.text = "Battle Live"
+        stageSubtitle.text = "${playerName} vs ${opponent.name}"
+        arenaTicker.text = "FIRST TO THINK FAST  Wrong answers lose $WRONG_ANSWER_PENALTY"
         matchPanel.popIn()
         animateVersusEntry()
         showQuestion()
@@ -337,6 +365,7 @@ class ArenaFragment : Fragment() {
         opponentAnswered = false
         currentCorrectIndex = question.correctIndex
         feedbackText.text = ""
+        comboText.text = ""
         optionsContainer.removeAllViews()
 
         roundText.text = "Question ${questionIndex + 1}/$QUESTION_COUNT"
@@ -466,9 +495,24 @@ class ArenaFragment : Fragment() {
         val correct = selectedIndex == currentCorrectIndex
         val delta = scoreForAnswer(correct, elapsed)
         playerScore += delta
+        correctStreak = if (correct) correctStreak + 1 else 0
 
         colorAnswerButtons(selectedIndex)
         scoreText.popIn()
+        scoreText.flashScore()
+        comboText.text = when {
+            correct && correctStreak >= 3 -> "HOT STREAK x$correctStreak"
+            correct -> "CLEAN HIT"
+            selectedIndex == -1 -> "TIMEOUT"
+            else -> "RANK HIT"
+        }
+        comboText.setTextColor(
+            ContextCompat.getColor(
+                requireContext(),
+                if (correct) android.R.color.holo_green_light else android.R.color.holo_red_light
+            )
+        )
+        comboText.popIn()
         feedbackText.text = when {
             correct -> "+$delta quick points"
             selectedIndex == -1 -> "$delta timeout"
@@ -485,6 +529,7 @@ class ArenaFragment : Fragment() {
         val correct = selectedIndex == currentCorrectIndex
         opponentScore += scoreForAnswer(correct, elapsed)
         opponentAvatarImage.pulse()
+        arenaTicker.flashText(if (correct) "OPPONENT SCORED" else "OPPONENT MISSED")
         maybeAdvanceQuestion()
     }
 
@@ -533,6 +578,9 @@ class ArenaFragment : Fragment() {
         resultPanel.visibility = View.VISIBLE
         startButton.visibility = View.GONE
         statusLabel.text = if (won) "Victory in the arena" else if (tied) "Arena draw" else "Defeated, but sharper"
+        stageTitle.text = if (won) "Victory Locked" else if (tied) "Rank Draw" else "Rematch Ready"
+        stageSubtitle.text = "$playerScore - $opponentScore"
+        arenaTicker.flashText(if (ratingDelta >= 0) "RATING UP  +$ratingDelta" else "RATING DROP  $ratingDelta")
         resultTitle.text = if (won) "Victory" else if (tied) "Draw" else "Defeat"
         resultDetails.text = "$playerName $playerScore - ${activeOpponent?.name ?: "Opponent"} $opponentScore"
         ratingDeltaText.text = if (ratingDelta >= 0) "+$ratingDelta rating" else "$ratingDelta rating"
@@ -637,6 +685,33 @@ class ArenaFragment : Fragment() {
         }
     }
 
+    private fun startIdleAnimation() {
+        idleAnimationJob?.cancel()
+        idleAnimationJob = viewLifecycleOwner.lifecycleScope.launch {
+            val tickerStates = listOf(
+                "LIVE QUEUE  ${playerLanguages.joinToString("  ")}",
+                "OUTPUT DUELS  Speed bonus active",
+                "RANKED ARENA  ${rankName(playerRating)}  $playerRating",
+                "CODE IQ CHECK  Ready"
+            )
+            var index = 0
+            while (true) {
+                startButton.pulseSoft()
+                searchVsBadge.pulse()
+                arenaTicker.flashText(tickerStates[index % tickerStates.size])
+                index++
+                delay(1800L)
+            }
+        }
+    }
+
+    private fun stopIdleAnimation() {
+        idleAnimationJob?.cancel()
+        startButton.animate().cancel()
+        startButton.scaleX = 1f
+        startButton.scaleY = 1f
+    }
+
     private fun stopSearchAnimation() {
         searchAnimationJob?.cancel()
         listOf(playerSearchAvatar, opponentSearchAvatar, searchVsBadge).forEach { view ->
@@ -702,6 +777,47 @@ class ArenaFragment : Fragment() {
                     .translationX(0f)
                     .setDuration(180L)
                     .start()
+            }
+            .start()
+    }
+
+    private fun View.pulseSoft() {
+        animate()
+            .scaleX(1.025f)
+            .scaleY(1.025f)
+            .setDuration(420L)
+            .withEndAction {
+                animate().scaleX(1f).scaleY(1f).setDuration(420L).start()
+            }
+            .start()
+    }
+
+    private fun TextView.flashText(value: String) {
+        animate().cancel()
+        animate()
+            .alpha(0.35f)
+            .translationY(-5f)
+            .setDuration(90L)
+            .withEndAction {
+                text = value
+                animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(160L)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+            }
+            .start()
+    }
+
+    private fun TextView.flashScore() {
+        animate().cancel()
+        animate()
+            .scaleX(1.04f)
+            .scaleY(1.04f)
+            .setDuration(100L)
+            .withEndAction {
+                animate().scaleX(1f).scaleY(1f).setDuration(130L).start()
             }
             .start()
     }
