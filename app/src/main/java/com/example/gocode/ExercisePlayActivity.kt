@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
 import android.widget.EditText
 import android.widget.ProgressBar
@@ -81,7 +82,7 @@ class ExercisePlayActivity : AppCompatActivity() {
     private var isDarkTheme = true
     private var pendingRunCode: String = ""
     private var pendingInputCount = 0
-    private val promptedInputs = mutableListOf<Int>()
+    private val promptedInputs = mutableListOf<String>()
 
     private var lintJob: Job? = null
     private var runJob: Job? = null
@@ -197,11 +198,31 @@ class ExercisePlayActivity : AppCompatActivity() {
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { _, insets ->
             val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            val imeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            val navBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             symbolInput.visibility = if (imeVisible) View.VISIBLE else View.GONE
-            if (imeVisible) symbolInput.bringToFront()
+            setSymbolBarKeyboardMargin(
+                if (imeVisible) calculateSymbolBarBottomMargin(imeBottom, navBottom) else 0
+            )
+            if (imeVisible) {
+                symbolInput.bringToFront()
+            }
             if (imeVisible && leoTipGroup.visibility == View.VISIBLE) hideLeoHard()
             insets
         }
+    }
+
+    private fun setSymbolBarKeyboardMargin(bottomMargin: Int) {
+        val params = symbolInput.layoutParams as? ViewGroup.MarginLayoutParams ?: return
+        if (params.bottomMargin == bottomMargin) return
+        params.bottomMargin = bottomMargin
+        symbolInput.layoutParams = params
+    }
+
+    private fun calculateSymbolBarBottomMargin(imeBottom: Int, navBottom: Int): Int {
+        val screenHeight = resources.displayMetrics.heightPixels
+        val layoutAlreadyResized = findViewById<View>(R.id.root).height < screenHeight - (imeBottom / 2)
+        return if (layoutAlreadyResized) 0 else (imeBottom - navBottom).coerceAtLeast(0)
     }
 
     override fun onResume() {
@@ -477,9 +498,9 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private fun submitPromptedInput() {
-        val value = inputPromptField.text.toString().trim().toIntOrNull()
-        if (value == null) {
-            inputPromptField.error = "Enter a whole number"
+        val value = inputPromptField.text.toString()
+        if (value.isEmpty()) {
+            inputPromptField.error = "Enter a value"
             return
         }
 
@@ -515,7 +536,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         renderReadyState()
     }
 
-    private fun buildRunTests(userInputs: List<Int>): List<RunTestCase> {
+    private fun buildRunTests(userInputs: List<String>): List<RunTestCase> {
         val learnerTest = RunTestCase(
             name = "Your input",
             input = "${userInputs.joinToString(separator = " ")}\n",
@@ -526,8 +547,8 @@ class ExercisePlayActivity : AppCompatActivity() {
         }
     }
 
-    private fun expectedSum(inputs: List<Int>): Int {
-        return inputs.take(requiredTaskInputCount).sum()
+    private fun expectedSum(inputs: List<String>): Int {
+        return inputs.take(requiredTaskInputCount).sumOf { it.toIntOrNull() ?: 0 }
     }
 
     private fun padTestInput(input: String): String {
@@ -538,11 +559,16 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private fun detectInputReadCount(code: String): Int {
-        val scannerReads = Regex("""\.\s*next(Int|Long|Double|Float|Short|Byte|Line|Boolean)\s*\(""")
-            .findAll(code)
-            .count()
-        val bufferedReads = Regex("""\.readLine\s*\(""").findAll(code).count()
-        return scannerReads + bufferedReads
+        val scannerReads = Regex(
+            """\.\s*next(?:Int|Long|Double|Float|Short|Byte|Line|Boolean|BigInteger|BigDecimal)?\s*\("""
+        ).findAll(code).count()
+        val bufferedReaderReads = Regex("""\.\s*readLine\s*\(""").findAll(code).count()
+        val streamReads = Regex("""(?:System\s*\.\s*in|[\w.]+)\s*\.\s*read\s*\(""").findAll(code).count()
+        val passwordReads = Regex("""\.\s*readPassword\s*\(""").findAll(code).count()
+        val dataInputReads = Regex(
+            """\.\s*read(?:Int|Long|Double|Float|Short|Byte|Boolean|Char|UTF|Fully)\s*\("""
+        ).findAll(code).count()
+        return scannerReads + bufferedReaderReads + streamReads + passwordReads + dataInputReads
     }
 
     private fun showLockedAnswerHint() {

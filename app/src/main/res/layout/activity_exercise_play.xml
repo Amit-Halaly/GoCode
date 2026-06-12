@@ -415,7 +415,7 @@
                     android:layout_marginTop="16dp"
                     android:background="@drawable/bg_exercise_input"
                     android:hint="Value"
-                    android:inputType="numberSigned"
+                    android:inputType="text"
                     android:paddingHorizontal="14dp"
                     android:singleLine="true"
                     android:textColor="#EAF2FF"
