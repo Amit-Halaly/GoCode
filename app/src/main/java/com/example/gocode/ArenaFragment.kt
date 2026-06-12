@@ -6,6 +6,7 @@ import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -45,6 +46,7 @@ class ArenaFragment : Fragment() {
     private lateinit var searchingProgress: ProgressBar
     private lateinit var playerSearchAvatar: ImageView
     private lateinit var opponentSearchAvatar: ImageView
+    private lateinit var searchVsBadge: TextView
     private lateinit var opponentNameText: TextView
     private lateinit var opponentMetaText: TextView
     private lateinit var opponentRatingText: TextView
@@ -93,6 +95,7 @@ class ArenaFragment : Fragment() {
     private var currentCorrectIndex = -1
 
     private var matchmakingJob: Job? = null
+    private var searchAnimationJob: Job? = null
     private var opponentJob: Job? = null
     private var timer: CountDownTimer? = null
 
@@ -118,6 +121,7 @@ class ArenaFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         matchmakingJob?.cancel()
+        searchAnimationJob?.cancel()
         opponentJob?.cancel()
         timer?.cancel()
     }
@@ -138,6 +142,7 @@ class ArenaFragment : Fragment() {
         searchingProgress = view.findViewById(R.id.searchingProgress)
         playerSearchAvatar = view.findViewById(R.id.playerSearchAvatar)
         opponentSearchAvatar = view.findViewById(R.id.opponentSearchAvatar)
+        searchVsBadge = view.findViewById(R.id.searchVsBadge)
         opponentNameText = view.findViewById(R.id.opponentName)
         opponentMetaText = view.findViewById(R.id.opponentMeta)
         opponentRatingText = view.findViewById(R.id.opponentRating)
@@ -244,6 +249,7 @@ class ArenaFragment : Fragment() {
     private fun startMatchmaking() {
         timer?.cancel()
         matchmakingJob?.cancel()
+        searchAnimationJob?.cancel()
         opponentJob?.cancel()
 
         startButton.visibility = View.GONE
@@ -258,6 +264,7 @@ class ArenaFragment : Fragment() {
         statusLabel.text = "Searching arena"
 
         matchmakingPanel.popIn()
+        startSearchAnimation()
 
         matchmakingJob = viewLifecycleOwner.lifecycleScope.launch {
             delay(950)
@@ -274,6 +281,9 @@ class ArenaFragment : Fragment() {
             opponentCardRank.text = "${rankName(opponent.rating)} - ${opponent.rating}"
             searchingProgress.visibility = View.GONE
             searchingText.text = "Match found"
+            stopSearchAnimation()
+            opponentSearchAvatar.popIn()
+            searchVsBadge.pulse()
             matchmakingPanel.popIn()
             delay(900)
             startRound(opponent)
@@ -309,6 +319,7 @@ class ArenaFragment : Fragment() {
         resultPanel.visibility = View.GONE
         statusLabel.text = "Ranked match live"
         matchPanel.popIn()
+        animateVersusEntry()
         showQuestion()
     }
 
@@ -325,7 +336,6 @@ class ArenaFragment : Fragment() {
         playerAnswered = false
         opponentAnswered = false
         currentCorrectIndex = question.correctIndex
-        questionStartMs = System.currentTimeMillis()
         feedbackText.text = ""
         optionsContainer.removeAllViews()
 
@@ -333,7 +343,8 @@ class ArenaFragment : Fragment() {
         scoreText.text = "$playerName $playerScore  -  ${activeOpponent?.name ?: "Opponent"} $opponentScore"
         questionCourseText.text = "${question.language} - ${question.course}"
         questionPromptText.text = question.prompt
-        showQuestionIntro(question)
+        questionPromptText.alpha = 0f
+        questionPromptText.translationY = 18f
 
         question.options.forEachIndexed { index, option ->
             val button = MaterialButton(requireContext()).apply {
@@ -345,6 +356,8 @@ class ArenaFragment : Fragment() {
                 minHeight = resources.getDimensionPixelSize(R.dimen.arena_option_min_height)
                 setPadding(22, 12, 22, 12)
                 setOnClickListener { submitPlayerAnswer(index) }
+                alpha = 0f
+                translationY = 20f
             }
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -355,11 +368,15 @@ class ArenaFragment : Fragment() {
             optionsContainer.addView(button, params)
         }
 
-        startQuestionTimer()
-        scheduleOpponentAnswer(question)
+        showQuestionIntro(question) {
+            questionStartMs = System.currentTimeMillis()
+            animateQuestionEntry()
+            startQuestionTimer()
+            scheduleOpponentAnswer(question)
+        }
     }
 
-    private fun showQuestionIntro(question: ArenaQuestion) {
+    private fun showQuestionIntro(question: ArenaQuestion, onDone: () -> Unit) {
         questionIntroTitle.text = "WHAT IS THE OUTPUT?"
         questionIntroSubtitle.text = "${question.language} - ${question.course}"
         questionIntroOverlay.visibility = View.VISIBLE
@@ -388,7 +405,10 @@ class ArenaFragment : Fragment() {
                                     questionIntroOverlay.animate()
                                         .alpha(0f)
                                         .setDuration(180)
-                                        .withEndAction { questionIntroOverlay.visibility = View.GONE }
+                                        .withEndAction {
+                                            questionIntroOverlay.visibility = View.GONE
+                                            onDone()
+                                        }
                                         .start()
                                 }, 420L)
                             }
@@ -408,6 +428,10 @@ class ArenaFragment : Fragment() {
             override fun onTick(millisUntilFinished: Long) {
                 timerProgress.progress = millisUntilFinished.toInt()
                 timerText.text = "${(millisUntilFinished / 1000f).roundToInt()}s"
+                if (millisUntilFinished < 3_500L) {
+                    timerText.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_orange_light))
+                    timerText.pulse()
+                }
             }
 
             override fun onFinish() {
@@ -537,21 +561,29 @@ class ArenaFragment : Fragment() {
         val global = (arenaOpponents + ArenaOpponent(playerName, playerRating, playerLanguages, 72, playerAvatarResId))
             .sortedByDescending { it.rating }
             .take(5)
-            .mapIndexed { index, player -> "${index + 1}. ${player.name} - ${player.rating}" }
+            .mapIndexed { index, player ->
+                val medal = when (index) {
+                    0 -> "01"
+                    1 -> "02"
+                    2 -> "03"
+                    else -> "0${index + 1}"
+                }
+                "$medal  ${player.name.padEnd(14).take(14)}  ${player.rating}  ${rankName(player.rating)}"
+            }
             .joinToString("\n")
 
-        globalLeaderboard.text = "Global\n$global"
+        globalLeaderboard.text = "GLOBAL RANK\n$global"
         localLeaderboard.text = listOf(
-            "Local",
-            "1. $playerName - $playerRating",
-            "2. ByteRunner - 1180",
-            "3. LoopMage - 1095"
+            "LOCAL LADDER",
+            "01  ${playerName.padEnd(14).take(14)}  $playerRating  ${rankName(playerRating)}",
+            "02  ByteRunner      1180  Silver",
+            "03  LoopMage        1095  Silver"
         ).joinToString("\n")
         friendsLeaderboard.text = listOf(
-            "Friends",
-            "1. Aviv - 1220",
-            "2. $playerName - $playerRating",
-            "3. Ben - 970"
+            "FRIENDS",
+            "01  Aviv            1220  Silver",
+            "02  ${playerName.padEnd(14).take(14)}  $playerRating  ${rankName(playerRating)}",
+            "03  Ben              970  Bronze"
         ).joinToString("\n")
     }
 
@@ -583,6 +615,94 @@ class ArenaFragment : Fragment() {
             .scaleY(1f)
             .setDuration(230L)
             .setInterpolator(OvershootInterpolator())
+            .start()
+    }
+
+    private fun startSearchAnimation() {
+        searchAnimationJob?.cancel()
+        playerSearchAvatar.scaleX = 1f
+        playerSearchAvatar.scaleY = 1f
+        opponentSearchAvatar.scaleX = 1f
+        opponentSearchAvatar.scaleY = 1f
+        searchVsBadge.scaleX = 1f
+        searchVsBadge.scaleY = 1f
+        searchAnimationJob = viewLifecycleOwner.lifecycleScope.launch {
+            while (true) {
+                playerSearchAvatar.floatBeat(direction = -1f)
+                searchVsBadge.pulse()
+                delay(360L)
+                opponentSearchAvatar.floatBeat(direction = 1f)
+                delay(420L)
+            }
+        }
+    }
+
+    private fun stopSearchAnimation() {
+        searchAnimationJob?.cancel()
+        listOf(playerSearchAvatar, opponentSearchAvatar, searchVsBadge).forEach { view ->
+            view.animate().cancel()
+            view.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .translationX(0f)
+                .alpha(1f)
+                .setDuration(160L)
+                .start()
+        }
+    }
+
+    private fun animateVersusEntry() {
+        playerAvatarImage.translationX = -90f
+        opponentAvatarImage.translationX = 90f
+        playerAvatarImage.alpha = 0f
+        opponentAvatarImage.alpha = 0f
+        playerAvatarImage.animate()
+            .alpha(1f)
+            .translationX(0f)
+            .setDuration(360L)
+            .setInterpolator(OvershootInterpolator())
+            .start()
+        opponentAvatarImage.animate()
+            .alpha(1f)
+            .translationX(0f)
+            .setStartDelay(90L)
+            .setDuration(360L)
+            .setInterpolator(OvershootInterpolator())
+            .start()
+    }
+
+    private fun animateQuestionEntry() {
+        questionPromptText.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(240L)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+        optionsContainer.childrenAsButtons().forEachIndexed { index, button ->
+            button.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setStartDelay(80L + index * 65L)
+                .setDuration(210L)
+                .setInterpolator(DecelerateInterpolator())
+                .start()
+        }
+    }
+
+    private fun View.floatBeat(direction: Float) {
+        animate()
+            .scaleX(1.08f)
+            .scaleY(1.08f)
+            .translationX(direction * 8f)
+            .setDuration(150L)
+            .withEndAction {
+                animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .translationX(0f)
+                    .setDuration(180L)
+                    .start()
+            }
             .start()
     }
 

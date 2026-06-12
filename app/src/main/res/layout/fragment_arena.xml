@@ -5,521 +5,593 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_arena_root">
 
-<androidx.core.widget.NestedScrollView
-    android:id="@+id/arenaScroll"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fillViewport="true">
-
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/arenaScroll"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:paddingBottom="92dp">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingBottom="78dp">
 
         <LinearLayout
-            android:id="@+id/arenaHeader"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Arena"
-                    android:textColor="#F8FAFC"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/arenaStatusLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:text="Ready for a ranked code duel"
-                    android:textColor="#A7B4C8"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_arena_badge"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="8dp">
-
-                <TextView
-                    android:id="@+id/arenaRating"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="1000"
-                    android:textColor="#FACC15"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/arenaRank"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Silver"
-                    android:textColor="#EAF2FF"
-                    android:textSize="11sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/arenaLanguages"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_arena_panel"
-            android:padding="12dp"
-            android:text="Java"
-            android:textColor="#EAF2FF"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/startArenaButton"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="14dp"
-            android:text="Find Match"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:backgroundTint="#10B981"
-            app:cornerRadius="8dp" />
-
-        <LinearLayout
-            android:id="@+id/battleContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/matchmakingPanel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:visibility="gone"
-            app:cardBackgroundColor="#101C2B"
-            app:cardCornerRadius="8dp"
-            app:strokeColor="#2B425B"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <TextView
-                    android:id="@+id/searchingText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Finding opponent"
-                    android:textColor="#F8FAFC"
-                    android:textSize="21sp"
-                    android:textStyle="bold" />
-
-                <ProgressBar
-                    android:id="@+id/searchingProgress"
-                    style="?android:attr/progressBarStyleLarge"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="16dp"
-                    android:indeterminateTint="#35E0A1" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:id="@+id/playerSearchAvatar"
-                        android:layout_width="86dp"
-                        android:layout_height="86dp"
-                        android:background="@drawable/bg_arena_avatar"
-                        android:padding="8dp"
-                        android:src="@drawable/avatar_robot" />
-
-                    <TextView
-                        android:layout_width="52dp"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="VS"
-                        android:textColor="#FACC15"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                    <ImageView
-                        android:id="@+id/opponentSearchAvatar"
-                        android:layout_width="86dp"
-                        android:layout_height="86dp"
-                        android:background="@drawable/bg_arena_avatar"
-                        android:padding="8dp"
-                        android:src="@drawable/avatar_alien" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/opponentName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Searching..."
-                    android:textColor="#EAF2FF"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/opponentMeta"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Matching language and rank"
-                    android:textColor="#A7B4C8"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/opponentRating"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Ranked"
-                    android:textColor="#FACC15"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/matchPanel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:visibility="gone"
-            app:cardBackgroundColor="#0B1624"
-            app:cardCornerRadius="8dp"
-            app:strokeColor="#2B425B"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="14dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/roundText"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Question 1/5"
-                        android:textColor="#F8FAFC"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/timerText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="12s"
-                        android:textColor="#35E0A1"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <ProgressBar
-                    android:id="@+id/timerProgress"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="10dp"
-                    android:progressTint="#35E0A1"
-                    android:progressBackgroundTint="#26364A" />
-
-                <LinearLayout
-                    android:id="@+id/versusRow"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <ImageView
-                            android:id="@+id/playerAvatarImage"
-                            android:layout_width="76dp"
-                            android:layout_height="76dp"
-                            android:background="@drawable/bg_arena_avatar"
-                            android:padding="8dp"
-                            android:src="@drawable/avatar_robot" />
-
-                        <TextView
-                            android:id="@+id/playerCardName"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:gravity="center"
-                            android:text="You"
-                            android:textColor="#F8FAFC"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/playerCardRank"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:text="Silver - 1000"
-                            android:textColor="#A7B4C8"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="54dp"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="VS"
-                        android:textColor="#FACC15"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <ImageView
-                            android:id="@+id/opponentAvatarImage"
-                            android:layout_width="76dp"
-                            android:layout_height="76dp"
-                            android:background="@drawable/bg_arena_avatar"
-                            android:padding="8dp"
-                            android:src="@drawable/avatar_alien" />
-
-                        <TextView
-                            android:id="@+id/opponentCardName"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:gravity="center"
-                            android:text="Opponent"
-                            android:textColor="#F8FAFC"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/opponentCardRank"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:text="Silver - 1000"
-                            android:textColor="#A7B4C8"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/scoreText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:gravity="center"
-                    android:text="You 0 - Opponent 0"
-                    android:textColor="#EAF2FF"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/questionCourse"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
-                    android:background="@drawable/bg_arena_badge"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="5dp"
-                    android:text="Java - Variables"
-                    android:textColor="#A7F3D0"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/questionPrompt"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:fontFamily="monospace"
-                    android:lineSpacingExtra="3dp"
-                    android:text="Question"
-                    android:textColor="#F8FAFC"
-                    android:textSize="17sp" />
-
-                <LinearLayout
-                    android:id="@+id/optionsContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:orientation="vertical" />
-
-                <TextView
-                    android:id="@+id/feedbackText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:gravity="center"
-                    android:textColor="#FACC15"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/resultPanel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:visibility="gone"
-            app:cardBackgroundColor="#101C2B"
-            app:cardCornerRadius="8dp"
-            app:strokeColor="#35E0A1"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <TextView
-                    android:id="@+id/resultTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Victory"
-                    android:textColor="#F8FAFC"
-                    android:textSize="28sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/resultDetails"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="You 0 - Opponent 0"
-                    android:textColor="#A7B4C8"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/ratingDeltaText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="+28 rating"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/playAgainButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:layout_marginTop="14dp"
-                    android:text="Play Again"
-                    android:textAllCaps="false"
-                    android:textStyle="bold"
-                    app:backgroundTint="#10B981"
-                    app:cornerRadius="8dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/leaderboardContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:padding="16dp"
+            android:paddingBottom="104dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Leaderboards"
-            android:textColor="#F8FAFC"
-            android:textSize="19sp"
-            android:textStyle="bold" />
+            <LinearLayout
+                android:id="@+id/arenaHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Code Arena"
+                        android:textColor="#F8FAFC"
+                        android:textSize="30sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/arenaStatusLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="Ready for a ranked code duel"
+                        android:textColor="#9EB1C9"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_arena_rank_plate"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="9dp">
+
+                    <TextView
+                        android:id="@+id/arenaRating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1000"
+                        android:textColor="#FFE66D"
+                        android:textSize="21sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/arenaRank"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Silver"
+                        android:textColor="#DDEBFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/globalLeaderboard"
-                android:layout_width="0dp"
+                android:id="@+id/arenaLanguages"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="5dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_arena_panel"
-                android:padding="10dp"
-                android:textColor="#EAF2FF"
-                android:textSize="11sp" />
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_arena_language_strip"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="11dp"
+                android:text="Java"
+                android:textColor="#DDF7FF"
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/localLeaderboard"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:id="@+id/battleContent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="5dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_arena_panel"
-                android:padding="10dp"
-                android:textColor="#EAF2FF"
-                android:textSize="11sp" />
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/friendsLeaderboard"
-                android:layout_width="0dp"
+                <FrameLayout
+                    android:id="@+id/arenaStage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_arena_stage"
+                    android:padding="15dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/stageTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="Ranked Output Duel"
+                            android:textColor="#F8FAFC"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/stageSubtitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:gravity="center"
+                            android:text="Fast answers. Clean logic. Real rank."
+                            android:textColor="#97B8D7"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:id="@+id/idleVersusRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_arena_tower_left"
+                                android:gravity="center"
+                                android:orientation="vertical"
+                                android:padding="12dp">
+
+                                <ImageView
+                                    android:id="@+id/playerSearchAvatar"
+                                    android:layout_width="86dp"
+                                    android:layout_height="86dp"
+                                    android:background="@drawable/bg_arena_avatar"
+                                    android:padding="8dp"
+                                    android:src="@drawable/avatar_robot" />
+
+                                <TextView
+                                    android:id="@+id/playerSearchLabel"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:gravity="center"
+                                    android:text="YOU"
+                                    android:textColor="#DDF7FF"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/searchVsBadge"
+                                android:layout_width="62dp"
+                                android:layout_height="62dp"
+                                android:layout_marginHorizontal="10dp"
+                                android:background="@drawable/bg_arena_vs_medal"
+                                android:gravity="center"
+                                android:text="VS"
+                                android:textColor="#08121F"
+                                android:textSize="23sp"
+                                android:textStyle="bold" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_arena_tower_right"
+                                android:gravity="center"
+                                android:orientation="vertical"
+                                android:padding="12dp">
+
+                                <ImageView
+                                    android:id="@+id/opponentSearchAvatar"
+                                    android:layout_width="86dp"
+                                    android:layout_height="86dp"
+                                    android:background="@drawable/bg_arena_avatar"
+                                    android:padding="8dp"
+                                    android:src="@drawable/avatar_alien" />
+
+                                <TextView
+                                    android:id="@+id/opponentName"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:gravity="center"
+                                    android:text="Searching..."
+                                    android:textColor="#F8FAFC"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/opponentMeta"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center"
+                            android:text="Matching course, language and rating"
+                            android:textColor="#A8BCD4"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/opponentRating"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_arena_badge"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="6dp"
+                            android:text="Ranked"
+                            android:textColor="#FFE66D"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <ProgressBar
+                            android:id="@+id/searchingProgress"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="14dp"
+                            android:indeterminate="true"
+                            android:indeterminateTint="#37F2B6"
+                            android:progressBackgroundTint="#152438" />
+
+                        <TextView
+                            android:id="@+id/searchingText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:gravity="center"
+                            android:text="Finding opponent"
+                            android:textColor="#37F2B6"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/startArenaButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:layout_marginTop="16dp"
+                            android:text="Find Match"
+                            android:textAllCaps="false"
+                            android:textColor="#07111E"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            app:backgroundTint="#37F2B6"
+                            app:cornerRadius="8dp"
+                            app:icon="@drawable/ic_play_arrow_24"
+                            app:iconGravity="textStart"
+                            app:iconTint="#07111E" />
+                    </LinearLayout>
+                </FrameLayout>
+
+                <LinearLayout
+                    android:id="@+id/matchmakingPanel"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/matchPanel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_arena_match_panel"
+                    android:orientation="vertical"
+                    android:padding="14dp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/roundText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Question 1/5"
+                            android:textColor="#F8FAFC"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/timerText"
+                            android:layout_width="54dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_arena_timer"
+                            android:gravity="center"
+                            android:text="12s"
+                            android:textColor="#37F2B6"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/timerProgress"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="9dp"
+                        android:layout_marginTop="10dp"
+                        android:progressBackgroundTint="#24344B"
+                        android:progressTint="#37F2B6" />
+
+                    <LinearLayout
+                        android:id="@+id/versusRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_arena_player_plate"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="10dp">
+
+                            <ImageView
+                                android:id="@+id/playerAvatarImage"
+                                android:layout_width="76dp"
+                                android:layout_height="76dp"
+                                android:background="@drawable/bg_arena_avatar"
+                                android:padding="8dp"
+                                android:src="@drawable/avatar_robot" />
+
+                            <TextView
+                                android:id="@+id/playerCardName"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:gravity="center"
+                                android:text="You"
+                                android:textColor="#F8FAFC"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/playerCardRank"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:text="Silver - 1000"
+                                android:textColor="#9EB1C9"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="54dp"
+                            android:layout_height="54dp"
+                            android:layout_marginHorizontal="8dp"
+                            android:background="@drawable/bg_arena_vs_medal"
+                            android:gravity="center"
+                            android:text="VS"
+                            android:textColor="#08121F"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_arena_opponent_plate"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="10dp">
+
+                            <ImageView
+                                android:id="@+id/opponentAvatarImage"
+                                android:layout_width="76dp"
+                                android:layout_height="76dp"
+                                android:background="@drawable/bg_arena_avatar"
+                                android:padding="8dp"
+                                android:src="@drawable/avatar_alien" />
+
+                            <TextView
+                                android:id="@+id/opponentCardName"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:gravity="center"
+                                android:text="Opponent"
+                                android:textColor="#F8FAFC"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/opponentCardRank"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:text="Silver - 1000"
+                                android:textColor="#9EB1C9"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/scoreText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_arena_score_strip"
+                        android:gravity="center"
+                        android:paddingVertical="9dp"
+                        android:text="You 0 - Opponent 0"
+                        android:textColor="#EAF2FF"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/questionCourse"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:background="@drawable/bg_arena_badge"
+                        android:paddingHorizontal="11dp"
+                        android:paddingVertical="6dp"
+                        android:text="Java - Variables"
+                        android:textColor="#A7F3D0"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/questionPrompt"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_arena_code_card"
+                        android:fontFamily="monospace"
+                        android:lineSpacingExtra="4dp"
+                        android:padding="14dp"
+                        android:text="Question"
+                        android:textColor="#F8FAFC"
+                        android:textSize="16sp" />
+
+                    <LinearLayout
+                        android:id="@+id/optionsContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="vertical" />
+
+                    <TextView
+                        android:id="@+id/feedbackText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:minHeight="24dp"
+                        android:textColor="#FFE66D"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/resultPanel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_arena_result_panel"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:padding="18dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/resultTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Victory"
+                        android:textColor="#F8FAFC"
+                        android:textSize="30sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/resultDetails"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="You 0 - Opponent 0"
+                        android:textColor="#A8BCD4"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/ratingDeltaText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="+28 rating"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/playAgainButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="14dp"
+                        android:text="Play Again"
+                        android:textAllCaps="false"
+                        android:textColor="#07111E"
+                        android:textStyle="bold"
+                        app:backgroundTint="#37F2B6"
+                        app:cornerRadius="8dp"
+                        app:icon="@drawable/ic_play_arrow_24"
+                        app:iconGravity="textStart"
+                        app:iconTint="#07111E" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/leaderboardContent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_arena_panel"
-                android:padding="10dp"
-                android:textColor="#EAF2FF"
-                android:textSize="11sp" />
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:text="Arena Leaderboards"
+                    android:textColor="#F8FAFC"
+                    android:textSize="23sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/globalLeaderboard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_arena_leaderboard_board"
+                    android:fontFamily="monospace"
+                    android:lineSpacingExtra="4dp"
+                    android:padding="14dp"
+                    android:textColor="#EAF2FF"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/localLeaderboard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_arena_leaderboard_board"
+                    android:fontFamily="monospace"
+                    android:lineSpacingExtra="4dp"
+                    android:padding="14dp"
+                    android:textColor="#EAF2FF"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/friendsLeaderboard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_arena_leaderboard_board"
+                    android:fontFamily="monospace"
+                    android:lineSpacingExtra="4dp"
+                    android:padding="14dp"
+                    android:textColor="#EAF2FF"
+                    android:textSize="13sp" />
+            </LinearLayout>
         </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <LinearLayout
         android:id="@+id/arenaBottomBar"
@@ -539,8 +611,9 @@
             android:layout_weight="1"
             android:text="Battle"
             android:textAllCaps="false"
+            android:textColor="#07111E"
             android:textStyle="bold"
-            app:backgroundTint="#10B981"
+            app:backgroundTint="#37F2B6"
             app:cornerRadius="8dp" />
 
         <com.google.android.material.button.MaterialButton
@@ -551,6 +624,7 @@
             android:layout_weight="1"
             android:text="Leaderboard"
             android:textAllCaps="false"
+            android:textColor="#DDEBFF"
             android:textStyle="bold"
             app:backgroundTint="#1D2E44"
             app:cornerRadius="8dp" />
@@ -560,7 +634,7 @@
         android:id="@+id/questionIntroOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#E607111D"
+        android:background="#EE06111F"
         android:clickable="true"
         android:focusable="true"
         android:visibility="gone">
@@ -578,7 +652,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="WHAT IS THE OUTPUT?"
-                android:textColor="#35E0A1"
+                android:textColor="#37F2B6"
                 android:textSize="34sp"
                 android:textStyle="bold" />
 
