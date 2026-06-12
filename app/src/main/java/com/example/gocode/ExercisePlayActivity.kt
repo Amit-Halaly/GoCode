@@ -3,20 +3,18 @@ package com.example.gocode
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.airbnb.lottie.LottieAnimationView
 import com.example.gocode.network.ApiClient
@@ -196,33 +194,37 @@ class ExercisePlayActivity : AppCompatActivity() {
         symbolInput.elevation = 24f
         symbolInput.translationZ = 24f
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { _, insets ->
-            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
-            val imeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-            val navBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            symbolInput.visibility = if (imeVisible) View.VISIBLE else View.GONE
-            setSymbolBarKeyboardMargin(
-                if (imeVisible) calculateSymbolBarBottomMargin(imeBottom, navBottom) else 0
-            )
-            if (imeVisible) {
+        observeKeyboardForSymbolBar()
+    }
+
+    private fun observeKeyboardForSymbolBar() {
+        val root = findViewById<View>(android.R.id.content)
+        root.viewTreeObserver.addOnGlobalLayoutListener {
+            val rect = Rect()
+            root.getWindowVisibleDisplayFrame(rect)
+
+            val screenHeight = root.rootView.height
+            val keyboardHeight = screenHeight - rect.bottom
+            val keyboardOpen = keyboardHeight > screenHeight * 0.15
+
+            symbolInput.visibility = if (keyboardOpen) View.VISIBLE else View.GONE
+            if (keyboardOpen) {
                 symbolInput.bringToFront()
+                symbolInput.post { alignSymbolBarToKeyboard(rect.bottom) }
+                if (leoTipGroup.visibility == View.VISIBLE) hideLeoHard()
+            } else {
+                symbolInput.translationY = 0f
             }
-            if (imeVisible && leoTipGroup.visibility == View.VISIBLE) hideLeoHard()
-            insets
         }
     }
 
-    private fun setSymbolBarKeyboardMargin(bottomMargin: Int) {
-        val params = symbolInput.layoutParams as? ViewGroup.MarginLayoutParams ?: return
-        if (params.bottomMargin == bottomMargin) return
-        params.bottomMargin = bottomMargin
-        symbolInput.layoutParams = params
-    }
+    private fun alignSymbolBarToKeyboard(keyboardTopOnScreen: Int) {
+        symbolInput.translationY = 0f
+        val location = IntArray(2)
+        symbolInput.getLocationOnScreen(location)
 
-    private fun calculateSymbolBarBottomMargin(imeBottom: Int, navBottom: Int): Int {
-        val screenHeight = resources.displayMetrics.heightPixels
-        val layoutAlreadyResized = findViewById<View>(R.id.root).height < screenHeight - (imeBottom / 2)
-        return if (layoutAlreadyResized) 0 else (imeBottom - navBottom).coerceAtLeast(0)
+        val symbolBottomOnScreen = location[1] + symbolInput.height
+        symbolInput.translationY = (keyboardTopOnScreen - symbolBottomOnScreen).toFloat()
     }
 
     override fun onResume() {
