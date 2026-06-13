@@ -13,9 +13,12 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.example.gocode.repositories.AvatarRepository
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -32,10 +35,12 @@ class ArenaFragment : Fragment() {
     private val db by lazy { FirebaseFirestore.getInstance() }
 
     private lateinit var statusLabel: TextView
+    private lateinit var arenaScroll: NestedScrollView
     private lateinit var ratingText: TextView
     private lateinit var rankText: TextView
     private lateinit var languageText: TextView
     private lateinit var startButton: MaterialButton
+    private lateinit var arenaBackButton: MaterialButton
     private lateinit var battleTabButton: MaterialButton
     private lateinit var leaderboardTabButton: MaterialButton
     private lateinit var battleContent: View
@@ -64,7 +69,10 @@ class ArenaFragment : Fragment() {
     private lateinit var roundText: TextView
     private lateinit var timerText: TextView
     private lateinit var timerProgress: ProgressBar
+    private lateinit var scoreBoard: View
     private lateinit var scoreText: TextView
+    private lateinit var playerScoreValue: TextView
+    private lateinit var opponentScoreValue: TextView
     private lateinit var comboText: TextView
     private lateinit var questionCourseText: TextView
     private lateinit var questionPromptText: TextView
@@ -115,11 +123,13 @@ class ArenaFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         bindViews(view)
+        setMainBottomNavigationVisible(false)
         renderIdle()
         loadPlayerProfile()
 
         startButton.setOnClickListener { startMatchmaking() }
         playAgainButton.setOnClickListener { startMatchmaking() }
+        arenaBackButton.setOnClickListener { findNavController().navigate(R.id.homeFragment) }
         battleTabButton.setOnClickListener { showArenaTab(ArenaTab.BATTLE) }
         leaderboardTabButton.setOnClickListener { showArenaTab(ArenaTab.LEADERBOARD) }
     }
@@ -131,14 +141,17 @@ class ArenaFragment : Fragment() {
         searchAnimationJob?.cancel()
         opponentJob?.cancel()
         timer?.cancel()
+        setMainBottomNavigationVisible(true)
     }
 
     private fun bindViews(view: View) {
+        arenaScroll = view.findViewById(R.id.arenaScroll)
         statusLabel = view.findViewById(R.id.arenaStatusLabel)
         ratingText = view.findViewById(R.id.arenaRating)
         rankText = view.findViewById(R.id.arenaRank)
         languageText = view.findViewById(R.id.arenaLanguages)
         startButton = view.findViewById(R.id.startArenaButton)
+        arenaBackButton = view.findViewById(R.id.arenaBackButton)
         battleTabButton = view.findViewById(R.id.battleTabButton)
         leaderboardTabButton = view.findViewById(R.id.leaderboardTabButton)
         battleContent = view.findViewById(R.id.battleContent)
@@ -167,7 +180,10 @@ class ArenaFragment : Fragment() {
         roundText = view.findViewById(R.id.roundText)
         timerText = view.findViewById(R.id.timerText)
         timerProgress = view.findViewById(R.id.timerProgress)
+        scoreBoard = view.findViewById(R.id.scoreBoard)
         scoreText = view.findViewById(R.id.scoreText)
+        playerScoreValue = view.findViewById(R.id.playerScoreValue)
+        opponentScoreValue = view.findViewById(R.id.opponentScoreValue)
         comboText = view.findViewById(R.id.comboText)
         questionCourseText = view.findViewById(R.id.questionCourse)
         questionPromptText = view.findViewById(R.id.questionPrompt)
@@ -251,6 +267,20 @@ class ArenaFragment : Fragment() {
         leaderboardContent.visibility = if (tab == ArenaTab.LEADERBOARD) View.VISIBLE else View.GONE
         battleTabButton.alpha = if (tab == ArenaTab.BATTLE) 1f else 0.58f
         leaderboardTabButton.alpha = if (tab == ArenaTab.LEADERBOARD) 1f else 0.58f
+        battleTabButton.setTextColor(
+            ContextCompat.getColor(requireContext(), if (tab == ArenaTab.BATTLE) android.R.color.black else android.R.color.white)
+        )
+        leaderboardTabButton.setTextColor(
+            ContextCompat.getColor(requireContext(), if (tab == ArenaTab.LEADERBOARD) android.R.color.black else android.R.color.white)
+        )
+        battleTabButton.backgroundTintList = ContextCompat.getColorStateList(
+            requireContext(),
+            if (tab == ArenaTab.BATTLE) android.R.color.holo_green_light else android.R.color.transparent
+        )
+        leaderboardTabButton.backgroundTintList = ContextCompat.getColorStateList(
+            requireContext(),
+            if (tab == ArenaTab.LEADERBOARD) android.R.color.holo_orange_light else android.R.color.transparent
+        )
         startButton.visibility = if (tab == ArenaTab.BATTLE && isIdleBattleState()) View.VISIBLE else View.GONE
         if (tab == ArenaTab.BATTLE && isIdleBattleState()) startIdleAnimation() else stopIdleAnimation()
     }
@@ -259,6 +289,11 @@ class ArenaFragment : Fragment() {
         return matchmakingPanel.visibility != View.VISIBLE &&
                 matchPanel.visibility != View.VISIBLE &&
                 resultPanel.visibility != View.VISIBLE
+    }
+
+    private fun setMainBottomNavigationVisible(visible: Boolean) {
+        activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)?.visibility =
+            if (visible) View.VISIBLE else View.GONE
     }
 
     @SuppressLint("SetTextI18n")
@@ -369,21 +404,26 @@ class ArenaFragment : Fragment() {
         optionsContainer.removeAllViews()
 
         roundText.text = "Question ${questionIndex + 1}/$QUESTION_COUNT"
-        scoreText.text = "$playerName $playerScore  -  ${activeOpponent?.name ?: "Opponent"} $opponentScore"
+        updateScoreboard()
         questionCourseText.text = "${question.language} - ${question.course}"
         questionPromptText.text = question.prompt
         questionPromptText.alpha = 0f
         questionPromptText.translationY = 18f
 
         question.options.forEachIndexed { index, option ->
+            val answerKey = ('A'.code + index).toChar()
             val button = MaterialButton(requireContext()).apply {
-                text = option
+                text = "$answerKey    $option"
                 isAllCaps = false
                 textAlignment = View.TEXT_ALIGNMENT_TEXT_START
                 setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
                 setBackgroundResource(R.drawable.bg_arena_option)
                 minHeight = resources.getDimensionPixelSize(R.dimen.arena_option_min_height)
-                setPadding(22, 12, 22, 12)
+                textSize = 15f
+                letterSpacing = 0.02f
+                insetTop = 0
+                insetBottom = 0
+                setPadding(26, 14, 26, 14)
                 setOnClickListener { submitPlayerAnswer(index) }
                 alpha = 0f
                 translationY = 20f
@@ -398,6 +438,7 @@ class ArenaFragment : Fragment() {
         }
 
         showQuestionIntro(question) {
+            scrollToQuestion()
             questionStartMs = System.currentTimeMillis()
             animateQuestionEntry()
             startQuestionTimer()
@@ -498,8 +539,9 @@ class ArenaFragment : Fragment() {
         correctStreak = if (correct) correctStreak + 1 else 0
 
         colorAnswerButtons(selectedIndex)
-        scoreText.popIn()
-        scoreText.flashScore()
+        updateScoreboard()
+        scoreBoard.popIn()
+        playerScoreValue.flashScore()
         comboText.text = when {
             correct && correctStreak >= 3 -> "HOT STREAK x$correctStreak"
             correct -> "CLEAN HIT"
@@ -529,6 +571,8 @@ class ArenaFragment : Fragment() {
         val correct = selectedIndex == currentCorrectIndex
         opponentScore += scoreForAnswer(correct, elapsed)
         opponentAvatarImage.pulse()
+        updateScoreboard()
+        opponentScoreValue.flashScore()
         arenaTicker.flashText(if (correct) "OPPONENT SCORED" else "OPPONENT MISSED")
         maybeAdvanceQuestion()
     }
@@ -537,7 +581,7 @@ class ArenaFragment : Fragment() {
         if (!playerAnswered || !opponentAnswered) return
 
         timer?.cancel()
-        scoreText.text = "$playerName $playerScore  -  ${activeOpponent?.name ?: "Opponent"} $opponentScore"
+        updateScoreboard()
 
         viewLifecycleOwner.lifecycleScope.launch {
             delay(850)
@@ -549,11 +593,25 @@ class ArenaFragment : Fragment() {
     private fun colorAnswerButtons(selectedIndex: Int) {
         optionsContainer.childrenAsButtons().forEachIndexed { index, button ->
             when (index) {
-                currentCorrectIndex -> button.setBackgroundResource(R.drawable.bg_arena_option_correct)
-                selectedIndex -> button.setBackgroundResource(R.drawable.bg_arena_option_wrong)
+                currentCorrectIndex -> {
+                    button.setBackgroundResource(R.drawable.bg_arena_option_correct)
+                    button.pulse()
+                }
+                selectedIndex -> {
+                    button.setBackgroundResource(R.drawable.bg_arena_option_wrong)
+                    button.shake()
+                }
                 else -> button.alpha = 0.56f
             }
         }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun updateScoreboard() {
+        val opponentName = activeOpponent?.name ?: "Opponent"
+        playerScoreValue.text = "${playerName.uppercase().take(10)}\n$playerScore"
+        opponentScoreValue.text = "${opponentName.uppercase().take(10)}\n$opponentScore"
+        scoreText.text = "VS"
     }
 
     @SuppressLint("SetTextI18n")
@@ -764,6 +822,13 @@ class ArenaFragment : Fragment() {
         }
     }
 
+    private fun scrollToQuestion() {
+        matchPanel.post {
+            val targetY = (matchPanel.top + questionCourseText.top - dp(14)).coerceAtLeast(0)
+            arenaScroll.smoothScrollTo(0, targetY)
+        }
+    }
+
     private fun View.floatBeat(direction: Float) {
         animate()
             .scaleX(1.08f)
@@ -820,6 +885,26 @@ class ArenaFragment : Fragment() {
                 animate().scaleX(1f).scaleY(1f).setDuration(130L).start()
             }
             .start()
+    }
+
+    private fun View.shake() {
+        animate()
+            .translationX(-10f)
+            .setDuration(55L)
+            .withEndAction {
+                animate()
+                    .translationX(10f)
+                    .setDuration(55L)
+                    .withEndAction {
+                        animate().translationX(0f).setDuration(70L).start()
+                    }
+                    .start()
+            }
+            .start()
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).roundToInt()
     }
 
     private fun View.pulse() {
