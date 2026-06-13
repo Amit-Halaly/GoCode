@@ -1,6 +1,8 @@
 package com.example.gocode
 
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
+import android.graphics.Typeface
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.LayoutInflater
@@ -85,12 +87,16 @@ class ArenaFragment : Fragment() {
     private lateinit var ratingDeltaText: TextView
     private lateinit var playAgainButton: MaterialButton
 
-    private lateinit var globalLeaderboard: TextView
-    private lateinit var localLeaderboard: TextView
-    private lateinit var friendsLeaderboard: TextView
+    private lateinit var globalLeaderboard: LinearLayout
+    private lateinit var localLeaderboard: LinearLayout
+    private lateinit var friendsLeaderboard: LinearLayout
+    private lateinit var globalLeaderboardButton: LinearLayout
+    private lateinit var localLeaderboardButton: LinearLayout
+    private lateinit var friendsLeaderboardButton: LinearLayout
     private lateinit var questionIntroOverlay: View
     private lateinit var questionIntroTitle: TextView
     private lateinit var questionIntroSubtitle: TextView
+    private lateinit var questionTitleText: TextView
 
     private var playerName = "You"
     private var playerRating = 1000
@@ -132,6 +138,9 @@ class ArenaFragment : Fragment() {
         arenaBackButton.setOnClickListener { findNavController().navigate(R.id.homeFragment) }
         battleTabButton.setOnClickListener { showArenaTab(ArenaTab.BATTLE) }
         leaderboardTabButton.setOnClickListener { showArenaTab(ArenaTab.LEADERBOARD) }
+        globalLeaderboardButton.setOnClickListener { showLeaderboardScope(LeaderboardScope.GLOBAL) }
+        localLeaderboardButton.setOnClickListener { showLeaderboardScope(LeaderboardScope.LOCAL) }
+        friendsLeaderboardButton.setOnClickListener { showLeaderboardScope(LeaderboardScope.FRIENDS) }
     }
 
     override fun onDestroyView() {
@@ -199,9 +208,13 @@ class ArenaFragment : Fragment() {
         globalLeaderboard = view.findViewById(R.id.globalLeaderboard)
         localLeaderboard = view.findViewById(R.id.localLeaderboard)
         friendsLeaderboard = view.findViewById(R.id.friendsLeaderboard)
+        globalLeaderboardButton = view.findViewById(R.id.globalLeaderboardButton)
+        localLeaderboardButton = view.findViewById(R.id.localLeaderboardButton)
+        friendsLeaderboardButton = view.findViewById(R.id.friendsLeaderboardButton)
         questionIntroOverlay = view.findViewById(R.id.questionIntroOverlay)
         questionIntroTitle = view.findViewById(R.id.questionIntroTitle)
         questionIntroSubtitle = view.findViewById(R.id.questionIntroSubtitle)
+        questionTitleText = view.findViewById(R.id.questionTitle)
     }
 
     @SuppressLint("SetTextI18n")
@@ -281,6 +294,7 @@ class ArenaFragment : Fragment() {
             requireContext(),
             if (tab == ArenaTab.LEADERBOARD) android.R.color.holo_orange_light else android.R.color.transparent
         )
+        if (tab == ArenaTab.LEADERBOARD) showLeaderboardScope(LeaderboardScope.GLOBAL)
         startButton.visibility = if (tab == ArenaTab.BATTLE && isIdleBattleState()) View.VISIBLE else View.GONE
         if (tab == ArenaTab.BATTLE && isIdleBattleState()) startIdleAnimation() else stopIdleAnimation()
     }
@@ -406,7 +420,11 @@ class ArenaFragment : Fragment() {
         roundText.text = "Question ${questionIndex + 1}/$QUESTION_COUNT"
         updateScoreboard()
         questionCourseText.text = "${question.language} - ${question.course}"
-        questionPromptText.text = question.prompt
+        val titleAndCode = question.toTitleAndCode()
+        questionTitleText.text = titleAndCode.first
+        questionPromptText.text = titleAndCode.second
+        questionTitleText.alpha = 0f
+        questionTitleText.translationY = 14f
         questionPromptText.alpha = 0f
         questionPromptText.translationY = 18f
 
@@ -418,6 +436,8 @@ class ArenaFragment : Fragment() {
                 textAlignment = View.TEXT_ALIGNMENT_TEXT_START
                 setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
                 setBackgroundResource(R.drawable.bg_arena_option)
+                backgroundTintList = null
+                rippleColor = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), android.R.color.transparent))
                 minHeight = resources.getDimensionPixelSize(R.dimen.arena_option_min_height)
                 textSize = 15f
                 letterSpacing = 0.02f
@@ -664,33 +684,186 @@ class ArenaFragment : Fragment() {
     }
 
     private fun renderLeaderboards() {
-        val global = (arenaOpponents + ArenaOpponent(playerName, playerRating, playerLanguages, 72, playerAvatarResId))
+        val globalPlayers = (arenaOpponents + ArenaOpponent(playerName, playerRating, playerLanguages, 72, playerAvatarResId))
             .sortedByDescending { it.rating }
             .take(5)
-            .mapIndexed { index, player ->
-                val medal = when (index) {
-                    0 -> "01"
-                    1 -> "02"
-                    2 -> "03"
-                    else -> "0${index + 1}"
-                }
-                "$medal  ${player.name.padEnd(14).take(14)}  ${player.rating}  ${rankName(player.rating)}"
-            }
-            .joinToString("\n")
+        buildLeaderboardTable(
+            container = globalLeaderboard,
+            title = "GLOBAL",
+            players = globalPlayers,
+            rankLabel = "WORLD"
+        )
+        buildLeaderboardTable(
+            container = localLeaderboard,
+            title = "LOCAL",
+            players = listOf(
+                ArenaOpponent(playerName, playerRating, playerLanguages, 72, playerAvatarResId),
+                ArenaOpponent("ByteRunner", 1180, listOf("C", "Python"), 66, R.drawable.avatar_robot),
+                ArenaOpponent("LoopMage", 1095, listOf("Java"), 62, R.drawable.avatar_owl),
+                ArenaOpponent("Ben", 970, listOf("Java"), 55, R.drawable.avatar_boy)
+            ).sortedByDescending { it.rating },
+            rankLabel = "CITY"
+        )
+        buildLeaderboardTable(
+            container = friendsLeaderboard,
+            title = "FRIENDS",
+            players = listOf(
+                ArenaOpponent("Aviv", 1220, listOf("Java"), 70, R.drawable.avatar_ninja),
+                ArenaOpponent(playerName, playerRating, playerLanguages, 72, playerAvatarResId),
+                ArenaOpponent("Ben", 970, listOf("Java"), 55, R.drawable.avatar_boy),
+                ArenaOpponent("Noa", 930, listOf("Python"), 52, R.drawable.avatar_cat_woman)
+            ).sortedByDescending { it.rating },
+            rankLabel = "CREW"
+        )
+        showLeaderboardScope(LeaderboardScope.GLOBAL)
+    }
 
-        globalLeaderboard.text = "GLOBAL RANK\n$global"
-        localLeaderboard.text = listOf(
-            "LOCAL LADDER",
-            "01  ${playerName.padEnd(14).take(14)}  $playerRating  ${rankName(playerRating)}",
-            "02  ByteRunner      1180  Silver",
-            "03  LoopMage        1095  Silver"
-        ).joinToString("\n")
-        friendsLeaderboard.text = listOf(
-            "FRIENDS",
-            "01  Aviv            1220  Silver",
-            "02  ${playerName.padEnd(14).take(14)}  $playerRating  ${rankName(playerRating)}",
-            "03  Ben              970  Bronze"
-        ).joinToString("\n")
+    private fun showLeaderboardScope(scope: LeaderboardScope) {
+        globalLeaderboard.visibility = if (scope == LeaderboardScope.GLOBAL) View.VISIBLE else View.GONE
+        localLeaderboard.visibility = if (scope == LeaderboardScope.LOCAL) View.VISIBLE else View.GONE
+        friendsLeaderboard.visibility = if (scope == LeaderboardScope.FRIENDS) View.VISIBLE else View.GONE
+
+        setScopeButtonState(globalLeaderboardButton, scope == LeaderboardScope.GLOBAL)
+        setScopeButtonState(localLeaderboardButton, scope == LeaderboardScope.LOCAL)
+        setScopeButtonState(friendsLeaderboardButton, scope == LeaderboardScope.FRIENDS)
+    }
+
+    private fun setScopeButtonState(button: LinearLayout, selected: Boolean) {
+        val active = ContextCompat.getColor(requireContext(), R.color.accent_green)
+        val activeText = ContextCompat.getColor(requireContext(), android.R.color.black)
+        val idleText = ContextCompat.getColor(requireContext(), android.R.color.white)
+        button.setBackgroundResource(if (selected) R.drawable.bg_arena_scope_tab_active else R.drawable.bg_arena_scope_tab_idle)
+        button.alpha = if (selected) 1f else 0.72f
+        (0 until button.childCount).forEach { index ->
+            when (val child = button.getChildAt(index)) {
+                is TextView -> child.setTextColor(if (selected) activeText else idleText)
+                is ImageView -> child.imageTintList = ColorStateList.valueOf(if (selected) activeText else active)
+            }
+        }
+    }
+
+    private fun buildLeaderboardTable(
+        container: LinearLayout,
+        title: String,
+        players: List<ArenaOpponent>,
+        rankLabel: String
+    ) {
+        container.removeAllViews()
+        container.addView(
+            leaderboardTitle("$title LEADERBOARD", "$rankLabel ranking by arena rating"),
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+        container.addView(
+            leaderboardHeader(),
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(10) }
+        )
+        players.take(5).forEachIndexed { index, player ->
+            container.addView(
+                leaderboardRow(index + 1, player),
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = dp(8) }
+            )
+        }
+    }
+
+    private fun leaderboardTitle(title: String, subtitle: String): View {
+        return LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(2), dp(2), dp(2), dp(2))
+            addView(TextView(requireContext()).apply {
+                text = title
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                textSize = 18f
+                typeface = Typeface.DEFAULT_BOLD
+            })
+            addView(TextView(requireContext()).apply {
+                text = subtitle
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_color))
+                textSize = 12f
+            })
+        }
+    }
+
+    private fun leaderboardHeader(): View {
+        return LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setBackgroundResource(R.drawable.bg_arena_leaderboard_header)
+            setPadding(dp(10), dp(8), dp(10), dp(8))
+            addHeaderCell("#", 0.55f)
+            addHeaderCell("Name", 1.75f)
+            addHeaderCell("Rank", 1f)
+            addHeaderCell("Pts", 0.8f)
+        }
+    }
+
+    private fun leaderboardRow(position: Int, player: ArenaOpponent): View {
+        return LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setBackgroundResource(if (position == 1) R.drawable.bg_arena_leaderboard_top_row else R.drawable.bg_arena_leaderboard_row)
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            addValueCell("#$position", 0.55f, highlight = position == 1)
+            addView(
+                TextView(requireContext()).apply {
+                    text = player.name
+                    maxLines = 1
+                    setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                    textSize = 14f
+                    typeface = Typeface.DEFAULT_BOLD
+                },
+                LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.75f)
+            )
+            addValueCell(rankName(player.rating), 1f, highlight = false)
+            addValueCell(player.rating.toString(), 0.8f, highlight = position == 1)
+        }
+    }
+
+    private fun LinearLayout.addHeaderCell(value: String, weight: Float) {
+        addView(
+            TextView(requireContext()).apply {
+                text = value
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_green))
+                textSize = 11f
+                typeface = Typeface.DEFAULT_BOLD
+            },
+            LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, weight)
+        )
+    }
+
+    private fun LinearLayout.addValueCell(value: String, weight: Float, highlight: Boolean) {
+        addView(
+            TextView(requireContext()).apply {
+                text = value
+                maxLines = 1
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setTextColor(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        if (highlight) android.R.color.holo_orange_light else android.R.color.white
+                    )
+                )
+                textSize = 13f
+                typeface = if (highlight) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+            },
+            LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, weight)
+        )
+    }
+
+    private fun ArenaQuestion.toTitleAndCode(): Pair<String, String> {
+        val lines = prompt.lines()
+        val title = lines.firstOrNull()?.takeIf { it.isNotBlank() } ?: "What is the output?"
+        val code = lines.drop(1).joinToString("\n").takeIf { it.isNotBlank() }
+            ?: prompt
+        return title to code
     }
 
     private fun scoreForAnswer(correct: Boolean, elapsedMs: Long): Int {
@@ -805,9 +978,16 @@ class ArenaFragment : Fragment() {
     }
 
     private fun animateQuestionEntry() {
+        questionTitleText.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(180L)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
         questionPromptText.animate()
             .alpha(1f)
             .translationY(0f)
+            .setStartDelay(50L)
             .setDuration(240L)
             .setInterpolator(DecelerateInterpolator())
             .start()
@@ -950,6 +1130,12 @@ class ArenaFragment : Fragment() {
     private enum class ArenaTab {
         BATTLE,
         LEADERBOARD
+    }
+
+    private enum class LeaderboardScope {
+        GLOBAL,
+        LOCAL,
+        FRIENDS
     }
 
     private companion object {

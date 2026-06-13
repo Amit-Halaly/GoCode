@@ -508,10 +508,20 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/questionTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="What is the output?"
+                        android:textColor="#F8FAFC"
+                        android:textSize="19sp"
+                        android:textStyle="bold" />
+
+                    <TextView
                         android:id="@+id/questionPrompt"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginTop="8dp"
                         android:background="@drawable/bg_arena_code_card"
                         android:fontFamily="monospace"
                         android:lineSpacingExtra="4dp"
@@ -611,41 +621,133 @@
                     android:textSize="23sp"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/globalLeaderboard"
+                <LinearLayout
+                    android:id="@+id/leaderboardScopeTabs"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_arena_leaderboard_board"
-                    android:fontFamily="monospace"
-                    android:lineSpacingExtra="4dp"
-                    android:padding="14dp"
-                    android:textColor="#EAF2FF"
-                    android:textSize="13sp" />
+                    android:background="@drawable/bg_arena_scope_tabs"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:padding="5dp">
 
-                <TextView
+                    <LinearLayout
+                        android:id="@+id/globalLeaderboardButton"
+                        android:layout_width="0dp"
+                        android:layout_height="58dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_arena_scope_tab_active"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="5dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_arena_global"
+                            app:tint="#07111E" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:text="World"
+                            android:textColor="#07111E"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/localLeaderboardButton"
+                        android:layout_width="0dp"
+                        android:layout_height="58dp"
+                        android:layout_marginHorizontal="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_arena_scope_tab_idle"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="5dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_arena_local"
+                            app:tint="#DDF7FF" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:text="Local"
+                            android:textColor="#DDF7FF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/friendsLeaderboardButton"
+                        android:layout_width="0dp"
+                        android:layout_height="58dp"
+                        android:layout_marginStart="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_arena_scope_tab_idle"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="5dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_arena_friends"
+                            app:tint="#DDF7FF" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:text="Friends"
+                            android:textColor="#DDF7FF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/globalLeaderboard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_arena_leaderboard_board"
+                    android:orientation="vertical"
+                    android:padding="14dp"
+                    android:visibility="visible" />
+
+                <LinearLayout
                     android:id="@+id/localLeaderboard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:background="@drawable/bg_arena_leaderboard_board"
-                    android:fontFamily="monospace"
-                    android:lineSpacingExtra="4dp"
+                    android:orientation="vertical"
                     android:padding="14dp"
-                    android:textColor="#EAF2FF"
-                    android:textSize="13sp" />
+                    android:visibility="gone" />
 
-                <TextView
+                <LinearLayout
                     android:id="@+id/friendsLeaderboard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:background="@drawable/bg_arena_leaderboard_board"
-                    android:fontFamily="monospace"
-                    android:lineSpacingExtra="4dp"
+                    android:orientation="vertical"
                     android:padding="14dp"
-                    android:textColor="#EAF2FF"
-                    android:textSize="13sp" />
+                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
