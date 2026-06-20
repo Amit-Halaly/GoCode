@@ -228,30 +228,77 @@ object GamificationRepository {
         rewardedNodeIds: List<String>,
         existingAchievements: Set<String>
     ): List<AchievementReward> {
+        val lessonCount = rewardedNodeIds.count { it.contains("_l") }
+        val practiceCount = rewardedNodeIds.count { it.contains("_p") }
+        val quizCount = rewardedNodeIds.count { it.contains("_q") }
+        val codeCount = rewardedNodeIds.count { it.contains("_c") }
+
         val candidates = buildList {
             if (nodeId.contains("_l")) {
                 add(AchievementReward("first_lesson", "First Lesson", "You completed your first lesson."))
             }
+            if (lessonCount >= 5) {
+                add(AchievementReward("lesson_runner_5", "Lesson Runner", "You completed 5 lessons."))
+            }
+            if (lessonCount >= 10) {
+                add(AchievementReward("lesson_master_10", "Lesson Master", "You completed 10 lessons."))
+            }
             if (nodeId.contains("_p")) {
                 add(AchievementReward("first_practice", "First Practice", "You finished your first practice session."))
+            }
+            if (practiceCount >= 5) {
+                add(AchievementReward("practice_streak_5", "Practice Streak", "You completed 5 practice sessions."))
+            }
+            if (practiceCount >= 10) {
+                add(AchievementReward("practice_grinder_10", "Practice Grinder", "You completed 10 practice sessions."))
             }
             if (nodeId.contains("_q")) {
                 add(AchievementReward("first_quiz", "First Quiz", "You completed your first section quiz."))
             }
+            if (quizCount >= 3) {
+                add(AchievementReward("quiz_climber_3", "Quiz Climber", "You completed 3 section quizzes."))
+            }
+            if (quizCount >= 7) {
+                add(AchievementReward("quiz_champion_7", "Quiz Champion", "You completed 7 section quizzes."))
+            }
             if (nodeId.contains("_c")) {
                 add(AchievementReward("first_code", "First Code Challenge", "You completed your first coding challenge."))
             }
-            if (rewardedNodeIds.count { it.contains("_q") } >= 1) {
+            if (codeCount >= 3) {
+                add(AchievementReward("code_builder_3", "Code Builder", "You completed 3 coding challenges."))
+            }
+            if (codeCount >= 8) {
+                add(AchievementReward("code_crafter_8", "Code Crafter", "You completed 8 coding challenges."))
+            }
+            if (quizCount >= 1) {
                 add(AchievementReward("first_section", "Section Cleared", "You cleared your first learning section."))
+            }
+            if (quizCount >= 3) {
+                add(AchievementReward("three_sections", "Three Sections Down", "You cleared 3 learning sections."))
+            }
+            if (quizCount >= 5) {
+                add(AchievementReward("half_path", "Halfway Through Java", "You cleared 5 Java sections."))
             }
             if (level >= 2) {
                 add(AchievementReward("level_2", "Level 2", "You reached level 2."))
             }
+            if (level >= 3) {
+                add(AchievementReward("level_3", "Rising Coder", "You reached level 3."))
+            }
             if (level >= 5) {
                 add(AchievementReward("level_5", "Level 5", "You reached level 5."))
             }
+            if (level >= 10) {
+                add(AchievementReward("level_10", "Level 10", "You reached level 10."))
+            }
+            if (coins >= 100) {
+                add(AchievementReward("coin_100", "First Coins", "You collected 100 coins."))
+            }
             if (coins >= 500) {
                 add(AchievementReward("coin_500", "Coin Collector", "You collected 500 coins."))
+            }
+            if (coins >= 1000) {
+                add(AchievementReward("coin_1000", "Treasure Stack", "You collected 1000 coins."))
             }
             if ("java_u10_q1" in rewardedNodeIds) {
                 add(AchievementReward("java_path_complete", "Java Path Complete", "You completed the Java fundamentals path."))

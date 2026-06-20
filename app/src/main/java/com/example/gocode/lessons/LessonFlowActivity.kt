@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.gocode.AchievementBottomSheet
 import com.example.gocode.R
 import com.example.gocode.gamification.GamificationRepository
 import com.example.gocode.gamification.GamificationResult
@@ -119,18 +119,17 @@ class LessonFlowActivity : AppCompatActivity() {
 
     private fun awardCompletionAndFinish() {
         GamificationRepository.awardNodeCompleted(this, nodeId) { result ->
-            result?.let { showReward(it) }
-            finish()
+            if (result == null) {
+                finish()
+            } else {
+                showReward(result) { finish() }
+            }
         }
     }
 
-    private fun showReward(result: GamificationResult) {
-        val bonusText = if (result.bonusCoins > 0) " +${result.bonusCoins} bonus coins" else ""
-        val achievementText = result.newAchievements.firstOrNull()?.let { "  Achievement: ${it.title}" }.orEmpty()
-        Toast.makeText(
-            this,
-            "+${result.reward.xp} XP  +${result.reward.coins} coins$bonusText$achievementText",
-            Toast.LENGTH_LONG
-        ).show()
+    private fun showReward(result: GamificationResult, onContinue: () -> Unit) {
+        AchievementBottomSheet.newRewardInstance(result).apply {
+            this.onContinue = onContinue
+        }.show(supportFragmentManager, "reward_sheet")
     }
 }

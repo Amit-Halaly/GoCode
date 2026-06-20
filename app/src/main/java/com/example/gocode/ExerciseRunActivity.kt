@@ -8,10 +8,10 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
+import com.example.gocode.AchievementBottomSheet
 import com.example.gocode.gamification.GamificationRepository
 import com.example.gocode.gamification.GamificationResult
 import com.example.gocode.lessons.LanguagePathFragment
@@ -462,13 +462,8 @@ class ExerciseRunActivity : AppCompatActivity() {
     }
 
     private fun showReward(result: GamificationResult) {
-        val bonusText = if (result.bonusCoins > 0) " +${result.bonusCoins} bonus coins" else ""
-        val achievementText = result.newAchievements.firstOrNull()?.let { "  Achievement: ${it.title}" }.orEmpty()
-        Toast.makeText(
-            this,
-            "+${result.reward.xp} XP  +${result.reward.coins} coins$bonusText$achievementText",
-            Toast.LENGTH_LONG
-        ).show()
+        AchievementBottomSheet.newRewardInstance(result)
+            .show(supportFragmentManager, "reward_sheet")
     }
 
     private fun codeKey(): String = "${KEY_CODE}_$nodeId"
