@@ -147,6 +147,13 @@ class PathNodesAdapter(
 
         private fun sectionColor(item: PathNodeItem): Int {
             val colorRes = when {
+                item.id.contains("_u10_") -> R.color.section_ten
+                item.id.contains("_u9_") -> R.color.section_nine
+                item.id.contains("_u8_") -> R.color.section_eight
+                item.id.contains("_u7_") -> R.color.section_seven
+                item.id.contains("_u6_") -> R.color.section_six
+                item.id.contains("_u5_") -> R.color.section_five
+                item.id.contains("_u4_") -> R.color.section_four
                 item.id.contains("_u2_") -> R.color.section_two
                 item.id.contains("_u3_") -> R.color.section_three
                 else -> R.color.section_one
@@ -158,6 +165,13 @@ class PathNodesAdapter(
             val header = when (item.id) {
                 "java_u2_l1" -> "SECTION 2 • JAVA" to "If / Else Statements"
                 "java_u3_l1" -> "SECTION 3 • JAVA" to "Loops"
+                "java_u4_l1" -> "SECTION 4 • JAVA" to "Arrays"
+                "java_u5_l1" -> "SECTION 5 • JAVA" to "Methods"
+                "java_u6_l1" -> "SECTION 6 • JAVA" to "Scanner Input"
+                "java_u7_l1" -> "SECTION 7 • JAVA" to "String Tools"
+                "java_u8_l1" -> "SECTION 8 • JAVA" to "Classes & Objects"
+                "java_u9_l1" -> "SECTION 9 • JAVA" to "Debugging Basics"
+                "java_u10_l1" -> "SECTION 10 • JAVA" to "Final Review"
                 else -> null
             }
 

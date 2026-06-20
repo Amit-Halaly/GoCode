@@ -12,6 +12,27 @@ object JavaPracticeRepository {
             "java_u3_p1" -> getSection3Practice1Questions()
             "java_u3_p2" -> getSection3Practice2Questions()
             "java_u3_q1" -> getSection3QuizQuestions()
+            "java_u4_p1" -> getSection4Practice1Questions()
+            "java_u4_p2" -> getSection4Practice2Questions()
+            "java_u4_q1" -> getSection4QuizQuestions()
+            "java_u5_p1" -> getSection5Practice1Questions()
+            "java_u5_p2" -> getSection5Practice2Questions()
+            "java_u5_q1" -> getSection5QuizQuestions()
+            "java_u6_p1" -> getSection6Practice1Questions()
+            "java_u6_p2" -> getSection6Practice2Questions()
+            "java_u6_q1" -> getSection6QuizQuestions()
+            "java_u7_p1" -> getSection7Practice1Questions()
+            "java_u7_p2" -> getSection7Practice2Questions()
+            "java_u7_q1" -> getSection7QuizQuestions()
+            "java_u8_p1" -> getSection8Practice1Questions()
+            "java_u8_p2" -> getSection8Practice2Questions()
+            "java_u8_q1" -> getSection8QuizQuestions()
+            "java_u9_p1" -> getSection9Practice1Questions()
+            "java_u9_p2" -> getSection9Practice2Questions()
+            "java_u9_q1" -> getSection9QuizQuestions()
+            "java_u10_p1" -> getSection10Practice1Questions()
+            "java_u10_p2" -> getSection10Practice2Questions()
+            "java_u10_q1" -> getSection10QuizQuestions()
             else -> getPractice1Questions()
         }
     }
@@ -929,4 +950,317 @@ object JavaPracticeRepository {
             )
         )
     }
+
+    private fun getSection4Practice1Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(
+            id = "java_s4_p1_q1",
+            type = PracticeQuestionType.MULTIPLE_CHOICE,
+            title = "Question 1",
+            question = "What does an array store?",
+            options = listOf("Many values of the same type", "Only one boolean", "Only class names", "Only errors"),
+            correctAnswer = "Many values of the same type",
+            explanation = "An array groups multiple values under one variable name."
+        ),
+        PracticeQuestion(
+            id = "java_s4_p1_q2",
+            type = PracticeQuestionType.DRAG_FILL_BLANK,
+            title = "Question 2",
+            question = "Complete the int array.",
+            code = """
+                ______ scores = {90, 75, 88};
+                System.out.println(scores[0]);
+            """.trimIndent(),
+            options = listOf("int[]", "String", "int", "boolean[]"),
+            correctAnswer = "int[]",
+            explanation = "int[] creates an array of int values."
+        ),
+        PracticeQuestion(
+            id = "java_s4_p1_q3",
+            type = PracticeQuestionType.MULTIPLE_CHOICE,
+            title = "Question 3",
+            question = "What does names[0] read?",
+            code = """String[] names = {"Leo", "Maya"};""",
+            options = listOf("Leo", "Maya", "0", "names"),
+            correctAnswer = "Leo",
+            explanation = "Array indexes start at 0."
+        ),
+        PracticeQuestion(
+            id = "java_s4_p1_q4",
+            type = PracticeQuestionType.FILL_BLANK,
+            title = "Question 4",
+            question = "Complete the property that returns the array size.",
+            code = """System.out.println(scores.______);""",
+            correctAnswer = "length",
+            explanation = "Arrays use .length to report how many values they hold."
+        )
+    )
+
+    private fun getSection4Practice2Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(
+            id = "java_s4_p2_q1",
+            type = PracticeQuestionType.MULTIPLE_CHOICE,
+            title = "Question 1",
+            question = "If an array has 4 values, what is the last index?",
+            options = listOf("3", "4", "1", "length"),
+            correctAnswer = "3",
+            explanation = "The last index is length - 1."
+        ),
+        PracticeQuestion(
+            id = "java_s4_p2_q2",
+            type = PracticeQuestionType.DRAG_FILL_BLANK,
+            title = "Question 2",
+            question = "Complete the loop that prints every score.",
+            code = """
+                for (int i = 0; i < scores.______; i++) {
+                    System.out.println(scores[______]);
+                }
+            """.trimIndent(),
+            options = listOf("length", "i", "0", "score", "size"),
+            correctAnswer = "length",
+            correctAnswers = listOf("length", "i"),
+            explanation = "Use scores.length for the limit and scores[i] to read the current value."
+        ),
+        PracticeQuestion(
+            id = "java_s4_p2_q3",
+            type = PracticeQuestionType.MULTIPLE_CHOICE,
+            title = "Question 3",
+            question = "What usually causes an array index error?",
+            options = listOf("Reading an index that does not exist", "Using println", "Creating a String", "Using a semicolon"),
+            correctAnswer = "Reading an index that does not exist",
+            explanation = "Indexes must stay between 0 and length - 1."
+        )
+    )
+
+    private fun getSection4QuizQuestions(): List<PracticeQuestion> = getSection4Practice1Questions() + listOf(
+        PracticeQuestion(
+            id = "java_s4_q5",
+            type = PracticeQuestionType.DRAG_FILL_BLANK,
+            title = "Quiz 5",
+            question = "Complete the enhanced for loop.",
+            code = """
+                for (int score ______ scores) {
+                    System.out.println(score);
+                }
+            """.trimIndent(),
+            options = listOf(":", "in", "=", "=="),
+            correctAnswer = ":",
+            explanation = "Enhanced for loops use a colon: for (int score : scores)."
+        )
+    )
+
+    private fun getSection5Practice1Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(
+            id = "java_s5_p1_q1",
+            type = PracticeQuestionType.MULTIPLE_CHOICE,
+            title = "Question 1",
+            question = "What is a method?",
+            options = listOf("A named block of reusable code", "Only a variable", "Only an array", "A Java error"),
+            correctAnswer = "A named block of reusable code",
+            explanation = "Methods organize code into reusable blocks."
+        ),
+        PracticeQuestion(
+            id = "java_s5_p1_q2",
+            type = PracticeQuestionType.DRAG_FILL_BLANK,
+            title = "Question 2",
+            question = "Complete the method call.",
+            code = """
+                static void sayHello() {
+                    System.out.println("Hello");
+                }
+
+                public static void main(String[] args) {
+                    ______;
+                }
+            """.trimIndent(),
+            options = listOf("sayHello()", "sayHello", "void", "method()"),
+            correctAnswer = "sayHello()",
+            explanation = "Call a method with its name and parentheses."
+        ),
+        PracticeQuestion(
+            id = "java_s5_p1_q3",
+            type = PracticeQuestionType.MULTIPLE_CHOICE,
+            title = "Question 3",
+            question = "What does void mean?",
+            options = listOf("The method does not return a value", "The method returns int", "The method is an array", "The method is broken"),
+            correctAnswer = "The method does not return a value",
+            explanation = "void methods run code but do not send back a result."
+        )
+    )
+
+    private fun getSection5Practice2Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(
+            id = "java_s5_p2_q1",
+            type = PracticeQuestionType.MULTIPLE_CHOICE,
+            title = "Question 1",
+            question = "What does a parameter do?",
+            options = listOf("Lets a method receive information", "Stops a loop", "Creates an error", "Deletes an array"),
+            correctAnswer = "Lets a method receive information",
+            explanation = "Parameters make methods flexible."
+        ),
+        PracticeQuestion(
+            id = "java_s5_p2_q2",
+            type = PracticeQuestionType.DRAG_FILL_BLANK,
+            title = "Question 2",
+            question = "Complete the method that returns double the number.",
+            code = """
+                static ______ doubleNumber(int number) {
+                    ______ number * 2;
+                }
+            """.trimIndent(),
+            options = listOf("int", "return", "void", "String"),
+            correctAnswer = "int",
+            correctAnswers = listOf("int", "return"),
+            explanation = "The method returns an int, so it uses int and return."
+        ),
+        PracticeQuestion(
+            id = "java_s5_p2_q3",
+            type = PracticeQuestionType.FILL_BLANK,
+            title = "Question 3",
+            question = "Complete the parameter type.",
+            code = """static void greet(______ name) { }""",
+            correctAnswer = "String",
+            explanation = "A name is text, so the parameter type is String."
+        )
+    )
+
+    private fun getSection5QuizQuestions(): List<PracticeQuestion> = getSection5Practice1Questions() + getSection5Practice2Questions()
+
+    private fun getSection6Practice1Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(
+            id = "java_s6_p1_q1",
+            type = PracticeQuestionType.MULTIPLE_CHOICE,
+            title = "Question 1",
+            question = "What does Scanner help with?",
+            options = listOf("Reading user input", "Creating arrays only", "Drawing graphics", "Changing colors"),
+            correctAnswer = "Reading user input",
+            explanation = "Scanner reads values typed into the console."
+        ),
+        PracticeQuestion(
+            id = "java_s6_p1_q2",
+            type = PracticeQuestionType.DRAG_FILL_BLANK,
+            title = "Question 2",
+            question = "Complete the Scanner setup.",
+            code = """
+                import java.util.______;
+
+                Scanner input = new Scanner(System.in);
+            """.trimIndent(),
+            options = listOf("Scanner", "String", "Input", "System"),
+            correctAnswer = "Scanner",
+            explanation = "Scanner is imported from java.util.Scanner."
+        ),
+        PracticeQuestion(
+            id = "java_s6_p1_q3",
+            type = PracticeQuestionType.MULTIPLE_CHOICE,
+            title = "Question 3",
+            question = "Which Scanner method reads a whole number?",
+            options = listOf("nextInt()", "nextLine()", "println()", "length()"),
+            correctAnswer = "nextInt()",
+            explanation = "nextInt() reads an int."
+        )
+    )
+
+    private fun getSection6Practice2Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(
+            id = "java_s6_p2_q1",
+            type = PracticeQuestionType.DRAG_FILL_BLANK,
+            title = "Question 1",
+            question = "Complete the age check from input.",
+            code = """
+                int age = input.______();
+
+                if (age ______ 13) {
+                    System.out.println("Welcome");
+                }
+            """.trimIndent(),
+            options = listOf("nextInt", ">=", "nextLine", "<=", "equals"),
+            correctAnswer = "nextInt",
+            correctAnswers = listOf("nextInt", ">="),
+            explanation = "Read an int with nextInt(), then compare age >= 13."
+        ),
+        PracticeQuestion(
+            id = "java_s6_p2_q2",
+            type = PracticeQuestionType.MULTIPLE_CHOICE,
+            title = "Question 2",
+            question = "Why print a prompt before reading input?",
+            options = listOf("So the user knows what to type", "So Java creates a class", "So arrays get longer", "So loops stop"),
+            correctAnswer = "So the user knows what to type",
+            explanation = "Prompts make console programs easier to use."
+        )
+    )
+
+    private fun getSection6QuizQuestions(): List<PracticeQuestion> = getSection6Practice1Questions() + getSection6Practice2Questions()
+
+    private fun getSection7Practice1Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(id = "java_s7_p1_q1", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 1", question = "What does length() return?", options = listOf("The number of characters", "The first character", "A loop", "An array"), correctAnswer = "The number of characters", explanation = "length() counts characters in a String."),
+        PracticeQuestion(id = "java_s7_p1_q2", type = PracticeQuestionType.DRAG_FILL_BLANK, title = "Question 2", question = "Complete the uppercase call.", code = """String word = "java";
+System.out.println(word.______());""", options = listOf("toUpperCase", "length", "contains", "equals"), correctAnswer = "toUpperCase", explanation = "toUpperCase() returns uppercase text."),
+        PracticeQuestion(id = "java_s7_p1_q3", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 3", question = "What does contains() return?", options = listOf("true or false", "Only an int", "Only a char", "A class"), correctAnswer = "true or false", explanation = "contains() checks if text includes another text.")
+    )
+
+    private fun getSection7Practice2Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(id = "java_s7_p2_q1", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 1", question = "Which method should beginners use to compare String text?", options = listOf("equals()", "==", "length()", "nextInt()"), correctAnswer = "equals()", explanation = "equals() compares String text."),
+        PracticeQuestion(id = "java_s7_p2_q2", type = PracticeQuestionType.DRAG_FILL_BLANK, title = "Question 2", question = "Complete the check.", code = """if (answer.______("yes")) {
+    System.out.println("Confirmed");
+}""", options = listOf("equals", "length", "trim", "for"), correctAnswer = "equals", explanation = "answer.equals(\"yes\") checks the text."),
+        PracticeQuestion(id = "java_s7_p2_q3", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 3", question = "What does trim() remove?", options = listOf("Spaces at the start and end", "All letters", "All numbers", "The whole String"), correctAnswer = "Spaces at the start and end", explanation = "trim() cleans extra outer spaces.")
+    )
+
+    private fun getSection7QuizQuestions(): List<PracticeQuestion> = getSection7Practice1Questions() + getSection7Practice2Questions()
+
+    private fun getSection8Practice1Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(id = "java_s8_p1_q1", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 1", question = "What is a class?", options = listOf("A blueprint for objects", "Only a loop", "Only a number", "A console input"), correctAnswer = "A blueprint for objects", explanation = "Classes describe the data and behavior objects can have."),
+        PracticeQuestion(id = "java_s8_p1_q2", type = PracticeQuestionType.DRAG_FILL_BLANK, title = "Question 2", question = "Complete the field declaration.", code = """class Student {
+    ______ name;
+    int age;
+}""", options = listOf("String", "Scanner", "void", "for"), correctAnswer = "String", explanation = "name is text, so it should be a String."),
+        PracticeQuestion(id = "java_s8_p1_q3", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 3", question = "What are fields?", options = listOf("Variables that belong to a class/object", "Only imported files", "Only errors", "Only println calls"), correctAnswer = "Variables that belong to a class/object", explanation = "Fields store object data.")
+    )
+
+    private fun getSection8Practice2Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(id = "java_s8_p2_q1", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 1", question = "Which keyword creates a new object?", options = listOf("new", "class", "if", "return"), correctAnswer = "new", explanation = "new creates an object from a class."),
+        PracticeQuestion(id = "java_s8_p2_q2", type = PracticeQuestionType.DRAG_FILL_BLANK, title = "Question 2", question = "Complete the object code.", code = """Student student = ______ Student();
+student.______ = "Maya";""", options = listOf("new", "name", "class", "String"), correctAnswer = "new", correctAnswers = listOf("new", "name"), explanation = "Use new Student() to create the object, then student.name to set the field."),
+        PracticeQuestion(id = "java_s8_p2_q3", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 3", question = "What does the dot in student.name mean?", options = listOf("Access something inside the object", "Start a loop", "Create an array", "Import Scanner"), correctAnswer = "Access something inside the object", explanation = "Dot syntax accesses fields and methods on an object.")
+    )
+
+    private fun getSection8QuizQuestions(): List<PracticeQuestion> = getSection8Practice1Questions() + getSection8Practice2Questions()
+
+    private fun getSection9Practice1Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(id = "java_s9_p1_q1", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 1", question = "When does a compile-time error happen?", options = listOf("Before the program runs", "Only after input", "Only inside arrays", "Never"), correctAnswer = "Before the program runs", explanation = "Compile-time errors stop Java from building the program."),
+        PracticeQuestion(id = "java_s9_p1_q2", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 2", question = "What is missing here?", code = """System.out.println("Hello")""", options = listOf("Semicolon", "Array", "Scanner", "Class field"), correctAnswer = "Semicolon", explanation = "Java statements usually end with ;."),
+        PracticeQuestion(id = "java_s9_p1_q3", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 3", question = "What should you check first in an error message?", options = listOf("The line number and message", "Only the app color", "Only the imports", "Nothing"), correctAnswer = "The line number and message", explanation = "The line number and message are the best starting point.")
+    )
+
+    private fun getSection9Practice2Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(id = "java_s9_p2_q1", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 1", question = "What does try / catch help with?", options = listOf("Handling risky runtime code", "Creating arrays only", "Styling buttons", "Importing every class"), correctAnswer = "Handling risky runtime code", explanation = "try / catch lets code respond to runtime failures."),
+        PracticeQuestion(id = "java_s9_p2_q2", type = PracticeQuestionType.DRAG_FILL_BLANK, title = "Question 2", question = "Complete the try / catch structure.", code = """______ {
+    int number = Integer.parseInt(text);
+} ______ (Exception e) {
+    System.out.println("Invalid");
+}""", options = listOf("try", "catch", "if", "for"), correctAnswer = "try", correctAnswers = listOf("try", "catch"), explanation = "Risky code goes in try, and the fallback goes in catch."),
+        PracticeQuestion(id = "java_s9_p2_q3", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 3", question = "Why use debug prints?", options = listOf("To inspect values while the program runs", "To remove Java", "To skip compiling", "To create an object automatically"), correctAnswer = "To inspect values while the program runs", explanation = "Debug prints can reveal what your variables contain.")
+    )
+
+    private fun getSection9QuizQuestions(): List<PracticeQuestion> = getSection9Practice1Questions() + getSection9Practice2Questions()
+
+    private fun getSection10Practice1Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(id = "java_s10_p1_q1", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 1", question = "Which tool repeats code?", options = listOf("loop", "String", "char", "import"), correctAnswer = "loop", explanation = "Loops repeat code."),
+        PracticeQuestion(id = "java_s10_p1_q2", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 2", question = "Which tool stores many values?", options = listOf("array", "if", "void", "catch"), correctAnswer = "array", explanation = "Arrays store many values."),
+        PracticeQuestion(id = "java_s10_p1_q3", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 3", question = "Which tool organizes reusable code?", options = listOf("method", "index", "input", "error"), correctAnswer = "method", explanation = "Methods organize reusable code.")
+    )
+
+    private fun getSection10Practice2Questions(): List<PracticeQuestion> = listOf(
+        PracticeQuestion(id = "java_s10_p2_q1", type = PracticeQuestionType.DRAG_FILL_BLANK, title = "Question 1", question = "Complete the mixed code.", code = """for (int i = 0; i < names.______; i++) {
+    if (names[i].______("Leo")) {
+        System.out.println("Found");
+    }
+}""", options = listOf("length", "equals", "size", "==", "Scanner"), correctAnswer = "length", correctAnswers = listOf("length", "equals"), explanation = "Use length for the array size and equals() for String comparison."),
+        PracticeQuestion(id = "java_s10_p2_q2", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Question 2", question = "What is the best first step when solving a coding task?", options = listOf("Break it into smaller steps", "Write random code", "Ignore errors", "Delete main"), correctAnswer = "Break it into smaller steps", explanation = "Small steps make bigger problems manageable.")
+    )
+
+    private fun getSection10QuizQuestions(): List<PracticeQuestion> = getSection10Practice1Questions() + getSection10Practice2Questions() + listOf(
+        PracticeQuestion(id = "java_s10_q6", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Final Quiz 6", question = "Which keyword sends a value back from a method?", options = listOf("return", "new", "catch", "while"), correctAnswer = "return", explanation = "return sends a value back from a method."),
+        PracticeQuestion(id = "java_s10_q7", type = PracticeQuestionType.MULTIPLE_CHOICE, title = "Final Quiz 7", question = "Which keyword creates an object?", options = listOf("new", "void", "else", "length"), correctAnswer = "new", explanation = "new creates an object from a class.")
+    )
 }

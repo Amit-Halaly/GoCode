@@ -482,7 +482,18 @@ class PracticeFlowActivity : AppCompatActivity() {
     }
 
     private fun isSummaryQuiz(): Boolean {
-        return nodeId == "java_u1_q1" || nodeId == "java_u2_q1" || nodeId == "java_u3_q1"
+        return nodeId in setOf(
+            "java_u1_q1",
+            "java_u2_q1",
+            "java_u3_q1",
+            "java_u4_q1",
+            "java_u5_q1",
+            "java_u6_q1",
+            "java_u7_q1",
+            "java_u8_q1",
+            "java_u9_q1",
+            "java_u10_q1"
+        )
     }
 
     private fun resetFillBlankStyle() {

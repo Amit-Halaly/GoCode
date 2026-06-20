@@ -185,6 +185,258 @@ object CurriculumRepository {
             type = PathNodeType.CODE,
             title = "Code: Count loop",
             offsetDp = 36
+        ),
+        PathNodeItem(
+            id = "java_u4_l1",
+            type = PathNodeType.LESSON,
+            title = "Arrays",
+            offsetDp = 0
+        ),
+        PathNodeItem(
+            id = "java_u4_p1",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: arrays",
+            offsetDp = 45
+        ),
+        PathNodeItem(
+            id = "java_u4_l2",
+            type = PathNodeType.LESSON,
+            title = "Array indexes",
+            offsetDp = 12
+        ),
+        PathNodeItem(
+            id = "java_u4_p2",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: indexes",
+            offsetDp = 72
+        ),
+        PathNodeItem(
+            id = "java_u4_q1",
+            type = PathNodeType.QUIZ,
+            title = "Quiz: arrays",
+            offsetDp = 18
+        ),
+        PathNodeItem(
+            id = "java_u4_c1",
+            type = PathNodeType.CODE,
+            title = "Code: Favorite list",
+            offsetDp = 36
+        ),
+        PathNodeItem(
+            id = "java_u5_l1",
+            type = PathNodeType.LESSON,
+            title = "Methods",
+            offsetDp = 0
+        ),
+        PathNodeItem(
+            id = "java_u5_p1",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: methods",
+            offsetDp = 45
+        ),
+        PathNodeItem(
+            id = "java_u5_l2",
+            type = PathNodeType.LESSON,
+            title = "Parameters + return",
+            offsetDp = 12
+        ),
+        PathNodeItem(
+            id = "java_u5_p2",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: return",
+            offsetDp = 72
+        ),
+        PathNodeItem(
+            id = "java_u5_q1",
+            type = PathNodeType.QUIZ,
+            title = "Quiz: methods",
+            offsetDp = 18
+        ),
+        PathNodeItem(
+            id = "java_u5_c1",
+            type = PathNodeType.CODE,
+            title = "Code: Helper method",
+            offsetDp = 36
+        ),
+        PathNodeItem(
+            id = "java_u6_l1",
+            type = PathNodeType.LESSON,
+            title = "Scanner input",
+            offsetDp = 0
+        ),
+        PathNodeItem(
+            id = "java_u6_p1",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: input",
+            offsetDp = 45
+        ),
+        PathNodeItem(
+            id = "java_u6_l2",
+            type = PathNodeType.LESSON,
+            title = "Input decisions",
+            offsetDp = 12
+        ),
+        PathNodeItem(
+            id = "java_u6_p2",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: Scanner",
+            offsetDp = 72
+        ),
+        PathNodeItem(
+            id = "java_u6_q1",
+            type = PathNodeType.QUIZ,
+            title = "Quiz: input",
+            offsetDp = 18
+        ),
+        PathNodeItem(
+            id = "java_u6_c1",
+            type = PathNodeType.CODE,
+            title = "Code: Ask age",
+            offsetDp = 36
+        ),
+        PathNodeItem(
+            id = "java_u7_l1",
+            type = PathNodeType.LESSON,
+            title = "String tools",
+            offsetDp = 0
+        ),
+        PathNodeItem(
+            id = "java_u7_p1",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: strings",
+            offsetDp = 45
+        ),
+        PathNodeItem(
+            id = "java_u7_l2",
+            type = PathNodeType.LESSON,
+            title = "String checks",
+            offsetDp = 12
+        ),
+        PathNodeItem(
+            id = "java_u7_p2",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: text",
+            offsetDp = 72
+        ),
+        PathNodeItem(
+            id = "java_u7_q1",
+            type = PathNodeType.QUIZ,
+            title = "Quiz: strings",
+            offsetDp = 18
+        ),
+        PathNodeItem(
+            id = "java_u7_c1",
+            type = PathNodeType.CODE,
+            title = "Code: Name checker",
+            offsetDp = 36
+        ),
+        PathNodeItem(
+            id = "java_u8_l1",
+            type = PathNodeType.LESSON,
+            title = "Classes",
+            offsetDp = 0
+        ),
+        PathNodeItem(
+            id = "java_u8_p1",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: classes",
+            offsetDp = 45
+        ),
+        PathNodeItem(
+            id = "java_u8_l2",
+            type = PathNodeType.LESSON,
+            title = "Objects",
+            offsetDp = 12
+        ),
+        PathNodeItem(
+            id = "java_u8_p2",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: objects",
+            offsetDp = 72
+        ),
+        PathNodeItem(
+            id = "java_u8_q1",
+            type = PathNodeType.QUIZ,
+            title = "Quiz: objects",
+            offsetDp = 18
+        ),
+        PathNodeItem(
+            id = "java_u8_c1",
+            type = PathNodeType.CODE,
+            title = "Code: Student object",
+            offsetDp = 36
+        ),
+        PathNodeItem(
+            id = "java_u9_l1",
+            type = PathNodeType.LESSON,
+            title = "Reading errors",
+            offsetDp = 0
+        ),
+        PathNodeItem(
+            id = "java_u9_p1",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: errors",
+            offsetDp = 45
+        ),
+        PathNodeItem(
+            id = "java_u9_l2",
+            type = PathNodeType.LESSON,
+            title = "try / catch",
+            offsetDp = 12
+        ),
+        PathNodeItem(
+            id = "java_u9_p2",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: debugging",
+            offsetDp = 72
+        ),
+        PathNodeItem(
+            id = "java_u9_q1",
+            type = PathNodeType.QUIZ,
+            title = "Quiz: debugging",
+            offsetDp = 18
+        ),
+        PathNodeItem(
+            id = "java_u9_c1",
+            type = PathNodeType.CODE,
+            title = "Code: Safe parse",
+            offsetDp = 36
+        ),
+        PathNodeItem(
+            id = "java_u10_l1",
+            type = PathNodeType.LESSON,
+            title = "Final review",
+            offsetDp = 0
+        ),
+        PathNodeItem(
+            id = "java_u10_p1",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: review",
+            offsetDp = 45
+        ),
+        PathNodeItem(
+            id = "java_u10_l2",
+            type = PathNodeType.LESSON,
+            title = "Build confidence",
+            offsetDp = 12
+        ),
+        PathNodeItem(
+            id = "java_u10_p2",
+            type = PathNodeType.PRACTICE,
+            title = "Practice: mixed",
+            offsetDp = 72
+        ),
+        PathNodeItem(
+            id = "java_u10_q1",
+            type = PathNodeType.QUIZ,
+            title = "Final quiz",
+            offsetDp = 18
+        ),
+        PathNodeItem(
+            id = "java_u10_c1",
+            type = PathNodeType.CODE,
+            title = "Code: Final check",
+            offsetDp = 36
         )
     )
 

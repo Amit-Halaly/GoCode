@@ -11,6 +11,20 @@ object JavaLessonsRepository {
             "java_u2_l2" -> getSection2Lesson2Steps()
             "java_u3_l1" -> getSection3Lesson1Steps()
             "java_u3_l2" -> getSection3Lesson2Steps()
+            "java_u4_l1" -> getSection4Lesson1Steps()
+            "java_u4_l2" -> getSection4Lesson2Steps()
+            "java_u5_l1" -> getSection5Lesson1Steps()
+            "java_u5_l2" -> getSection5Lesson2Steps()
+            "java_u6_l1" -> getSection6Lesson1Steps()
+            "java_u6_l2" -> getSection6Lesson2Steps()
+            "java_u7_l1" -> getSection7Lesson1Steps()
+            "java_u7_l2" -> getSection7Lesson2Steps()
+            "java_u8_l1" -> getSection8Lesson1Steps()
+            "java_u8_l2" -> getSection8Lesson2Steps()
+            "java_u9_l1" -> getSection9Lesson1Steps()
+            "java_u9_l2" -> getSection9Lesson2Steps()
+            "java_u10_l1" -> getSection10Lesson1Steps()
+            "java_u10_l2" -> getSection10Lesson2Steps()
             else -> getLesson1Steps()
         }
     }
@@ -486,4 +500,328 @@ object JavaLessonsRepository {
             )
         )
     }
+
+    private fun getSection4Lesson1Steps(): List<LessonStep> = listOf(
+        LessonStep(
+            id = "java_s4_l1_s1",
+            title = "Arrays store many values",
+            body = "An array is one variable that holds a list of values of the same type.\n\nInstead of creating score1, score2, and score3, you can store all scores together."
+        ),
+        LessonStep(
+            id = "java_s4_l1_s2",
+            title = "Create an array",
+            body = "Use square brackets after the type to create an array.",
+            code = """
+                int[] scores = {90, 75, 88};
+                String[] names = {"Leo", "Maya", "Noam"};
+            """.trimIndent(),
+            tip = "Every value in one array should match the array type."
+        ),
+        LessonStep(
+            id = "java_s4_l1_s3",
+            title = "Read from an array",
+            body = "Use an index inside square brackets to read one value from the array.",
+            code = """
+                String[] names = {"Leo", "Maya", "Noam"};
+                System.out.println(names[0]);
+            """.trimIndent(),
+            tip = "This prints Leo because arrays start counting from 0."
+        ),
+        LessonStep(
+            id = "java_s4_l1_s4",
+            title = "Array length",
+            body = "Use .length to know how many values are inside an array.",
+            code = """
+                int[] scores = {90, 75, 88};
+                System.out.println(scores.length);
+            """.trimIndent(),
+            tip = "This prints 3."
+        ),
+        LessonStep(
+            id = "java_s4_l1_s5",
+            title = "Arrays and loops work together",
+            body = "Loops are perfect for reading every value in an array.",
+            code = """
+                int[] scores = {90, 75, 88};
+
+                for (int i = 0; i < scores.length; i++) {
+                    System.out.println(scores[i]);
+                }
+            """.trimIndent(),
+            tip = "i starts at 0 because the first array index is 0."
+        )
+    )
+
+    private fun getSection4Lesson2Steps(): List<LessonStep> = listOf(
+        LessonStep(
+            id = "java_s4_l2_s1",
+            title = "Indexes start at zero",
+            body = "The first value in an array is index 0, the second is index 1, and so on.\n\nThis is one of the most important array rules."
+        ),
+        LessonStep(
+            id = "java_s4_l2_s2",
+            title = "Change an array value",
+            body = "You can update one place in the array by using its index.",
+            code = """
+                int[] scores = {90, 75, 88};
+                scores[1] = 80;
+            """.trimIndent(),
+            tip = "scores[1] changes the second value."
+        ),
+        LessonStep(
+            id = "java_s4_l2_s3",
+            title = "Last index",
+            body = "If an array has 3 values, the last index is 2.\n\nIn general, the last index is length - 1.",
+            code = """
+                String[] names = {"Leo", "Maya", "Noam"};
+                System.out.println(names[names.length - 1]);
+            """.trimIndent(),
+            tip = "This prints the last name safely."
+        ),
+        LessonStep(
+            id = "java_s4_l2_s4",
+            title = "Avoid index mistakes",
+            body = "Trying to read an index that does not exist causes an error.",
+            code = """
+                int[] scores = {90, 75, 88};
+                System.out.println(scores[3]); // error
+            """.trimIndent(),
+            tip = "scores[3] is outside the array because the last index is 2."
+        ),
+        LessonStep(
+            id = "java_s4_l2_s5",
+            title = "Enhanced for loop",
+            body = "When you only need the values, an enhanced for loop is very readable.",
+            code = """
+                for (int score : scores) {
+                    System.out.println(score);
+                }
+            """.trimIndent(),
+            tip = "Read it as: for each score in scores."
+        )
+    )
+
+    private fun getSection5Lesson1Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s5_l1_s1", title = "Methods organize code", body = "A method is a named block of code.\n\nMethods help you reuse logic and keep main() easier to read."),
+        LessonStep(
+            id = "java_s5_l1_s2",
+            title = "Create a method",
+            body = "For now, place beginner methods inside the Main class, outside main().",
+            code = """
+                static void sayHello() {
+                    System.out.println("Hello");
+                }
+            """.trimIndent(),
+            tip = "void means the method does not return a value."
+        ),
+        LessonStep(
+            id = "java_s5_l1_s3",
+            title = "Call a method",
+            body = "A method runs only when you call it by name.",
+            code = """
+                public static void main(String[] args) {
+                    sayHello();
+                }
+            """.trimIndent(),
+            tip = "The parentheses are part of the method call."
+        ),
+        LessonStep(
+            id = "java_s5_l1_s4",
+            title = "Reuse the same method",
+            body = "You can call the same method many times.",
+            code = """
+                sayHello();
+                sayHello();
+                sayHello();
+            """.trimIndent(),
+            tip = "One method definition can power many calls."
+        )
+    )
+
+    private fun getSection5Lesson2Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s5_l2_s1", title = "Parameters pass information", body = "A parameter is a value a method receives.\n\nIt makes methods flexible."),
+        LessonStep(
+            id = "java_s5_l2_s2",
+            title = "Method with a parameter",
+            body = "Write the parameter type and name inside the parentheses.",
+            code = """
+                static void greet(String name) {
+                    System.out.println("Hello " + name);
+                }
+            """.trimIndent(),
+            tip = "name behaves like a variable inside the method."
+        ),
+        LessonStep(
+            id = "java_s5_l2_s3",
+            title = "Return a value",
+            body = "A method can calculate a value and send it back with return.",
+            code = """
+                static int doubleNumber(int number) {
+                    return number * 2;
+                }
+            """.trimIndent(),
+            tip = "int before the method name means this method returns an int."
+        ),
+        LessonStep(
+            id = "java_s5_l2_s4",
+            title = "Store returned values",
+            body = "You can store a returned value in a variable.",
+            code = """
+                int result = doubleNumber(4);
+                System.out.println(result);
+            """.trimIndent(),
+            tip = "This prints 8."
+        )
+    )
+
+    private fun getSection6Lesson1Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s6_l1_s1", title = "Programs can read input", body = "Scanner lets a console program read what the user types.\n\nThis makes programs interactive."),
+        LessonStep(
+            id = "java_s6_l1_s2",
+            title = "Import Scanner",
+            body = "Scanner comes from java.util, so it needs an import at the top of the file.",
+            code = """
+                import java.util.Scanner;
+            """.trimIndent(),
+            tip = "Imports go before public class Main."
+        ),
+        LessonStep(
+            id = "java_s6_l1_s3",
+            title = "Create Scanner",
+            body = "Create a Scanner connected to System.in.",
+            code = """
+                Scanner input = new Scanner(System.in);
+            """.trimIndent(),
+            tip = "System.in means keyboard input."
+        ),
+        LessonStep(
+            id = "java_s6_l1_s4",
+            title = "Read text and numbers",
+            body = "Use nextLine() for text and nextInt() for whole numbers.",
+            code = """
+                String name = input.nextLine();
+                int age = input.nextInt();
+            """.trimIndent(),
+            tip = "Choose the Scanner method that matches the value you need."
+        )
+    )
+
+    private fun getSection6Lesson2Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s6_l2_s1", title = "Use input in decisions", body = "After reading input, you can use it with if / else just like any other variable."),
+        LessonStep(
+            id = "java_s6_l2_s2",
+            title = "Ask and check",
+            body = "This program asks for age and reacts to the answer.",
+            code = """
+                int age = input.nextInt();
+
+                if (age >= 13) {
+                    System.out.println("Welcome");
+                } else {
+                    System.out.println("Too young");
+                }
+            """.trimIndent(),
+            tip = "Input becomes more powerful when combined with conditions."
+        ),
+        LessonStep(
+            id = "java_s6_l2_s3",
+            title = "Prompts help the user",
+            body = "Print a short question before reading input.",
+            code = """
+                System.out.println("Enter your age:");
+                int age = input.nextInt();
+            """.trimIndent(),
+            tip = "Good prompts make console programs easier to use."
+        ),
+        LessonStep(
+            id = "java_s6_l2_s4",
+            title = "Close Scanner at the end",
+            body = "When the program is done reading, you can close the Scanner.",
+            code = """
+                input.close();
+            """.trimIndent(),
+            tip = "Close it near the end of main()."
+        )
+    )
+
+    private fun getSection7Lesson1Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s7_l1_s1", title = "Strings have useful tools", body = "String is more than text storage.\n\nJava gives strings methods that can measure, compare, and change text."),
+        LessonStep(id = "java_s7_l1_s2", title = "length()", body = "Use length() to count characters.", code = """String name = "Leo";
+System.out.println(name.length());""", tip = "Leo has 3 characters."),
+        LessonStep(id = "java_s7_l1_s3", title = "toUpperCase()", body = "Use toUpperCase() to create an uppercase version of text.", code = """String word = "java";
+System.out.println(word.toUpperCase());""", tip = "This prints JAVA."),
+        LessonStep(id = "java_s7_l1_s4", title = "contains()", body = "Use contains() to check if text includes another piece of text.", code = """String email = "leo@gocode.com";
+System.out.println(email.contains("@"));""", tip = "contains() returns true or false.")
+    )
+
+    private fun getSection7Lesson2Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s7_l2_s1", title = "Compare strings safely", body = "Use equals() to compare String values.\n\nDo not use == for beginner string comparison."),
+        LessonStep(id = "java_s7_l2_s2", title = "equals()", body = "equals() checks if two strings have the same text.", code = """String answer = "yes";
+
+if (answer.equals("yes")) {
+    System.out.println("Confirmed");
+}""", tip = "This checks the text, not just the variable reference."),
+        LessonStep(id = "java_s7_l2_s3", title = "equalsIgnoreCase()", body = "Use equalsIgnoreCase() when capital letters should not matter.", code = """String answer = "YES";
+System.out.println(answer.equalsIgnoreCase("yes"));""", tip = "This prints true."),
+        LessonStep(id = "java_s7_l2_s4", title = "trim()", body = "trim() removes extra spaces from the start and end.", code = """String name = "  Leo  ";
+System.out.println(name.trim());""", tip = "This is useful for user input.")
+    )
+
+    private fun getSection8Lesson1Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s8_l1_s1", title = "Classes describe things", body = "A class is a blueprint for a kind of object.\n\nFor example, a Student class can describe student data."),
+        LessonStep(id = "java_s8_l1_s2", title = "Fields store object data", body = "Fields are variables that belong to the class.", code = """class Student {
+    String name;
+    int age;
+}""", tip = "Fields describe what each Student can remember."),
+        LessonStep(id = "java_s8_l1_s3", title = "Classes can have methods", body = "A class can also contain methods that use its fields.", code = """class Student {
+    String name;
+
+    void introduce() {
+        System.out.println("Hi, I am " + name);
+    }
+}""", tip = "Object methods describe behavior.")
+    )
+
+    private fun getSection8Lesson2Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s8_l2_s1", title = "Objects are real examples", body = "If a class is a blueprint, an object is one real thing created from it."),
+        LessonStep(id = "java_s8_l2_s2", title = "Create an object", body = "Use new to create an object.", code = """Student student = new Student();""", tip = "This creates one Student object."),
+        LessonStep(id = "java_s8_l2_s3", title = "Set fields", body = "Use dot syntax to set or read object fields.", code = """student.name = "Maya";
+student.age = 14;""", tip = "The dot means: inside this object."),
+        LessonStep(id = "java_s8_l2_s4", title = "Call object methods", body = "Use dot syntax to call a method on an object.", code = """student.introduce();""", tip = "The method uses the object's own data.")
+    )
+
+    private fun getSection9Lesson1Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s9_l1_s1", title = "Errors are information", body = "Errors are not a sign that you failed.\n\nThey are messages that help you find what Java could not understand or could not run."),
+        LessonStep(id = "java_s9_l1_s2", title = "Compile-time errors", body = "A compile-time error happens before the program runs.", code = """System.out.println("Hello")""", tip = "This line is missing a semicolon."),
+        LessonStep(id = "java_s9_l1_s3", title = "Runtime errors", body = "A runtime error happens while the program is running.", code = """int[] scores = {90, 80};
+System.out.println(scores[5]);""", tip = "Index 5 does not exist."),
+        LessonStep(id = "java_s9_l1_s4", title = "Read the line number", body = "Error messages often include a line number.\n\nStart there, then check nearby lines too.", tip = "Many mistakes are one line above the reported line.")
+    )
+
+    private fun getSection9Lesson2Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s9_l2_s1", title = "try / catch handles risky code", body = "Some code can fail at runtime.\n\ntry / catch lets your program respond instead of crashing."),
+        LessonStep(id = "java_s9_l2_s2", title = "Basic try / catch", body = "Put risky code inside try and the fallback inside catch.", code = """try {
+    int number = Integer.parseInt("abc");
+} catch (Exception e) {
+    System.out.println("Invalid number");
+}""", tip = "parseInt tries to turn text into an int."),
+        LessonStep(id = "java_s9_l2_s3", title = "Use helpful debug prints", body = "Printing important values can help you understand what the program is doing.", code = """System.out.println("age = " + age);""", tip = "Remove or clean debug prints when the code is finished."),
+        LessonStep(id = "java_s9_l2_s4", title = "Fix one error at a time", body = "When you see many errors, start with the first one.\n\nFix it, run again, then continue.", tip = "One missing brace can create many confusing errors.")
+    )
+
+    private fun getSection10Lesson1Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s10_l1_s1", title = "You now know the core pieces", body = "You learned program structure, variables, conditions, loops, arrays, methods, input, strings, objects, and debugging."),
+        LessonStep(id = "java_s10_l1_s2", title = "Think in steps", body = "When solving a problem, break it down:\n\nWhat data do I need?\nWhat decision do I need?\nWhat repeats?\nWhat can become a method?"),
+        LessonStep(id = "java_s10_l1_s3", title = "Combine tools", body = "Real programs combine many small ideas.", code = """for (String name : names) {
+    if (name.length() > 3) {
+        greet(name);
+    }
+}""", tip = "This combines arrays, loops, strings, if, and methods.")
+    )
+
+    private fun getSection10Lesson2Steps(): List<LessonStep> = listOf(
+        LessonStep(id = "java_s10_l2_s1", title = "Practice builds speed", body = "At this point, the goal is not memorizing everything.\n\nThe goal is recognizing patterns and knowing where to look."),
+        LessonStep(id = "java_s10_l2_s2", title = "Common beginner checklist", body = "Check semicolons, braces, variable names, types, and indexes.\n\nMost beginner bugs live there."),
+        LessonStep(id = "java_s10_l2_s3", title = "Ready for the next level", body = "After this review, you are ready for deeper Java topics like constructors, lists, files, and Android-specific code.", tip = "The final quiz will mix ideas from the whole Java path.")
+    )
 }
