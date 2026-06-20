@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.gocode.ExerciseRunActivity
 import com.example.gocode.R
 import com.example.gocode.adapters.PathNodesAdapter
+import com.example.gocode.gamification.GamificationRepository
 import com.google.android.material.card.MaterialCardView
 
 class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
@@ -54,7 +55,7 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
         val nodes = loadNodes(template)
 
         val adapter = PathNodesAdapter(nodes) { node ->
-            NodeStartBottomSheet.newInstance(node, xp = 20) { clickedNode ->
+            NodeStartBottomSheet.newInstance(node, xp = GamificationRepository.rewardForNode(node.id).xp.toInt()) { clickedNode ->
                 when (clickedNode.type) {
                     PathNodeType.LESSON -> {
                         startActivity(

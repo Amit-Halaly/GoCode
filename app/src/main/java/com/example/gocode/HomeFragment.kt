@@ -104,6 +104,7 @@ class HomeFragment : Fragment() {
         val avatarIv = view.findViewById<ImageView>(R.id.avatarImage)
         val userLevelTv = view.findViewById<TextView>(R.id.userLevel)
         val tvXp = view.findViewById<TextView>(R.id.tvXp)
+        val tvCoins = view.findViewById<TextView>(R.id.tvCoins)
         val xpProgress = view.findViewById<ProgressBar>(R.id.xpProgress)
 
         val user = auth.currentUser ?: return
@@ -131,9 +132,11 @@ class HomeFragment : Fragment() {
             userLevelTv.text = "Level $level"
 
             val xp = doc.getLong("xp") ?: 0L
-            val xpToNext = doc.getLong("xpToNext") ?: 1000L
+            val xpToNext = doc.getLong("xpToNext") ?: 120L
+            val coins = doc.getLong("coins") ?: 0L
 
             tvXp.text = "$xp / $xpToNext"
+            tvCoins.text = "$coins coins"
             val max = xpToNext.toInt().coerceAtLeast(1)
             xpProgress.max = max
             xpProgress.progress = xp.toInt().coerceIn(0, max)

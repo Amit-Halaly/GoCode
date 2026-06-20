@@ -1,6 +1,7 @@
 package com.example.gocode
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,7 +12,10 @@ import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.gocode.gamification.GamificationRepository
+import com.example.gocode.lessons.LessonProgressStore
 import com.example.gocode.repositories.AvatarRepository
 import com.example.gocode.settings.SettingsActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -50,6 +54,7 @@ class ProfileFragment : Fragment() {
         val usernameTv = view.findViewById<TextView>(R.id.profileUsername)
         val levelTv = view.findViewById<TextView>(R.id.profileLevelText)
         val xpTv = view.findViewById<TextView>(R.id.profileXpText)
+        val coinsTv = view.findViewById<TextView>(R.id.profileCoinsText)
         val xpProgress = view.findViewById<ProgressBar>(R.id.profileXpProgress)
 
         val coursesCompletedTv = view.findViewById<TextView>(R.id.profileCoursesCompleted)
@@ -83,12 +88,33 @@ class ProfileFragment : Fragment() {
             levelTv.text = "level $level"
 
             val xp = doc.getLong("xp") ?: 0L
-            val xpToNext = doc.getLong("xpToNext") ?: 1000L
+            val xpToNext = doc.getLong("xpToNext") ?: 120L
+            val coins = doc.getLong("coins") ?: 0L
             xpTv.text = "XP $xp/$xpToNext"
+            coinsTv.text = "$coins coins"
 
             val max = xpToNext.toInt().coerceAtLeast(1)
             xpProgress.max = max
             xpProgress.progress = xp.toInt().coerceIn(0, max)
+
+            val completedLessons = doc.getLong("lessonNodesCompleted") ?: 0L
+            val completedPractices = doc.getLong("practiceNodesCompleted") ?: 0L
+            val completedQuizzes = doc.getLong("quizNodesCompleted") ?: 0L
+            val completedCode = doc.getLong("codeNodesCompleted") ?: 0L
+            coursesCompletedTv.text = completedQuizzes.toString()
+            challengesSolvedTv.text = (completedPractices + completedCode).toString()
+            arenaWinsTv.text = (doc.getLong("arenaWins") ?: 0L).toString()
+
+            val achievementIds = (doc.get("achievementIds") as? List<*>)
+                .orEmpty()
+                .mapNotNull { it as? String }
+                .toSet()
+            setAchievementState(achFirstLogin, true)
+            setAchievementState(achFirstCourse, "first_lesson" in achievementIds || completedLessons > 0)
+            setAchievementState(achFirstChallenge, "first_code" in achievementIds || completedCode > 0)
+            setAchievementState(achChallenges10, "level_5" in achievementIds || completedPractices + completedCode >= 10)
+            setAchievementState(achArenaFirstWin, (doc.getLong("arenaWins") ?: 0L) > 0)
+            setAchievementState(achStreak7, "java_path_complete" in achievementIds)
 
             val status = doc.getString("onlineStatus") ?: "offline"
             statusDot.setBackgroundResource(
@@ -116,6 +142,11 @@ class ProfileFragment : Fragment() {
                         startActivity(
                             Intent(requireContext(), SettingsActivity::class.java)
                         )
+                        true
+                    }
+
+                    R.id.action_reset_progress -> {
+                        confirmResetProgress()
                         true
                     }
 
@@ -191,6 +222,33 @@ class ProfileFragment : Fragment() {
     private fun showAchievement(icon: Int, title: String, desc: String) {
         AchievementBottomSheet.newInstance(icon, title, desc)
             .show(parentFragmentManager, "achievement_bs")
+    }
+
+    private fun setAchievementState(view: ImageView, unlocked: Boolean) {
+        view.alpha = if (unlocked) 1f else 0.32f
+    }
+
+    private fun confirmResetProgress() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Reset progress?")
+            .setMessage("This will reset lesson progress, XP, coins, levels, achievements, and learning stats. Your profile details will stay the same.")
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Reset") { _, _ ->
+                resetProgress()
+            }
+            .show()
+    }
+
+    private fun resetProgress() {
+        LessonProgressStore.clear(requireContext())
+        GamificationRepository.resetProgress(requireContext()) { success ->
+            if (!isAdded) return@resetProgress
+            Toast.makeText(
+                requireContext(),
+                if (success) "Progress reset. You can start fresh." else "Local progress reset. Cloud reset failed.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     override fun onDestroyView() {

@@ -23,6 +23,12 @@ object LessonProgressStore {
             .apply()
     }
 
+    fun clear(context: Context) {
+        prefs(context).edit()
+            .clear()
+            .apply()
+    }
+
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 }

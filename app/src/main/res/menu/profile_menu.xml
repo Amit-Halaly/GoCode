@@ -6,6 +6,10 @@
         android:title="Settings" />
 
     <item
+        android:id="@+id/action_reset_progress"
+        android:title="Reset Progress" />
+
+    <item
         android:id="@+id/action_logout"
         android:title="Log Out" />
 

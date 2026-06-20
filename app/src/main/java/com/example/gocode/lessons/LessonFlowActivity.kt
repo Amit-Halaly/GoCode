@@ -4,8 +4,11 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gocode.R
+import com.example.gocode.gamification.GamificationRepository
+import com.example.gocode.gamification.GamificationResult
 import com.example.gocode.lessons.lesson.JavaLessonsRepository
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -76,7 +79,7 @@ class LessonFlowActivity : AppCompatActivity() {
                 renderStep()
             } else {
                 LessonProgressStore.saveProgress(this, nodeId, 100)
-                finish()
+                awardCompletionAndFinish()
             }
         }
 
@@ -112,5 +115,22 @@ class LessonFlowActivity : AppCompatActivity() {
 
         btnPrev.isEnabled = currentIndex > 0
         btnNext.text = if (currentIndex == steps.size - 1) "Finish" else "Next"
+    }
+
+    private fun awardCompletionAndFinish() {
+        GamificationRepository.awardNodeCompleted(this, nodeId) { result ->
+            result?.let { showReward(it) }
+            finish()
+        }
+    }
+
+    private fun showReward(result: GamificationResult) {
+        val bonusText = if (result.bonusCoins > 0) " +${result.bonusCoins} bonus coins" else ""
+        val achievementText = result.newAchievements.firstOrNull()?.let { "  Achievement: ${it.title}" }.orEmpty()
+        Toast.makeText(
+            this,
+            "+${result.reward.xp} XP  +${result.reward.coins} coins$bonusText$achievementText",
+            Toast.LENGTH_LONG
+        ).show()
     }
 }

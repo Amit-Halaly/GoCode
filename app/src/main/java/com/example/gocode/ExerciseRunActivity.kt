@@ -8,10 +8,14 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
+import com.example.gocode.gamification.GamificationRepository
+import com.example.gocode.gamification.GamificationResult
 import com.example.gocode.lessons.LanguagePathFragment
+import com.example.gocode.lessons.LessonProgressStore
 import com.example.gocode.network.ApiClient
 import com.example.gocode.network.models.lintModels.LintRequest
 import com.example.gocode.network.models.runModels.RunRequest
@@ -293,6 +297,8 @@ class ExerciseRunActivity : AppCompatActivity() {
                 } else {
                     hintText.text = "—"
                     hintText.visibility = View.GONE
+                    LessonProgressStore.saveProgress(this@ExerciseRunActivity, nodeId, 100)
+                    awardCompletion()
                 }
 
             }.onFailure { e ->
@@ -447,6 +453,22 @@ class ExerciseRunActivity : AppCompatActivity() {
             "java_u10_c1" -> "Write a method that loops through the names array and prints only names longer than 3 characters."
             else -> "Print Hello World"
         }
+    }
+
+    private fun awardCompletion() {
+        GamificationRepository.awardNodeCompleted(this, nodeId) { result ->
+            result?.let { showReward(it) }
+        }
+    }
+
+    private fun showReward(result: GamificationResult) {
+        val bonusText = if (result.bonusCoins > 0) " +${result.bonusCoins} bonus coins" else ""
+        val achievementText = result.newAchievements.firstOrNull()?.let { "  Achievement: ${it.title}" }.orEmpty()
+        Toast.makeText(
+            this,
+            "+${result.reward.xp} XP  +${result.reward.coins} coins$bonusText$achievementText",
+            Toast.LENGTH_LONG
+        ).show()
     }
 
     private fun codeKey(): String = "${KEY_CODE}_$nodeId"
