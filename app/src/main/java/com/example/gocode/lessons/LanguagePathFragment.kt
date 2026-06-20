@@ -1,6 +1,7 @@
 package com.example.gocode.lessons
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -8,7 +9,6 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gocode.ExercisePlayActivity
-import com.example.gocode.ExerciseRunActivity
 import com.example.gocode.R
 import com.example.gocode.adapters.PathNodesAdapter
 
@@ -39,21 +39,20 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
         val nodes = CurriculumRepository.applyProgress(template, completedIds)
             .map { it.copy(locked = false) }
 
-
         val adapter = PathNodesAdapter(nodes) { node ->
-
             NodeStartBottomSheet.newInstance(node, xp = 20) { clickedNode ->
 
                 when (clickedNode.type) {
-
                     PathNodeType.LESSON -> {
                         startActivity(
-                            android.content.Intent(requireContext(), LessonFlowActivity::class.java)
+                            Intent(requireContext(), LessonFlowActivity::class.java)
                         )
                     }
 
                     PathNodeType.PRACTICE -> {
-
+                        startActivity(
+                            Intent(requireContext(), PracticeFlowActivity::class.java)
+                        )
                     }
 
                     PathNodeType.QUIZ -> {
@@ -62,15 +61,13 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
 
                     PathNodeType.CODE -> {
                         startActivity(
-                            android.content.Intent(requireContext(), ExercisePlayActivity::class.java)
+                            Intent(requireContext(), ExercisePlayActivity::class.java)
                         )
                     }
                 }
 
             }.show(childFragmentManager, "NodeStartBottomSheet")
-
         }
-
 
         rvPathNodes.layoutManager = LinearLayoutManager(requireContext())
         rvPathNodes.adapter = adapter

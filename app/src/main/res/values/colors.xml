@@ -39,5 +39,8 @@
     <color name="lesson_code_box">#151A24</color>
     <color name="pb_bg">#33FFFFFF</color>
 
+    <color name="practice_correct">#22C55E</color>
+    <color name="practice_wrong">#EF4444</color>
+
 
 </resources>
