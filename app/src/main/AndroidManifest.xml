@@ -70,6 +70,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".lessons.PracticeFlowActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ExerciseRunActivity"
             android:exported="false" />
 
