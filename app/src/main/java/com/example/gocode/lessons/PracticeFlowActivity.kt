@@ -7,7 +7,9 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.DragEvent
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -17,6 +19,7 @@ import com.example.gocode.R
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import kotlin.math.abs
 
 class PracticeFlowActivity : AppCompatActivity() {
 
@@ -29,11 +32,15 @@ class PracticeFlowActivity : AppCompatActivity() {
     private lateinit var tvPracticeCode: TextView
     private lateinit var optionsContainer: LinearLayout
     private lateinit var fillBlankContainer: MaterialCardView
+    private lateinit var quizResultCard: MaterialCardView
     private lateinit var etFillAnswer: EditText
     private lateinit var dragBlankContainer: LinearLayout
     private lateinit var inlineCodeContainer: LinearLayout
     private lateinit var dragOptionsContainer: LinearLayout
     private lateinit var tvFeedback: TextView
+    private lateinit var tvQuizScore: TextView
+    private lateinit var tvQuizResultTitle: TextView
+    private lateinit var tvQuizResultBody: TextView
     private lateinit var btnCheckOrNext: MaterialButton
 
     private var questions: List<PracticeQuestion> = emptyList()
@@ -41,6 +48,9 @@ class PracticeFlowActivity : AppCompatActivity() {
     private var answered = false
     private var selectedCorrect = false
     private var selectedDragAnswer: String? = null
+    private var nodeId: String = "java_u1_p1"
+    private var correctCount = 0
+    private var showingQuizResult = false
     private val inlineBlankViews = mutableListOf<TextView>()
     private val selectedDragAnswers = mutableListOf<String?>()
 
@@ -57,14 +67,19 @@ class PracticeFlowActivity : AppCompatActivity() {
         tvPracticeCode = findViewById(R.id.tvPracticeCode)
         optionsContainer = findViewById(R.id.optionsContainer)
         fillBlankContainer = findViewById(R.id.fillBlankContainer)
+        quizResultCard = findViewById(R.id.quizResultCard)
         etFillAnswer = findViewById(R.id.etFillAnswer)
         dragBlankContainer = findViewById(R.id.dragBlankContainer)
         inlineCodeContainer = findViewById(R.id.inlineCodeContainer)
         dragOptionsContainer = findViewById(R.id.dragOptionsContainer)
         tvFeedback = findViewById(R.id.tvFeedback)
+        tvQuizScore = findViewById(R.id.tvQuizScore)
+        tvQuizResultTitle = findViewById(R.id.tvQuizResultTitle)
+        tvQuizResultBody = findViewById(R.id.tvQuizResultBody)
         btnCheckOrNext = findViewById(R.id.btnCheckOrNext)
 
-        questions = JavaPracticeRepository.getPractice1Questions()
+        nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_p1"
+        questions = JavaPracticeRepository.getQuestions(nodeId)
 
         if (questions.isEmpty()) {
             finish()
@@ -94,12 +109,17 @@ class PracticeFlowActivity : AppCompatActivity() {
         answered = false
         selectedCorrect = false
         selectedDragAnswer = null
+        showingQuizResult = false
 
         tvQuestionCounter.text = "${currentIndex + 1}/${questions.size}"
-        practiceProgress.progress = ((currentIndex + 1) * 100) / questions.size
+        val progressPercent = ((currentIndex + 1) * 100) / questions.size
+        practiceProgress.progress = progressPercent
+        LessonProgressStore.saveProgress(this, nodeId, progressPercent)
 
         tvPracticeTitle.text = question.title
         tvPracticeQuestion.text = question.question
+        tvPracticeQuestion.visibility = View.VISIBLE
+        quizResultCard.visibility = View.GONE
 
         hideFeedback()
 
@@ -195,6 +215,11 @@ class PracticeFlowActivity : AppCompatActivity() {
         btnCheckOrNext.isEnabled = inlineBlankViews.isEmpty()
 
         question.options.forEach { option ->
+            var downX = 0f
+            var downY = 0f
+            var dragStarted = false
+            val touchSlop = ViewConfiguration.get(this).scaledTouchSlop
+
             val chip = TextView(this).apply {
                 text = option
                 gravity = Gravity.CENTER
@@ -217,12 +242,58 @@ class PracticeFlowActivity : AppCompatActivity() {
                     marginEnd = dp(10)
                 }
 
-                setOnLongClickListener {
-                    if (!answered) {
-                        val clip = ClipData.newPlainText("answer", option)
-                        startDragAndDrop(clip, View.DragShadowBuilder(this), null, 0)
+                setOnTouchListener { view, event ->
+                    if (answered) return@setOnTouchListener false
+
+                    when (event.actionMasked) {
+                        MotionEvent.ACTION_DOWN -> {
+                            downX = event.rawX
+                            downY = event.rawY
+                            dragStarted = false
+                            view.isPressed = true
+                            true
+                        }
+
+                        MotionEvent.ACTION_MOVE -> {
+                            val dx = event.rawX - downX
+                            val dy = event.rawY - downY
+                            val isVerticalDrag = abs(dy) > touchSlop && abs(dy) > abs(dx)
+
+                            if (isVerticalDrag && !dragStarted) {
+                                dragStarted = true
+                                view.isPressed = false
+                                view.parent?.requestDisallowInterceptTouchEvent(true)
+                                dragBlankContainer.parent?.requestDisallowInterceptTouchEvent(true)
+                                val clip = ClipData.newPlainText("answer", option)
+                                view.startDragAndDrop(clip, View.DragShadowBuilder(view), null, 0)
+                                true
+                            } else {
+                                false
+                            }
+                        }
+
+                        MotionEvent.ACTION_UP -> {
+                            view.isPressed = false
+                            view.parent?.requestDisallowInterceptTouchEvent(false)
+                            dragBlankContainer.parent?.requestDisallowInterceptTouchEvent(false)
+
+                            val dx = abs(event.rawX - downX)
+                            val dy = abs(event.rawY - downY)
+                            if (!dragStarted && dx < touchSlop && dy < touchSlop) {
+                                view.performClick()
+                            }
+                            true
+                        }
+
+                        MotionEvent.ACTION_CANCEL -> {
+                            view.isPressed = false
+                            view.parent?.requestDisallowInterceptTouchEvent(false)
+                            dragBlankContainer.parent?.requestDisallowInterceptTouchEvent(false)
+                            false
+                        }
+
+                        else -> false
                     }
-                    true
                 }
 
                 setOnClickListener {
@@ -258,6 +329,7 @@ class PracticeFlowActivity : AppCompatActivity() {
         }
 
         showFeedback(selectedCorrect, question.explanation)
+        recordAnswerResult()
         setAnsweredButtonState()
     }
 
@@ -280,6 +352,7 @@ class PracticeFlowActivity : AppCompatActivity() {
         etFillAnswer.isEnabled = false
 
         showFeedback(selectedCorrect, question.explanation)
+        recordAnswerResult()
         setAnsweredButtonState()
     }
 
@@ -297,6 +370,7 @@ class PracticeFlowActivity : AppCompatActivity() {
         }
         markDragOptions(expectedAnswers)
         showFeedback(selectedCorrect, question.explanation)
+        recordAnswerResult()
         setAnsweredButtonState()
     }
 
@@ -350,13 +424,65 @@ class PracticeFlowActivity : AppCompatActivity() {
     }
 
     private fun goNext() {
+        if (showingQuizResult) {
+            finish()
+            return
+        }
+
         if (currentIndex < questions.size - 1) {
             currentIndex++
             etFillAnswer.isEnabled = true
             renderQuestion()
         } else {
-            finish()
+            LessonProgressStore.saveProgress(this, nodeId, 100)
+            if (isSummaryQuiz()) {
+                showQuizResult()
+            } else {
+                finish()
+            }
         }
+    }
+
+    private fun recordAnswerResult() {
+        if (selectedCorrect) {
+            correctCount++
+        }
+    }
+
+    private fun showQuizResult() {
+        showingQuizResult = true
+        val score = ((correctCount * 100f) / questions.size).toInt()
+        val shouldContinue = score >= 75
+
+        tvQuestionCounter.text = "${correctCount}/${questions.size}"
+        practiceProgress.progress = 100
+        tvPracticeTitle.text = "Section 1 complete"
+        tvPracticeQuestion.visibility = View.GONE
+        cardPracticeCode.visibility = View.GONE
+        optionsContainer.visibility = View.GONE
+        fillBlankContainer.visibility = View.GONE
+        dragBlankContainer.visibility = View.GONE
+        hideFeedback()
+
+        quizResultCard.visibility = View.VISIBLE
+        tvQuizScore.text = "$score%"
+        tvQuizResultTitle.text = if (shouldContinue) {
+            "Leo says: keep going"
+        } else {
+            "Leo says: review first"
+        }
+        tvQuizResultBody.text = if (shouldContinue) {
+            "Nice work. You understand enough to move into the next section. Leo still wants you to practice this section again later so the basics stay sharp."
+        } else {
+            "You are close, but Leo recommends repeating this section before moving on. Focus on main(), println, and choosing the right variable type."
+        }
+
+        btnCheckOrNext.text = "Finish"
+        btnCheckOrNext.isEnabled = true
+    }
+
+    private fun isSummaryQuiz(): Boolean {
+        return nodeId == "java_u1_q1" || nodeId == "java_u2_q1" || nodeId == "java_u3_q1"
     }
 
     private fun resetFillBlankStyle() {

@@ -30,6 +30,7 @@ class LessonFlowActivity : AppCompatActivity() {
 
     private var steps: List<LessonStep> = emptyList()
     private var currentIndex = 0
+    private var nodeId: String = "java_u1_l1"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +53,8 @@ class LessonFlowActivity : AppCompatActivity() {
         btnPrev = findViewById(R.id.btnPrev)
         btnNext = findViewById(R.id.btnNext)
 
-        steps = JavaLessonsRepository.getLesson1Steps()
+        nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_l1"
+        steps = JavaLessonsRepository.getSteps(nodeId)
 
         if (steps.isEmpty()) {
             finish()
@@ -73,6 +75,7 @@ class LessonFlowActivity : AppCompatActivity() {
                 currentIndex++
                 renderStep()
             } else {
+                LessonProgressStore.saveProgress(this, nodeId, 100)
                 finish()
             }
         }
@@ -90,6 +93,7 @@ class LessonFlowActivity : AppCompatActivity() {
 
         val percent = ((currentIndex + 1) * 100) / steps.size
         stepProgress.progress = percent
+        LessonProgressStore.saveProgress(this, nodeId, percent)
 
         if (step.code.isNullOrBlank()) {
             cardCode.visibility = View.GONE

@@ -1,62 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="110dp"
-    android:layout_marginBottom="8dp">
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:orientation="vertical">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardSectionHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="14dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/section_two"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvSectionTop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.9"
+                android:text="SECTION 2 • JAVA"
+                android:textColor="@color/gc_text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvSectionTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="If / Else Statements"
+                android:textColor="@color/gc_text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
     <FrameLayout
-        android:id="@+id/nodeWrapper"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center">
+        android:layout_width="match_parent"
+        android:layout_height="110dp">
 
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:id="@+id/progressRing"
-            android:layout_width="92dp"
-            android:layout_height="92dp"
+        <FrameLayout
+            android:id="@+id/nodeWrapper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
-            app:indicatorColor="@color/btn_primary"
-            app:indicatorDirectionCircular="clockwise"
-            app:indicatorSize="92dp"
-            app:trackColor="#33FFFFFF"
-            app:trackThickness="7dp" />
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardNode"
-            android:layout_width="78dp"
-            android:layout_height="78dp"
-            android:layout_gravity="center"
-            app:cardBackgroundColor="@color/btn_primary"
-            app:cardCornerRadius="39dp"
-            app:cardElevation="8dp">
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/progressRing"
+                android:layout_width="92dp"
+                android:layout_height="92dp"
+                android:layout_gravity="center"
+                app:indicatorColor="@color/btn_primary"
+                app:indicatorDirectionCircular="clockwise"
+                app:indicatorSize="92dp"
+                app:trackColor="#33FFFFFF"
+                app:trackThickness="7dp" />
 
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardNode"
+                android:layout_width="78dp"
+                android:layout_height="78dp"
+                android:layout_gravity="center"
+                app:cardBackgroundColor="@color/btn_primary"
+                app:cardCornerRadius="39dp"
+                app:cardElevation="8dp">
 
-                <View
-                    android:id="@+id/topHighlight"
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/bg_node_top_highlight"
-                    android:scaleY="1.05"
-                    android:translationY="-10dp" />
+                    android:layout_height="match_parent">
 
-                <com.airbnb.lottie.LottieAnimationView
-                    android:id="@+id/lottieNodeIcon"
-                    android:layout_width="70dp"
-                    android:layout_height="70dp"
-                    android:layout_gravity="center"
-                    app:lottie_autoPlay="false"
-                    app:lottie_loop="true"
-                    app:lottie_renderMode="hardware" />
+                    <View
+                        android:id="@+id/topHighlight"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_node_top_highlight"
+                        android:scaleY="1.05"
+                        android:translationY="-10dp" />
 
+                    <com.airbnb.lottie.LottieAnimationView
+                        android:id="@+id/lottieNodeIcon"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:layout_gravity="center"
+                        app:lottie_autoPlay="false"
+                        app:lottie_loop="true"
+                        app:lottie_renderMode="hardware" />
 
-            </FrameLayout>
+                </FrameLayout>
 
-        </com.google.android.material.card.MaterialCardView>
+            </com.google.android.material.card.MaterialCardView>
 
+        </FrameLayout>
     </FrameLayout>
 
-</FrameLayout>
+</LinearLayout>

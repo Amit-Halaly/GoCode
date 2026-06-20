@@ -4,6 +4,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
 import com.example.gocode.R
@@ -13,38 +15,40 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.CircularProgressIndicator
 
 class PathNodesAdapter(
-    private val items: List<PathNodeItem>, private val onNodeClick: (PathNodeItem) -> Unit
+    private var items: List<PathNodeItem>,
+    private val onNodeClick: (PathNodeItem) -> Unit
 ) : RecyclerView.Adapter<PathNodesAdapter.NodeVH>() {
 
-    private val activeIndex: Int = items.indexOfFirst { !it.locked }.let { idx ->
-        if (idx == -1) 0 else idx
-    }
+    private val activeIndex: Int
+        get() = items.indexOfFirst { !it.locked && it.progressPercent < 100 }.let { idx ->
+            if (idx == -1) {
+                items.indexOfFirst { !it.locked }.let { if (it == -1) 0 else it }
+            } else {
+                idx
+            }
+        }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NodeVH {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_path_node, parent, false)
-        return NodeVH(v)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_path_node, parent, false)
+        return NodeVH(view)
     }
 
     override fun onBindViewHolder(holder: NodeVH, position: Int) {
         val item = items[position]
-        val lockedNow = item.locked
-        val isActive = (position == activeIndex) && !lockedNow
-
+        val isActive = position == activeIndex && !item.locked
         holder.bind(item = item, isActive = isActive, onNodeClick = onNodeClick)
     }
-
 
     override fun onViewAttachedToWindow(holder: NodeVH) {
         super.onViewAttachedToWindow(holder)
 
-        val pos = holder.bindingAdapterPosition
-        if (pos == RecyclerView.NO_POSITION) return
+        val position = holder.bindingAdapterPosition
+        if (position == RecyclerView.NO_POSITION) return
 
-        val item = items[pos]
-        val isActive = (pos == activeIndex) && !item.locked
-        holder.applyPulse(isActive)
+        val item = items[position]
+        holder.applyPulse(position == activeIndex && !item.locked)
     }
-
 
     fun kickActivePulse() {
         if (activeIndex in items.indices) {
@@ -52,11 +56,23 @@ class PathNodesAdapter(
         }
     }
 
+    fun submitItems(nextItems: List<PathNodeItem>) {
+        items = nextItems
+        notifyDataSetChanged()
+    }
+
+    fun itemAt(position: Int): PathNodeItem? {
+        return items.getOrNull(position)
+    }
+
     override fun getItemCount(): Int = items.size
 
     class NodeVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val nodeWrapper: View = itemView.findViewById(R.id.nodeWrapper)
+        private val cardSectionHeader: MaterialCardView = itemView.findViewById(R.id.cardSectionHeader)
+        private val tvSectionTop: TextView = itemView.findViewById(R.id.tvSectionTop)
+        private val tvSectionTitle: TextView = itemView.findViewById(R.id.tvSectionTitle)
         private val cardNode: MaterialCardView = itemView.findViewById(R.id.cardNode)
         private val progressRing: CircularProgressIndicator =
             itemView.findViewById(R.id.progressRing)
@@ -65,7 +81,9 @@ class PathNodesAdapter(
         private var lastLottieRes: Int? = null
 
         fun bind(
-            item: PathNodeItem, isActive: Boolean, onNodeClick: (PathNodeItem) -> Unit
+            item: PathNodeItem,
+            isActive: Boolean,
+            onNodeClick: (PathNodeItem) -> Unit
         ) {
             val lottieRes = when (item.type) {
                 PathNodeType.LESSON -> R.raw.lesson
@@ -85,6 +103,10 @@ class PathNodesAdapter(
                 lottieNodeIcon.playAnimation()
             }
 
+            val sectionColor = sectionColor(item)
+            bindSectionHeader(item, sectionColor)
+            cardNode.setCardBackgroundColor(sectionColor)
+            progressRing.setIndicatorColor(sectionColor)
             progressRing.progress = item.progressPercent.coerceIn(0, 100)
 
             if (item.locked) {
@@ -97,14 +119,15 @@ class PathNodesAdapter(
                 lottieNodeIcon.alpha = 1f
             }
 
-            val lp = nodeWrapper.layoutParams as ViewGroup.MarginLayoutParams
-            lp.leftMargin = dp(itemView, item.offsetDp)
-            lp.rightMargin = 0
-            nodeWrapper.layoutParams = lp
+            val layoutParams = nodeWrapper.layoutParams as ViewGroup.MarginLayoutParams
+            layoutParams.leftMargin = dp(itemView, item.offsetDp)
+            layoutParams.rightMargin = 0
+            nodeWrapper.layoutParams = layoutParams
+
             applyPulse(isActive)
-            cardNode.setOnClickListener {
-                onNodeClick(item)
-            }
+
+            cardNode.setOnClickListener { onNodeClick(item) }
+            nodeWrapper.setOnClickListener { onNodeClick(item) }
         }
 
         fun applyPulse(isActive: Boolean) {
@@ -120,6 +143,33 @@ class PathNodesAdapter(
                 progressRing.scaleX = 1f
                 progressRing.scaleY = 1f
             }
+        }
+
+        private fun sectionColor(item: PathNodeItem): Int {
+            val colorRes = when {
+                item.id.contains("_u2_") -> R.color.section_two
+                item.id.contains("_u3_") -> R.color.section_three
+                else -> R.color.section_one
+            }
+            return ContextCompat.getColor(itemView.context, colorRes)
+        }
+
+        private fun bindSectionHeader(item: PathNodeItem, sectionColor: Int) {
+            val header = when (item.id) {
+                "java_u2_l1" -> "SECTION 2 • JAVA" to "If / Else Statements"
+                "java_u3_l1" -> "SECTION 3 • JAVA" to "Loops"
+                else -> null
+            }
+
+            if (header == null) {
+                cardSectionHeader.visibility = View.GONE
+                return
+            }
+
+            cardSectionHeader.visibility = View.VISIBLE
+            cardSectionHeader.setCardBackgroundColor(sectionColor)
+            tvSectionTop.text = header.first
+            tvSectionTitle.text = header.second
         }
 
         private fun dp(view: View, value: Int): Int {

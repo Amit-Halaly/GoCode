@@ -25,6 +25,9 @@
     <color name="gc_card_background">#081d3c</color>
     <color name="btn_primary">#0167ed</color>
     <color name="titles_primary">#4DA3FF</color>
+    <color name="section_one">#0167ED</color>
+    <color name="section_two">#7C3AED</color>
+    <color name="section_three">#059669</color>
 
     <!-- profile screen  -->
     <color name="profile_lo_red">#E34B43</color>

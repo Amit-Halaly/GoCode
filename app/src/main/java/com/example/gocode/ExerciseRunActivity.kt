@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
+import com.example.gocode.lessons.LanguagePathFragment
 import com.example.gocode.network.ApiClient
 import com.example.gocode.network.models.lintModels.LintRequest
 import com.example.gocode.network.models.runModels.RunRequest
@@ -45,6 +46,7 @@ class ExerciseRunActivity : AppCompatActivity() {
     private var isDarkTheme: Boolean = true
     private var lintJob: Job? = null
     private var runJob: Job? = null
+    private var nodeId: String = "java_u1_c1"
 
     private lateinit var taskText: TextView
     private lateinit var hintText: TextView
@@ -69,15 +71,16 @@ class ExerciseRunActivity : AppCompatActivity() {
         taskText = findViewById(R.id.taskText)
         hintText = findViewById(R.id.hintText)
 
-        currentTask = "Print Hello World"
+        nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_c1"
+        currentTask = taskForNode(nodeId)
         taskText.text = "Task: $currentTask"
 
 
         setupSymbolBar()
         setupEditor()
 
-        val savedCode = prefs.getString(KEY_CODE, null)
-        val savedInput = prefs.getString(KEY_INPUT, "") ?: ""
+        val savedCode = prefs.getString(codeKey(), null)
+        val savedInput = prefs.getString(inputKey(), "") ?: ""
         isDarkTheme = prefs.getBoolean(KEY_DARK, true)
 
         applyTheme(isDarkTheme)
@@ -153,8 +156,8 @@ class ExerciseRunActivity : AppCompatActivity() {
 
     private fun persistDraft() {
         prefs.edit {
-            putString(KEY_CODE, editor.text.toString())
-            putString(KEY_INPUT, inputField.text.toString())
+            putString(codeKey(), editor.text.toString())
+            putString(inputKey(), inputField.text.toString())
         }
     }
 
@@ -315,13 +318,48 @@ class ExerciseRunActivity : AppCompatActivity() {
         }
     }
 
-    private fun defaultJavaTemplate(): String = """
-        public class Main {
-            public static void main(String[] args) {
-                System.out.println("Hello GoCode!");
-            }
+    private fun defaultJavaTemplate(): String {
+        return when (nodeId) {
+            "java_u2_c1" -> """
+                public class Main {
+                    public static void main(String[] args) {
+                        int age = 16;
+                        boolean hasPassword = true;
+
+                        // TODO: Print "Access granted" only when age is at least 13
+                        // and hasPassword is true. Otherwise print "Access denied".
+                    }
+                }
+            """.trimIndent()
+            "java_u3_c1" -> """
+                public class Main {
+                    public static void main(String[] args) {
+                        // TODO: Use a for loop to print the numbers 1 to 5.
+                        // When the number is 3, also print "Middle".
+                    }
+                }
+            """.trimIndent()
+            else -> """
+                public class Main {
+                    public static void main(String[] args) {
+                        System.out.println("Hello GoCode!");
+                    }
+                }
+            """.trimIndent()
         }
-    """.trimIndent()
+    }
+
+    private fun taskForNode(nodeId: String): String {
+        return when (nodeId) {
+            "java_u2_c1" -> "Use if / else to check access. Print Access granted only when age >= 13 and hasPassword is true."
+            "java_u3_c1" -> "Use a for loop to print the numbers 1 to 5. When the number is 3, also print Middle."
+            else -> "Print Hello World"
+        }
+    }
+
+    private fun codeKey(): String = "${KEY_CODE}_$nodeId"
+
+    private fun inputKey(): String = "${KEY_INPUT}_$nodeId"
 
     companion object {
         private const val PREFS_NAME = "goCode_prefs"
