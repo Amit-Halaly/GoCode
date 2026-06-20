@@ -13,7 +13,11 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
+import com.example.gocode.lessons.CurriculumRepository
+import com.example.gocode.lessons.PathNodeItem
 import com.example.gocode.repositories.AvatarRepository
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -30,6 +34,7 @@ class HomeFragment : Fragment() {
     private val db by lazy { FirebaseFirestore.getInstance() }
 
     private var userListener: ListenerRegistration? = null
+    private var progressListener: ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,62 +48,33 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View = inflater.inflate(R.layout.fragment_home, container, false)
 
-    @SuppressLint("CutPasteId", "SetTextI18n")
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnContinue)
-            .setOnClickListener {
-                requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
-                    R.id.bottom_navigation
-                ).selectedItemId = R.id.learnFragment
-            }
+        val bottomNav = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation)
 
-        view.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnStartMission)
-            .setOnClickListener {
-                requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
-                    R.id.bottom_navigation
-                ).selectedItemId = R.id.learnFragment
-            }
+        view.findViewById<MaterialButton>(R.id.btnContinue).setOnClickListener {
+            bottomNav.selectedItemId = R.id.learnFragment
+        }
+        view.findViewById<MaterialButton>(R.id.btnStartMission).setOnClickListener {
+            bottomNav.selectedItemId = R.id.learnFragment
+        }
+        view.findViewById<MaterialButton>(R.id.btnArena).setOnClickListener {
+            bottomNav.selectedItemId = R.id.arenaFragment
+        }
 
-        view.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnArena)
-            .setOnClickListener {
-                requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
-                    R.id.bottom_navigation
-                ).selectedItemId = R.id.arenaFragment
-            }
+        val rvNotifications = view.findViewById<RecyclerView>(R.id.rvNotifications).apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = NotificationsAdapter(listOf("Loading your progress..."))
+            isNestedScrollingEnabled = true
+        }
 
-        val arenaRatingTv = view.findViewById<TextView>(R.id.txtArenaRating)
-
-
-        val rvNotifications = view.findViewById<RecyclerView>(R.id.rvNotifications)
-        rvNotifications.layoutManager = LinearLayoutManager(requireContext())
-        rvNotifications.adapter = NotificationsAdapter(
-            listOf(
-                "You gained 40 XP yesterday!",
-                "Your friend just beat your Arena score!",
-                "New daily mission available",
-                "Daily streak: 3 days 🔥",
-                "You have a new friend!",
-                "You are about to level up keep going!"
-            )
-        )
-        rvNotifications.isNestedScrollingEnabled = true
-
-        val rvCourses = view.findViewById<RecyclerView>(R.id.rvCourses)
-        rvCourses.layoutManager = LinearLayoutManager(requireContext())
-
-        val defaultCourses = listOf(
-            "Python Basics",
-            "Java Fundamentals",
-            "C Programming",
-            "Algorithms",
-            "Variables",
-            "Functions"
-        )
-        rvCourses.adapter = CoursesAdapter(defaultCourses)
-        rvCourses.isNestedScrollingEnabled = true
-
+        val rvCourses = view.findViewById<RecyclerView>(R.id.rvCourses).apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = CoursesAdapter(listOf("No completed sections yet"))
+            isNestedScrollingEnabled = true
+        }
 
         val userNameTv = view.findViewById<TextView>(R.id.userName)
         val avatarIv = view.findViewById<ImageView>(R.id.avatarImage)
@@ -106,6 +82,15 @@ class HomeFragment : Fragment() {
         val tvXp = view.findViewById<TextView>(R.id.tvXp)
         val tvCoins = view.findViewById<TextView>(R.id.tvCoins)
         val xpProgress = view.findViewById<ProgressBar>(R.id.xpProgress)
+        val arenaRatingTv = view.findViewById<TextView>(R.id.txtArenaRating)
+        val lessonNameTv = view.findViewById<TextView>(R.id.lessonName)
+        val lessonMetaTv = view.findViewById<TextView>(R.id.lessonMeta)
+        val lessonProgress = view.findViewById<ProgressBar>(R.id.lessonProgress)
+        val lessonPercentTv = view.findViewById<TextView>(R.id.lessonPercent)
+        val dailyMissionTitle = view.findViewById<TextView>(R.id.tvDailyMissionTitle)
+        val dailyMissionBody = view.findViewById<TextView>(R.id.tvDailyMissionBody)
+        val dailyMissionXp = view.findViewById<TextView>(R.id.tvDailyMissionXp)
+        val dailyMissionCoins = view.findViewById<TextView>(R.id.tvDailyMissionCoins)
 
         val user = auth.currentUser ?: return
 
@@ -115,88 +100,173 @@ class HomeFragment : Fragment() {
             doc.getString("username")?.takeIf { it.isNotBlank() }?.let { userNameTv.text = it }
 
             doc.getString("avatarId")?.takeIf { it.isNotBlank() }?.let { avatarId ->
-                val avatars = AvatarRepository.load(requireContext())
-                val avatarItem = avatars.firstOrNull { it.id == avatarId }
+                val avatarItem = AvatarRepository.load(requireContext()).firstOrNull { it.id == avatarId }
                 if (avatarItem != null) {
-                    val resId = AvatarRepository.resolveDrawableResId(
-                        requireContext(), avatarItem.drawableName
-                    )
+                    val resId = AvatarRepository.resolveDrawableResId(requireContext(), avatarItem.drawableName)
                     if (resId != 0) avatarIv.setImageResource(resId)
                 }
             }
 
-            val rating = doc.getLong("rating") ?: 0L
-            arenaRatingTv.text = "Rating: $rating"
-
             val level = doc.getLong("level") ?: 1L
-            userLevelTv.text = "Level $level"
-
             val xp = doc.getLong("xp") ?: 0L
             val xpToNext = doc.getLong("xpToNext") ?: 120L
             val coins = doc.getLong("coins") ?: 0L
+            val rating = doc.getLong("rating") ?: 0L
+            val completedPractices = doc.getLong("practiceNodesCompleted") ?: 0L
+            val completedQuizzes = doc.getLong("quizNodesCompleted") ?: 0L
+            val completedCode = doc.getLong("codeNodesCompleted") ?: 0L
+            val rewardedNodeIds = (doc.get("rewardedNodeIds") as? List<*>)
+                .orEmpty()
+                .mapNotNull { it as? String }
 
+            userLevelTv.text = "Level $level"
             tvXp.text = "$xp / $xpToNext"
             tvCoins.text = "$coins coins"
+            arenaRatingTv.text = "Rating: $rating"
+
             val max = xpToNext.toInt().coerceAtLeast(1)
             xpProgress.max = max
             xpProgress.progress = xp.toInt().coerceIn(0, max)
 
-            val lang = doc.getString("primaryLanguage")
-            val coursesByLang = when (lang) {
-                "Python" -> listOf(
-                    "Python Basics", "Variables", "Conditions", "Loops", "Functions", "Lists"
-                )
+            rvCourses.adapter = CoursesAdapter(completedCourseTitles(rewardedNodeIds).ifEmpty {
+                listOf("No completed sections yet")
+            })
 
-                "Java" -> listOf(
-                    "Java Fundamentals",
-                    "Variables",
-                    "OOP Basics",
-                    "Classes & Objects",
-                    "Methods",
-                    "Collections"
+            rvNotifications.adapter = NotificationsAdapter(
+                buildNotifications(
+                    level = level,
+                    xp = xp,
+                    xpToNext = xpToNext,
+                    coins = coins,
+                    completedQuizzes = completedQuizzes,
+                    completedChallenges = completedPractices + completedCode
                 )
+            )
 
-                "C" -> listOf(
-                    "C Programming", "Pointers", "Arrays", "Functions", "Memory Basics", "Structs"
-                )
-
-                else -> defaultCourses
-            }
-            rvCourses.adapter = CoursesAdapter(coursesByLang)
+            bindDailyMission(
+                dailyMissionTitle,
+                dailyMissionBody,
+                dailyMissionXp,
+                dailyMissionCoins,
+                completedPractices,
+                completedCode
+            )
         }
 
-        val bottomNav =
-            requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
-                R.id.bottom_navigation
-            )
+        progressListener = db.collection("users")
+            .document(user.uid)
+            .collection("nodeProgress")
+            .addSnapshotListener { snapshot, _ ->
+                val progressByNode = snapshot?.documents.orEmpty().associate { progressDoc ->
+                    progressDoc.id to ((progressDoc.getLong("progressPercent") ?: 0L).toInt().coerceIn(0, 100))
+                }
+                bindContinueLearning(lessonNameTv, lessonMetaTv, lessonProgress, lessonPercentTv, progressByNode)
+            }
 
         val arenaLottie = view.findViewById<LottieAnimationView>(R.id.arenaLottie)
-
-        arenaLottie.setOnClickListener {
-            arenaLottie.playAnimation()
-        }
+        arenaLottie.setOnClickListener { arenaLottie.playAnimation() }
 
         view.post {
-            val bottomNav =
-                requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
-                    R.id.bottom_navigation
-                )
-
-            val navHeight = bottomNav.height
-            view.setPadding(
-                view.paddingLeft,
-                view.paddingTop,
-                view.paddingRight,
-                navHeight
-            )
+            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, bottomNav.height)
         }
+    }
 
+    private fun bindContinueLearning(
+        title: TextView,
+        meta: TextView,
+        progressBar: ProgressBar,
+        percent: TextView,
+        progressByNode: Map<String, Int>
+    ) {
+        val nodes = CurriculumRepository.section1("java")
+        val next = nodes.firstOrNull { progressByNode.getOrDefault(it.id, 0) < 100 } ?: nodes.last()
+        val progress = progressByNode.getOrDefault(next.id, 0).coerceIn(0, 100)
+
+        title.text = next.title
+        meta.text = "${nodeTypeLabel(next)} • ${sectionTitle(next.id)}"
+        progressBar.progress = progress
+        percent.text = "$progress%"
+    }
+
+    private fun completedCourseTitles(rewardedNodeIds: List<String>): List<String> {
+        return listOf(
+            "java_u1_q1" to "Java Getting Started",
+            "java_u2_q1" to "If / Else Statements",
+            "java_u3_q1" to "Loops",
+            "java_u4_q1" to "Arrays",
+            "java_u5_q1" to "Methods",
+            "java_u6_q1" to "Scanner Input",
+            "java_u7_q1" to "String Tools",
+            "java_u8_q1" to "Classes & Objects",
+            "java_u9_q1" to "Debugging Basics",
+            "java_u10_q1" to "Final Review"
+        ).filter { (quizNodeId, _) -> quizNodeId in rewardedNodeIds }
+            .map { (_, title) -> title }
+    }
+
+    private fun buildNotifications(
+        level: Long,
+        xp: Long,
+        xpToNext: Long,
+        coins: Long,
+        completedQuizzes: Long,
+        completedChallenges: Long
+    ): List<String> {
+        val remainingXp = (xpToNext - xp).coerceAtLeast(0L)
+        return buildList {
+            add("Level $level active • $remainingXp XP to the next level")
+            add("$coins coins available for future rewards")
+            add("$completedQuizzes Java sections completed")
+            add("$completedChallenges practice/code challenges completed")
+            if (remainingXp <= 40L) add("You are close to leveling up")
+        }
+    }
+
+    private fun bindDailyMission(
+        title: TextView,
+        body: TextView,
+        xp: TextView,
+        coins: TextView,
+        completedPractices: Long,
+        completedCode: Long
+    ) {
+        title.text = "Daily Mission:"
+        if (completedCode < completedPractices) {
+            body.text = "Complete your next coding challenge"
+            xp.text = "+100 XP"
+            coins.text = "+75 Coins"
+        } else {
+            body.text = "Complete your next practice bubble"
+            xp.text = "+50 XP"
+            coins.text = "+25 Coins"
+        }
+    }
+
+    private fun nodeTypeLabel(node: PathNodeItem): String {
+        return node.type.name.lowercase().replaceFirstChar { it.uppercase() }
+    }
+
+    private fun sectionTitle(nodeId: String): String {
+        return when {
+            nodeId.contains("_u10_") -> "Final Review"
+            nodeId.contains("_u9_") -> "Debugging Basics"
+            nodeId.contains("_u8_") -> "Classes & Objects"
+            nodeId.contains("_u7_") -> "String Tools"
+            nodeId.contains("_u6_") -> "Scanner Input"
+            nodeId.contains("_u5_") -> "Methods"
+            nodeId.contains("_u4_") -> "Arrays"
+            nodeId.contains("_u3_") -> "Loops"
+            nodeId.contains("_u2_") -> "If / Else Statements"
+            else -> "Getting Started"
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         userListener?.remove()
+        progressListener?.remove()
         userListener = null
+        progressListener = null
     }
 
     companion object {

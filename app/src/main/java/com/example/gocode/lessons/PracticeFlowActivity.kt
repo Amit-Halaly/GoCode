@@ -17,6 +17,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gocode.AchievementBottomSheet
 import com.example.gocode.R
+import com.example.gocode.firebase.FirebaseContentRepository
 import com.example.gocode.gamification.GamificationRepository
 import com.example.gocode.gamification.GamificationResult
 import com.google.android.material.button.MaterialButton
@@ -87,6 +88,15 @@ class PracticeFlowActivity : AppCompatActivity() {
         if (questions.isEmpty()) {
             finish()
             return
+        }
+
+        FirebaseContentRepository.getQuestions(nodeId) { remoteQuestions ->
+            if (remoteQuestions.isNotEmpty()) {
+                questions = remoteQuestions
+                currentIndex = 0
+                correctCount = 0
+                renderQuestion()
+            }
         }
 
         btnBack.setOnClickListener { finish() }

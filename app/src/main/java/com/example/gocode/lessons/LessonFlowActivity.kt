@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gocode.AchievementBottomSheet
 import com.example.gocode.R
+import com.example.gocode.firebase.FirebaseContentRepository
 import com.example.gocode.gamification.GamificationRepository
 import com.example.gocode.gamification.GamificationResult
 import com.example.gocode.lessons.lesson.JavaLessonsRepository
@@ -62,6 +63,13 @@ class LessonFlowActivity : AppCompatActivity() {
         if (steps.isEmpty()) {
             finish()
             return
+        }
+        FirebaseContentRepository.getLessonSteps(nodeId) { remoteSteps ->
+            if (remoteSteps.isNotEmpty()) {
+                steps = remoteSteps
+                currentIndex = currentIndex.coerceAtMost(steps.lastIndex)
+                renderStep()
+            }
         }
 
         btnBack.setOnClickListener { finish() }

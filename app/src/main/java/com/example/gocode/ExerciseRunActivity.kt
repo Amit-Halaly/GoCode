@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import com.example.gocode.AchievementBottomSheet
+import com.example.gocode.firebase.FirebaseContentRepository
 import com.example.gocode.gamification.GamificationRepository
 import com.example.gocode.gamification.GamificationResult
 import com.example.gocode.lessons.LanguagePathFragment
@@ -90,6 +91,17 @@ class ExerciseRunActivity : AppCompatActivity() {
         applyTheme(isDarkTheme)
         editor.setText(savedCode ?: defaultJavaTemplate())
         inputField.setText(savedInput)
+        FirebaseContentRepository.getCodeTask(nodeId) { task ->
+            val remoteTask = task["task"]
+            val remoteTemplate = task["template"]
+            if (!remoteTask.isNullOrBlank()) {
+                currentTask = remoteTask
+                taskText.text = "Task: $currentTask"
+            }
+            if (savedCode == null && !remoteTemplate.isNullOrBlank()) {
+                editor.setText(remoteTemplate)
+            }
+        }
 
         editor.subscribeAlways<ContentChangeEvent> {
             scheduleLint()

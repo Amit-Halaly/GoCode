@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.gocode.ExerciseRunActivity
 import com.example.gocode.R
 import com.example.gocode.adapters.PathNodesAdapter
+import com.example.gocode.firebase.FirebaseContentRepository
 import com.example.gocode.gamification.GamificationRepository
 import com.google.android.material.card.MaterialCardView
 
@@ -92,6 +93,8 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
         val layoutManager = LinearLayoutManager(requireContext())
         rvPathNodes.layoutManager = layoutManager
         rvPathNodes.adapter = adapter
+        refreshNodesFromFirebase(template)
+        refreshPathFromFirebase()
 
         rvPathNodes.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -110,8 +113,11 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
 
     override fun onResume() {
         super.onResume()
+        if (language.lowercase() != "java") return
         val template = CurriculumRepository.section1(language)
         pathAdapter?.submitItems(loadNodes(template))
+        refreshNodesFromFirebase(template)
+        refreshPathFromFirebase()
     }
 
     private fun loadNodes(template: List<PathNodeItem>): List<PathNodeItem> {
@@ -122,6 +128,25 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
 
         return CurriculumRepository.applyProgress(template, progress)
             .map { it.copy(locked = false) }
+    }
+
+    private fun refreshNodesFromFirebase(template: List<PathNodeItem>) {
+        val context = context ?: return
+        LessonProgressStore.getProgressMap(context, template.map { it.id }) { progress ->
+            if (!isAdded) return@getProgressMap
+            pathAdapter?.submitItems(
+                CurriculumRepository.applyProgress(template, progress)
+                    .map { it.copy(locked = false) }
+            )
+        }
+    }
+
+    private fun refreshPathFromFirebase() {
+        FirebaseContentRepository.getPathNodes { remoteTemplate ->
+            if (!isAdded || remoteTemplate.isEmpty()) return@getPathNodes
+            pathAdapter?.submitItems(loadNodes(remoteTemplate))
+            refreshNodesFromFirebase(remoteTemplate)
+        }
     }
 
     private fun updateSectionHeader(sectionNumber: Int) {

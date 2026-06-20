@@ -166,6 +166,9 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<View>(R.id.itemChangeAvatar)
             .findViewById<TextView>(R.id.title).text = "Change Avatar"
 
+        findViewById<View>(R.id.itemAchievements)
+            .findViewById<TextView>(R.id.title).text = "Achievements"
+
         findViewById<View>(R.id.itemNotifications)
             .findViewById<TextView>(R.id.title).text = "Notifications"
 
@@ -182,6 +185,9 @@ class SettingsActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.itemChangeAvatar).setOnClickListener {
             startActivity(Intent(this, AvatarPickerActivity::class.java))
+        }
+        findViewById<View>(R.id.itemAchievements).setOnClickListener {
+            startActivity(Intent(this, AchievementsActivity::class.java))
         }
         findViewById<View>(R.id.itemAbout).setOnClickListener {
             startActivity(Intent(this, AboutActivity::class.java))
