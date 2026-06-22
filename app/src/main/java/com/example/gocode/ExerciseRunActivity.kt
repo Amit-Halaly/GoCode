@@ -18,6 +18,7 @@ import com.example.gocode.gamification.GamificationResult
 import com.example.gocode.lessons.LanguagePathFragment
 import com.example.gocode.lessons.LessonProgressStore
 import com.example.gocode.network.ApiClient
+import com.example.gocode.network.models.hintModels.HintRequest
 import com.example.gocode.network.models.lintModels.LintRequest
 import com.example.gocode.network.models.runModels.RunRequest
 import io.github.rosemoe.sora.event.ContentChangeEvent
@@ -41,6 +42,7 @@ class ExerciseRunActivity : AppCompatActivity() {
 
     private lateinit var editor: CodeEditor
     private lateinit var inputField: EditText
+
     private lateinit var lintStatus: TextView
     private lateinit var outputView: TextView
 
@@ -48,16 +50,17 @@ class ExerciseRunActivity : AppCompatActivity() {
     private lateinit var themeButton: Button
     private lateinit var clearButton: Button
 
+    private lateinit var taskText: TextView
+    private lateinit var hintText: TextView
+
     private var isDarkTheme: Boolean = true
     private var lintJob: Job? = null
     private var runJob: Job? = null
     private var nodeId: String = "java_u1_c1"
 
-    private lateinit var taskText: TextView
-    private lateinit var hintText: TextView
-
     private var currentTask: String = "Task: —"
 
+    private var expectedOutput: String? = "Hello World"
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,7 +82,6 @@ class ExerciseRunActivity : AppCompatActivity() {
         nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_c1"
         currentTask = taskForNode(nodeId)
         taskText.text = "Task: $currentTask"
-
 
         setupSymbolBar()
         setupEditor()
@@ -103,9 +105,7 @@ class ExerciseRunActivity : AppCompatActivity() {
             }
         }
 
-        editor.subscribeAlways<ContentChangeEvent> {
-            scheduleLint()
-        }
+        editor.subscribeAlways<ContentChangeEvent> { scheduleLint() }
 
         themeButton.setOnClickListener {
             isDarkTheme = !isDarkTheme
@@ -118,6 +118,8 @@ class ExerciseRunActivity : AppCompatActivity() {
             inputField.setText("")
             lintStatus.text = "—"
             outputView.text = "—"
+            hintText.text = "—"
+            hintText.visibility = View.GONE
             clearDiagnostics()
             persistDraft()
         }
@@ -261,22 +263,32 @@ class ExerciseRunActivity : AppCompatActivity() {
         runJob = lifecycleScope.launch {
             val code = editor.text.toString()
             val input = inputField.text.toString()
-
             persistDraft()
 
             runButton.isEnabled = false
             outputView.text = "Running..."
+            hintText.text = "—"
+            hintText.visibility = View.GONE
 
             runCatching {
                 ApiClient.execApi.run(
                     RunRequest(
                         language = "java",
                         code = code,
-                        input = input
+                        input = input,
+                        expectedOutput = expectedOutput,
+                        compareMode = "normalize"
                     )
                 )
             }.onSuccess { res ->
+
+                val hasTest = (res.passed != null)
+                val failed =
+                    if (hasTest) (res.passed == false)
+                    else ((res.exitCode != 0) || res.error.isNotBlank())
+
                 outputView.text = buildString {
+                    appendLine("passed: ${res.passed}")
                     appendLine("exitCode: ${res.exitCode}")
                     appendLine()
                     appendLine("output:")
@@ -284,19 +296,32 @@ class ExerciseRunActivity : AppCompatActivity() {
                     appendLine()
                     appendLine("error:")
                     appendLine(res.error)
+
+                    if (hasTest) {
+                        appendLine()
+                        appendLine("expected:")
+                        appendLine(res.expectedOutput ?: "—")
+                        appendLine()
+                        appendLine("actual:")
+                        appendLine(res.actualOutput ?: res.output)
+                    }
                 }
-                val failed = (res.exitCode != 0) || res.error.isNotBlank()
+
                 if (failed) {
                     runCatching {
                         ApiClient.execApi.hint(
-                            com.example.gocode.network.models.hintModels.HintRequest(
+                            HintRequest(
                                 task = currentTask,
                                 language = "java",
                                 code = code,
                                 input = input,
                                 output = res.output,
                                 error = res.error,
-                                exitCode = res.exitCode
+                                exitCode = res.exitCode,
+                                passed = res.passed,
+                                expectedOutput = res.expectedOutput,
+                                actualOutput = res.actualOutput,
+                                compareMode = "normalize"
                             )
                         )
                     }.onSuccess { hintRes ->
@@ -307,14 +332,16 @@ class ExerciseRunActivity : AppCompatActivity() {
                         hintText.visibility = View.GONE
                     }
                 } else {
-                    hintText.text = "—"
-                    hintText.visibility = View.GONE
+                    hintText.text = "congratulations!"
+                    hintText.visibility = View.VISIBLE
                     LessonProgressStore.saveProgress(this@ExerciseRunActivity, nodeId, 100)
                     awardCompletion()
                 }
 
             }.onFailure { e ->
                 outputView.text = "Request failed: ${e.message}"
+                hintText.text = "—"
+                hintText.visibility = View.GONE
             }
 
             runButton.isEnabled = true
@@ -487,6 +514,6 @@ class ExerciseRunActivity : AppCompatActivity() {
         private const val KEY_CODE = "playground_code"
         private const val KEY_INPUT = "playground_input"
         private const val KEY_DARK = "playground_dark"
-        private const val LINT_DEBOUNCE_MS = 450L
+        private const val LINT_DEBOUNCE_MS = 1000L
     }
 }

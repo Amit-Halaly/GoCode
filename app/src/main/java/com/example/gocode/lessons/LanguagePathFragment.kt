@@ -1,5 +1,6 @@
 package com.example.gocode.lessons
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -33,6 +34,7 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
         language = arguments?.getString(ARG_LANGUAGE) ?: "python"
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
