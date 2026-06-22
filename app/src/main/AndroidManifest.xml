@@ -77,6 +77,11 @@
             android:name=".ExerciseRunActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ExercisePlayActivity"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:exported="false" />
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
