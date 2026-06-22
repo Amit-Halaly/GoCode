@@ -99,6 +99,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <include
+                android:id="@+id/itemAchievements"
+                layout="@layout/item_settings_nav"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
             <TextView
                 style="@style/SettingsSectionTitle"
                 android:layout_width="match_parent"

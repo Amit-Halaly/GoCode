@@ -58,6 +58,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".settings.AchievementsActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".settings.AboutActivity"
             android:exported="false" />
 

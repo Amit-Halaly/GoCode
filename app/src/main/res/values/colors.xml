@@ -25,6 +25,16 @@
     <color name="gc_card_background">#081d3c</color>
     <color name="btn_primary">#0167ed</color>
     <color name="titles_primary">#4DA3FF</color>
+    <color name="section_one">#0167ED</color>
+    <color name="section_two">#7C3AED</color>
+    <color name="section_three">#059669</color>
+    <color name="section_four">#DC2626</color>
+    <color name="section_five">#0891B2</color>
+    <color name="section_six">#EA580C</color>
+    <color name="section_seven">#DB2777</color>
+    <color name="section_eight">#4F46E5</color>
+    <color name="section_nine">#64748B</color>
+    <color name="section_ten">#0F766E</color>
     <color name="accent_green">#37F2B6</color>
 
     <!-- profile screen  -->

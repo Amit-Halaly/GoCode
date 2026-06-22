@@ -11,6 +11,12 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
+import com.example.gocode.AchievementBottomSheet
+import com.example.gocode.firebase.FirebaseContentRepository
+import com.example.gocode.gamification.GamificationRepository
+import com.example.gocode.gamification.GamificationResult
+import com.example.gocode.lessons.LanguagePathFragment
+import com.example.gocode.lessons.LessonProgressStore
 import com.example.gocode.network.ApiClient
 import com.example.gocode.network.models.hintModels.HintRequest
 import com.example.gocode.network.models.lintModels.LintRequest
@@ -50,6 +56,7 @@ class ExerciseRunActivity : AppCompatActivity() {
     private var isDarkTheme: Boolean = true
     private var lintJob: Job? = null
     private var runJob: Job? = null
+    private var nodeId: String = "java_u1_c1"
 
     private var currentTask: String = "Task: —"
 
@@ -72,19 +79,31 @@ class ExerciseRunActivity : AppCompatActivity() {
         taskText = findViewById(R.id.taskText)
         hintText = findViewById(R.id.hintText)
 
-        currentTask = "Print Hello World"
+        nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_c1"
+        currentTask = taskForNode(nodeId)
         taskText.text = "Task: $currentTask"
 
         setupSymbolBar()
         setupEditor()
 
-        val savedCode = prefs.getString(KEY_CODE, null)
-        val savedInput = prefs.getString(KEY_INPUT, "") ?: ""
+        val savedCode = prefs.getString(codeKey(), null)
+        val savedInput = prefs.getString(inputKey(), "") ?: ""
         isDarkTheme = prefs.getBoolean(KEY_DARK, true)
 
         applyTheme(isDarkTheme)
         editor.setText(savedCode ?: defaultJavaTemplate())
         inputField.setText(savedInput)
+        FirebaseContentRepository.getCodeTask(nodeId) { task ->
+            val remoteTask = task["task"]
+            val remoteTemplate = task["template"]
+            if (!remoteTask.isNullOrBlank()) {
+                currentTask = remoteTask
+                taskText.text = "Task: $currentTask"
+            }
+            if (savedCode == null && !remoteTemplate.isNullOrBlank()) {
+                editor.setText(remoteTemplate)
+            }
+        }
 
         editor.subscribeAlways<ContentChangeEvent> { scheduleLint() }
 
@@ -155,8 +174,8 @@ class ExerciseRunActivity : AppCompatActivity() {
 
     private fun persistDraft() {
         prefs.edit {
-            putString(KEY_CODE, editor.text.toString())
-            putString(KEY_INPUT, inputField.text.toString())
+            putString(codeKey(), editor.text.toString())
+            putString(inputKey(), inputField.text.toString())
         }
     }
 
@@ -315,6 +334,8 @@ class ExerciseRunActivity : AppCompatActivity() {
                 } else {
                     hintText.text = "congratulations!"
                     hintText.visibility = View.VISIBLE
+                    LessonProgressStore.saveProgress(this@ExerciseRunActivity, nodeId, 100)
+                    awardCompletion()
                 }
 
             }.onFailure { e ->
@@ -342,13 +363,151 @@ class ExerciseRunActivity : AppCompatActivity() {
         }
     }
 
-    private fun defaultJavaTemplate(): String = """
-        public class Main {
-            public static void main(String[] args) {
-                System.out.println("Hello GoCode!");
-            }
+    private fun defaultJavaTemplate(): String {
+        return when (nodeId) {
+            "java_u2_c1" -> """
+                public class Main {
+                    public static void main(String[] args) {
+                        int age = 16;
+                        boolean hasPassword = true;
+
+                        // TODO: Print "Access granted" only when age is at least 13
+                        // and hasPassword is true. Otherwise print "Access denied".
+                    }
+                }
+            """.trimIndent()
+            "java_u3_c1" -> """
+                public class Main {
+                    public static void main(String[] args) {
+                        // TODO: Use a for loop to print the numbers 1 to 5.
+                        // When the number is 3, also print "Middle".
+                    }
+                }
+            """.trimIndent()
+            "java_u4_c1" -> """
+                public class Main {
+                    public static void main(String[] args) {
+                        String[] favorites = {"Java", "Android", "GoCode"};
+
+                        // TODO: Use a loop to print every value in favorites.
+                    }
+                }
+            """.trimIndent()
+            "java_u5_c1" -> """
+                public class Main {
+                    static void greet(String name) {
+                        // TODO: Print "Hello " plus the name.
+                    }
+
+                    public static void main(String[] args) {
+                        greet("Leo");
+                        greet("Maya");
+                    }
+                }
+            """.trimIndent()
+            "java_u6_c1" -> """
+                import java.util.Scanner;
+
+                public class Main {
+                    public static void main(String[] args) {
+                        Scanner input = new Scanner(System.in);
+
+                        // TODO: Ask for age, read it, and print "Welcome" if age >= 13.
+
+                        input.close();
+                    }
+                }
+            """.trimIndent()
+            "java_u7_c1" -> """
+                public class Main {
+                    public static void main(String[] args) {
+                        String name = "  Leo  ";
+
+                        // TODO: Trim the name and check if it equals "Leo".
+                        // If it does, print "Found Leo".
+                    }
+                }
+            """.trimIndent()
+            "java_u8_c1" -> """
+                class Student {
+                    String name;
+                    int age;
+
+                    void introduce() {
+                        // TODO: Print the student's name and age.
+                    }
+                }
+
+                public class Main {
+                    public static void main(String[] args) {
+                        Student student = new Student();
+                        student.name = "Maya";
+                        student.age = 14;
+                        student.introduce();
+                    }
+                }
+            """.trimIndent()
+            "java_u9_c1" -> """
+                public class Main {
+                    public static void main(String[] args) {
+                        String text = "42";
+
+                        // TODO: Use try / catch to parse text into an int.
+                        // Print the number if it works, otherwise print "Invalid number".
+                    }
+                }
+            """.trimIndent()
+            "java_u10_c1" -> """
+                public class Main {
+                    static void printLongNames(String[] names) {
+                        // TODO: Print only names longer than 3 characters.
+                    }
+
+                    public static void main(String[] args) {
+                        String[] names = {"Leo", "Maya", "Noam", "Dan"};
+                        printLongNames(names);
+                    }
+                }
+            """.trimIndent()
+            else -> """
+                public class Main {
+                    public static void main(String[] args) {
+                        System.out.println("Hello GoCode!");
+                    }
+                }
+            """.trimIndent()
         }
-    """.trimIndent()
+    }
+
+    private fun taskForNode(nodeId: String): String {
+        return when (nodeId) {
+            "java_u2_c1" -> "Use if / else to check access. Print Access granted only when age >= 13 and hasPassword is true."
+            "java_u3_c1" -> "Use a for loop to print the numbers 1 to 5. When the number is 3, also print Middle."
+            "java_u4_c1" -> "Use a loop to print every value in the favorites array."
+            "java_u5_c1" -> "Complete the greet method so it prints Hello plus the name it receives."
+            "java_u6_c1" -> "Use Scanner to read an age. Print Welcome if age is at least 13, otherwise print Too young."
+            "java_u7_c1" -> "Trim the name and use equals to check if it is Leo. If yes, print Found Leo."
+            "java_u8_c1" -> "Complete the Student introduce method so the object prints its own name and age."
+            "java_u9_c1" -> "Use try / catch to parse text into an int. Print the number or Invalid number."
+            "java_u10_c1" -> "Write a method that loops through the names array and prints only names longer than 3 characters."
+            else -> "Print Hello World"
+        }
+    }
+
+    private fun awardCompletion() {
+        GamificationRepository.awardNodeCompleted(this, nodeId) { result ->
+            result?.let { showReward(it) }
+        }
+    }
+
+    private fun showReward(result: GamificationResult) {
+        AchievementBottomSheet.newRewardInstance(result)
+            .show(supportFragmentManager, "reward_sheet")
+    }
+
+    private fun codeKey(): String = "${KEY_CODE}_$nodeId"
+
+    private fun inputKey(): String = "${KEY_INPUT}_$nodeId"
 
     companion object {
         private const val PREFS_NAME = "goCode_prefs"

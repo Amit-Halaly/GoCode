@@ -141,8 +141,10 @@ class OnboardingActivity : AppCompatActivity() {
                     data["createdAt"] = FieldValue.serverTimestamp()
                     data["level"] = 1L
                     data["xp"] = 0L
-                    data["xpToNext"] = 1000L
+                    data["xpToNext"] = 120L
                     data["coins"] = 0L
+                    data["rewardedNodeIds"] = emptyList<String>()
+                    data["achievementIds"] = emptyList<String>()
                     data["streak"] = 0L
                     data["rating"] = 0L
                 }

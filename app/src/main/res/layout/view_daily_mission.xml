@@ -29,6 +29,7 @@
             app:lottie_renderMode="hardware" />
 
         <TextView
+            android:id="@+id/tvDailyMissionTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
@@ -39,6 +40,7 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tvDailyMissionBody"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
@@ -68,6 +70,7 @@
                     android:src="@drawable/xp" />
 
                 <TextView
+                    android:id="@+id/tvDailyMissionXp"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_marginStart="6dp"
@@ -83,6 +86,7 @@
                     android:src="@drawable/coin" />
 
                 <TextView
+                    android:id="@+id/tvDailyMissionCoins"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"

@@ -6,7 +6,11 @@ import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.gocode.AchievementBottomSheet
 import com.example.gocode.R
+import com.example.gocode.firebase.FirebaseContentRepository
+import com.example.gocode.gamification.GamificationRepository
+import com.example.gocode.gamification.GamificationResult
 import com.example.gocode.lessons.lesson.JavaLessonsRepository
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -31,6 +35,7 @@ class LessonFlowActivity : AppCompatActivity() {
 
     private var steps: List<LessonStep> = emptyList()
     private var currentIndex = 0
+    private var nodeId: String = "java_u1_l1"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,11 +58,19 @@ class LessonFlowActivity : AppCompatActivity() {
         btnPrev = findViewById(R.id.btnPrev)
         btnNext = findViewById(R.id.btnNext)
 
-        steps = JavaLessonsRepository.getLesson1Steps()
+        nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_l1"
+        steps = JavaLessonsRepository.getSteps(nodeId)
 
         if (steps.isEmpty()) {
             finish()
             return
+        }
+        FirebaseContentRepository.getLessonSteps(nodeId) { remoteSteps ->
+            if (remoteSteps.isNotEmpty()) {
+                steps = remoteSteps
+                currentIndex = currentIndex.coerceAtMost(steps.lastIndex)
+                renderStep()
+            }
         }
 
         btnBack.setOnClickListener { finish() }
@@ -74,7 +87,8 @@ class LessonFlowActivity : AppCompatActivity() {
                 currentIndex++
                 renderStep()
             } else {
-                finish()
+                LessonProgressStore.saveProgress(this, nodeId, 100)
+                awardCompletionAndFinish()
             }
         }
 
@@ -92,6 +106,7 @@ class LessonFlowActivity : AppCompatActivity() {
 
         val percent = ((currentIndex + 1) * 100) / steps.size
         stepProgress.progress = percent
+        LessonProgressStore.saveProgress(this, nodeId, percent)
 
         if (step.code.isNullOrBlank()) {
             cardCode.visibility = View.GONE
@@ -110,5 +125,21 @@ class LessonFlowActivity : AppCompatActivity() {
 
         btnPrev.isEnabled = currentIndex > 0
         btnNext.text = if (currentIndex == steps.size - 1) "Finish" else "Next"
+    }
+
+    private fun awardCompletionAndFinish() {
+        GamificationRepository.awardNodeCompleted(this, nodeId) { result ->
+            if (result == null) {
+                finish()
+            } else {
+                showReward(result) { finish() }
+            }
+        }
+    }
+
+    private fun showReward(result: GamificationResult, onContinue: () -> Unit) {
+        AchievementBottomSheet.newRewardInstance(result).apply {
+            this.onContinue = onContinue
+        }.show(supportFragmentManager, "reward_sheet")
     }
 }
