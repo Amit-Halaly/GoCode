@@ -81,7 +81,17 @@ class SettingsActivity : AppCompatActivity() {
                 .addSnapshotListener { doc, _ ->
                     if (doc == null) return@addSnapshotListener
 
-                    doc.getString("avatarId")?.let { updateAvatarUI(it) }
+                    val avatars = AvatarRepository.load(this)
+                    val ownedAvatarIds = AvatarRepository.defaultOwnedAvatarIds(avatars) +
+                        (doc.get("ownedAvatarIds") as? List<*>).orEmpty().mapNotNull { it as? String }
+                    val requestedAvatarId = doc.getString("avatarId")
+                    val avatarId = requestedAvatarId
+                        ?.takeIf { it in ownedAvatarIds }
+                        ?: AvatarRepository.DEFAULT_AVATAR_ID
+                    if (requestedAvatarId != avatarId) {
+                        db.collection("users").document(user.uid).update("avatarId", avatarId)
+                    }
+                    updateAvatarUI(avatarId)
 
                     val status = doc.getString("onlineStatus") ?: "offline"
 

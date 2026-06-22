@@ -67,16 +67,24 @@ class EditProfileActivity : AppCompatActivity() {
             selectedLanguage = doc.getString("primaryLanguage") ?: "Python"
             updateLanguageUI()
 
-            doc.getString("avatarId")?.let { avatarId ->
-                val avatar = AvatarRepository.load(this).firstOrNull { it.id == avatarId }
+            val avatars = AvatarRepository.load(this)
+            val ownedAvatarIds = AvatarRepository.defaultOwnedAvatarIds(avatars) +
+                (doc.get("ownedAvatarIds") as? List<*>).orEmpty().mapNotNull { it as? String }
+            val requestedAvatarId = doc.getString("avatarId")
+            val avatarId = requestedAvatarId
+                ?.takeIf { it in ownedAvatarIds }
+                ?: AvatarRepository.DEFAULT_AVATAR_ID
+            if (requestedAvatarId != avatarId) {
+                db.collection("users").document(user.uid).update("avatarId", avatarId)
+            }
+            val avatar = avatars.firstOrNull { it.id == avatarId }
 
-                avatar?.let {
-                    val resId = AvatarRepository.resolveDrawableResId(
-                        this, it.drawableName
-                    )
-                    if (resId != 0) {
-                        avatarIv.setImageResource(resId)
-                    }
+            avatar?.let {
+                val resId = AvatarRepository.resolveDrawableResId(
+                    this, it.drawableName
+                )
+                if (resId != 0) {
+                    avatarIv.setImageResource(resId)
                 }
             }
 

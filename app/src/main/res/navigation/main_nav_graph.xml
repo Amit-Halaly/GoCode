@@ -21,6 +21,11 @@
         android:label="Arena" />
 
     <fragment
+        android:id="@+id/marketFragment"
+        android:name="com.example.gocode.market.MarketFragment"
+        android:label="Market" />
+
+    <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.gocode.ProfileFragment"
         android:label="Profile" />

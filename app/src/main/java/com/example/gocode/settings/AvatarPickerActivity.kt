@@ -8,9 +8,11 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gocode.R
 import com.example.gocode.adapters.AvatarAdapter
+import com.example.gocode.market.MarketRepository
 import com.example.gocode.repositories.AvatarRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 class AvatarPickerActivity : AppCompatActivity() {
 
@@ -31,29 +33,40 @@ class AvatarPickerActivity : AppCompatActivity() {
         val user = auth.currentUser ?: return
         val avatars = AvatarRepository.load(this)
 
-        db.collection("users")
-            .document(user.uid)
-            .get()
-            .addOnSuccessListener { doc ->
+        MarketRepository.loadProfile(avatars) { profile ->
+            val defaultOwnedIds = AvatarRepository.defaultOwnedAvatarIds(avatars)
+            val ownedIds = profile?.ownedAvatarIds ?: defaultOwnedIds
+            val currentAvatarId = profile?.equippedAvatarId ?: AvatarRepository.DEFAULT_AVATAR_ID
 
-                val currentAvatarId = doc.getString("avatarId") ?: ""
-
-                recycler.adapter = AvatarAdapter(
-                    items = avatars,
-                    initiallySelectedId = currentAvatarId
-                ) { selectedAvatar ->
-
-                    db.collection("users")
-                        .document(user.uid)
-                        .update("avatarId", selectedAvatar.id)
-
-                    val result = Intent().apply {
-                        putExtra("selectedAvatarId", selectedAvatar.id)
-                    }
-
-                    setResult(RESULT_OK, result)
-                    finish()
-                }
+            if (currentAvatarId == AvatarRepository.DEFAULT_AVATAR_ID) {
+                db.collection("users")
+                    .document(user.uid)
+                    .set(
+                        mapOf(
+                            "avatarId" to AvatarRepository.DEFAULT_AVATAR_ID,
+                            "ownedAvatarIds" to ownedIds.toList()
+                        ),
+                        SetOptions.merge()
+                    )
             }
+
+            recycler.adapter = AvatarAdapter(
+                items = avatars,
+                initiallySelectedId = currentAvatarId,
+                unlockedIds = ownedIds
+            ) { selectedAvatar ->
+
+                db.collection("users")
+                    .document(user.uid)
+                    .update("avatarId", selectedAvatar.id)
+
+                val result = Intent().apply {
+                    putExtra("selectedAvatarId", selectedAvatar.id)
+                }
+
+                setResult(RESULT_OK, result)
+                finish()
+            }
+        }
     }
 }

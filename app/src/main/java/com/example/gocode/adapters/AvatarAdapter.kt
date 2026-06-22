@@ -13,6 +13,7 @@ import androidx.core.graphics.drawable.toDrawable
 class AvatarAdapter(
     private val items: List<AvatarItem>,
     initiallySelectedId: String,
+    private val unlockedIds: Set<String>,
     private val onSelected: (AvatarItem) -> Unit
 ) : RecyclerView.Adapter<AvatarAdapter.VH>() {
 
@@ -36,11 +37,17 @@ class AvatarAdapter(
         }
 
         val isSelected = item.id == selectedId
+        val isUnlocked = item.id in unlockedIds
+
+        holder.img.alpha = if (isUnlocked) 1f else 0.28f
+        holder.lockOverlay.visibility = if (isUnlocked) View.GONE else View.VISIBLE
         holder.card.setBackgroundResource(
             if (isSelected) R.drawable.bg_avatar_selected else R.drawable.bg_avatar_card
         )
 
         holder.card.setOnClickListener {
+            if (!isUnlocked) return@setOnClickListener
+
             val pos = holder.bindingAdapterPosition
             if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
 
@@ -61,5 +68,6 @@ class AvatarAdapter(
     class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val card: View = itemView.findViewById(R.id.avatarCard)
         val img: ImageView = itemView.findViewById(R.id.imgAvatar)
+        val lockOverlay: View = itemView.findViewById(R.id.avatarLockOverlay)
     }
 }

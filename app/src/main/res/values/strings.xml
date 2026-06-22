@@ -39,6 +39,9 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="profile">Profile</string>
     <string name="arena">Arena</string>
+    <string name="market">Market</string>
+    <string name="market_subtitle">Unlock avatars with coins earned from lessons and challenges.</string>
+    <string name="avatar_locked">LOCK</string>
     <string name="learn">Learn</string>
     <string name="home">Home</string>
     <string name="lesson_title">Lesson title</string>

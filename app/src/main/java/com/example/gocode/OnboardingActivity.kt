@@ -81,10 +81,11 @@ class OnboardingActivity : AppCompatActivity() {
             return
         }
 
-        selectedAvatarId = avatars.first().id
+        val unlockedIds = AvatarRepository.defaultOwnedAvatarIds(avatars)
+        selectedAvatarId = AvatarRepository.DEFAULT_AVATAR_ID
 
         rvAvatars.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        rvAvatars.adapter = AvatarAdapter(avatars, selectedAvatarId) { chosen ->
+        rvAvatars.adapter = AvatarAdapter(avatars, selectedAvatarId, unlockedIds) { chosen ->
             selectedAvatarId = chosen.id
         }
     }
@@ -131,6 +132,7 @@ class OnboardingActivity : AppCompatActivity() {
             "primaryLanguage" to selectedLanguage,
             "skillLevel" to selectedSkill,
             "avatarId" to selectedAvatarId,
+            "ownedAvatarIds" to listOf(AvatarRepository.DEFAULT_AVATAR_ID),
             "onboardingCompleted" to true,
             "updatedAt" to FieldValue.serverTimestamp()
         )

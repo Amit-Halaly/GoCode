@@ -232,8 +232,17 @@ class ArenaFragment : Fragment() {
                     ?: user.displayName
                     ?: "You"
                 playerRating = (doc.getLong("rating") ?: 1000L).toInt()
-                val avatarId = doc.getString("avatarId")
-                playerAvatarResId = avatarDrawableForId(avatarId, R.drawable.avatar_robot)
+                val avatars = AvatarRepository.load(requireContext())
+                val ownedAvatarIds = AvatarRepository.defaultOwnedAvatarIds(avatars) +
+                    (doc.get("ownedAvatarIds") as? List<*>).orEmpty().mapNotNull { it as? String }
+                val requestedAvatarId = doc.getString("avatarId")
+                val avatarId = requestedAvatarId
+                    ?.takeIf { it in ownedAvatarIds }
+                    ?: AvatarRepository.DEFAULT_AVATAR_ID
+                if (requestedAvatarId != avatarId) {
+                    db.collection("users").document(user.uid).update("avatarId", avatarId)
+                }
+                playerAvatarResId = avatarDrawableForId(avatarId, R.drawable.avatar_alien)
                 val primaryLanguage = doc.getString("primaryLanguage") ?: "Java"
                 val knownLanguages = doc.get("knownLanguages") as? List<*>
                 playerLanguages = (knownLanguages?.filterIsInstance<String>().orEmpty() + primaryLanguage)
