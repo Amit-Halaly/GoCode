@@ -13,4 +13,18 @@
         android:layout_height="match_parent"
         android:contentDescription="@string/todo"
         android:scaleType="fitCenter"/>
+
+    <FrameLayout
+        android:id="@+id/avatarLockOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_avatar_locked"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_lock_answer" />
+    </FrameLayout>
 </FrameLayout>

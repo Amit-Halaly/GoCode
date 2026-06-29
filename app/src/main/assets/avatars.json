@@ -1,14 +1,14 @@
 [
-  { "id": "lion_robot", "drawableName": "avatar_lion_robot" },
-  { "id": "robot",      "drawableName": "avatar_robot" },
-  { "id": "boy",        "drawableName": "avatar_boy" },
-  { "id": "monkey",     "drawableName": "avatar_monkey" },
-  { "id": "cat",        "drawableName": "avatar_cat" },
-  { "id": "cat_woman",  "drawableName": "avatar_cat_woman" },
-  { "id": "ninja",      "drawableName": "avatar_ninja" },
-  { "id": "owl",        "drawableName": "avatar_owl" },
-  { "id": "alien",      "drawableName": "avatar_alien" },
-  { "id": "witch",      "drawableName": "avatar_witch" },
-  { "id": "panda",      "drawableName": "avatar_panda" },
-  { "id": "shark",      "drawableName": "avatar_shark" }
+  { "id": "alien",      "drawableName": "avatar_alien",      "displayName": "Starter Alien", "price": 0,    "rarity": "Starter",   "unlockedByDefault": true },
+  { "id": "boy",        "drawableName": "avatar_boy",        "displayName": "Code Rookie",   "price": 120,  "rarity": "Common",    "unlockedByDefault": false },
+  { "id": "cat",        "drawableName": "avatar_cat",        "displayName": "Focus Cat",     "price": 180,  "rarity": "Common",    "unlockedByDefault": false },
+  { "id": "robot",      "drawableName": "avatar_robot",      "displayName": "Byte Bot",      "price": 260,  "rarity": "Rare",      "unlockedByDefault": false },
+  { "id": "monkey",     "drawableName": "avatar_monkey",     "displayName": "Loop Jumper",   "price": 320,  "rarity": "Rare",      "unlockedByDefault": false },
+  { "id": "owl",        "drawableName": "avatar_owl",        "displayName": "Syntax Owl",    "price": 380,  "rarity": "Rare",      "unlockedByDefault": false },
+  { "id": "cat_woman",  "drawableName": "avatar_cat_woman",  "displayName": "Night Coder",   "price": 520,  "rarity": "Epic",      "unlockedByDefault": false },
+  { "id": "ninja",      "drawableName": "avatar_ninja",      "displayName": "Silent Ninja",  "price": 650,  "rarity": "Epic",      "unlockedByDefault": false },
+  { "id": "witch",      "drawableName": "avatar_witch",      "displayName": "Bug Witch",     "price": 720,  "rarity": "Epic",      "unlockedByDefault": false },
+  { "id": "panda",      "drawableName": "avatar_panda",      "displayName": "Panda Mentor",  "price": 850,  "rarity": "Legendary", "unlockedByDefault": false },
+  { "id": "shark",      "drawableName": "avatar_shark",      "displayName": "Sharp Shark",   "price": 950,  "rarity": "Legendary", "unlockedByDefault": false },
+  { "id": "lion_robot", "drawableName": "avatar_lion_robot", "displayName": "Leo Prime",     "price": 1200, "rarity": "Mythic",    "unlockedByDefault": false }
 ]

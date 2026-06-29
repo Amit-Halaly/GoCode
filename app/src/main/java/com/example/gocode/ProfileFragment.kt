@@ -70,16 +70,23 @@ class ProfileFragment : Fragment() {
 
             doc.getString("username")?.takeIf { it.isNotBlank() }?.let { usernameTv.text = it }
 
-            doc.getString("avatarId")?.let { avatarId ->
-                val avatarItem =
-                    AvatarRepository.load(requireContext()).firstOrNull { it.id == avatarId }
+            val avatars = AvatarRepository.load(requireContext())
+            val ownedAvatarIds = AvatarRepository.defaultOwnedAvatarIds(avatars) +
+                (doc.get("ownedAvatarIds") as? List<*>).orEmpty().mapNotNull { it as? String }
+            val requestedAvatarId = doc.getString("avatarId")
+            val avatarId = requestedAvatarId
+                ?.takeIf { it in ownedAvatarIds }
+                ?: AvatarRepository.DEFAULT_AVATAR_ID
+            if (requestedAvatarId != avatarId) {
+                db.collection("users").document(user.uid).update("avatarId", avatarId)
+            }
 
-                avatarItem?.let {
-                    val resId = AvatarRepository.resolveDrawableResId(
-                        requireContext(), it.drawableName
-                    )
-                    if (resId != 0) avatarIv.setImageResource(resId)
-                }
+            val avatarItem = avatars.firstOrNull { it.id == avatarId }
+            avatarItem?.let {
+                val resId = AvatarRepository.resolveDrawableResId(
+                    requireContext(), it.drawableName
+                )
+                if (resId != 0) avatarIv.setImageResource(resId)
             }
 
             val level = doc.getLong("level") ?: 1L

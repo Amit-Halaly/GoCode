@@ -99,12 +99,20 @@ class HomeFragment : Fragment() {
 
             doc.getString("username")?.takeIf { it.isNotBlank() }?.let { userNameTv.text = it }
 
-            doc.getString("avatarId")?.takeIf { it.isNotBlank() }?.let { avatarId ->
-                val avatarItem = AvatarRepository.load(requireContext()).firstOrNull { it.id == avatarId }
-                if (avatarItem != null) {
-                    val resId = AvatarRepository.resolveDrawableResId(requireContext(), avatarItem.drawableName)
-                    if (resId != 0) avatarIv.setImageResource(resId)
-                }
+            val avatars = AvatarRepository.load(requireContext())
+            val ownedAvatarIds = AvatarRepository.defaultOwnedAvatarIds(avatars) +
+                (doc.get("ownedAvatarIds") as? List<*>).orEmpty().mapNotNull { it as? String }
+            val requestedAvatarId = doc.getString("avatarId")
+            val avatarId = requestedAvatarId
+                ?.takeIf { it in ownedAvatarIds }
+                ?: AvatarRepository.DEFAULT_AVATAR_ID
+            if (requestedAvatarId != avatarId) {
+                db.collection("users").document(user.uid).update("avatarId", avatarId)
+            }
+            val avatarItem = avatars.firstOrNull { it.id == avatarId }
+            if (avatarItem != null) {
+                val resId = AvatarRepository.resolveDrawableResId(requireContext(), avatarItem.drawableName)
+                if (resId != 0) avatarIv.setImageResource(resId)
             }
 
             val level = doc.getLong("level") ?: 1L
