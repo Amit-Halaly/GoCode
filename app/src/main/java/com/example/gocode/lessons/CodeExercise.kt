@@ -7,6 +7,7 @@ data class CodeExercise(
     val title: String,
     val subtitle: String,
     val template: String,
+    val answer: String,
     val defaultInput: String = "",
     val compareMode: String = "trim",
     val tests: List<RunTestCase>

@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
+import com.example.gocode.gamification.GamificationRepository
 import com.example.gocode.lessons.CodeExercise
 import com.example.gocode.lessons.JavaCodeExerciseRepository
 import com.example.gocode.lessons.LanguagePathFragment
@@ -28,6 +29,7 @@ import com.example.gocode.network.models.runModels.RunRequest
 import com.example.gocode.network.models.runModels.RunResponse
 import com.example.gocode.network.models.runModels.RunTestCase
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
@@ -94,6 +96,7 @@ class ExercisePlayActivity : AppCompatActivity() {
     private var hintLoadedForThisRun = false
     private var hintRequestInFlight = false
     private var lastRun: RunResponse? = null
+    private var answerUnlocked = false
 
     private var nodeId: String = "java_u1_c1"
     private lateinit var currentExercise: CodeExercise
@@ -154,9 +157,11 @@ class ExercisePlayActivity : AppCompatActivity() {
 
         val savedCode = savedInstanceState?.getString(STATE_CODE) ?: prefs.getString(codeKey(), null)
         val savedInput = savedInstanceState?.getString(STATE_INPUT) ?: prefs.getString(inputKey(), "") ?: ""
+        answerUnlocked = prefs.getBoolean(answerUnlockedKey(), false)
 
         editor.setText(savedCode ?: currentExercise.template)
         inputField.setText(savedInput.ifBlank { currentExercise.defaultInput })
+        updateAnswerButton()
 
         hideLeoHard()
         hideLottie(immediate = true)
@@ -170,7 +175,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         resetButton.setOnClickListener { resetExercise() }
         themeButton.setOnClickListener { toggleTheme() }
         leoTipGroup.setOnClickListener { requestHint() }
-        answerButton.setOnClickListener { showLockedAnswerHint() }
+        answerButton.setOnClickListener { showUnlockAnswerDialog() }
         inputPromptButton.setOnClickListener { submitPromptedInput() }
         inputPromptCancel.setOnClickListener { cancelPromptedRun() }
 
@@ -411,6 +416,9 @@ class ExercisePlayActivity : AppCompatActivity() {
             setStatus(if (passed) Status.PASSED else Status.FAILED)
             if (passed) {
                 LessonProgressStore.saveProgress(this@ExercisePlayActivity, nodeId, 100)
+                if (!answerUnlocked) {
+                    GamificationRepository.awardNodeCompleted(this@ExercisePlayActivity, nodeId)
+                }
                 playResultAnimation(pass = true) { finish() }
             } else {
                 showFailThenLeo()
@@ -560,9 +568,52 @@ class ExercisePlayActivity : AppCompatActivity() {
         return scannerReads + bufferedReaderReads + streamReads + passwordReads + dataInputReads
     }
 
-    private fun showLockedAnswerHint() {
-        outputTitle.text = "Answer locked"
-        outputText.text = "The full answer is locked. Unlocking it costs $ANSWER_UNLOCK_COST coins."
+    private fun showUnlockAnswerDialog() {
+        if (answerUnlocked) {
+            showUnlockedAnswer()
+            return
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Unlock answer")
+            .setMessage("Do you want to spend $ANSWER_UNLOCK_COST coins to reveal the full solution? You will not earn XP or coins for completing this code exercise after unlocking it.")
+            .setIcon(R.drawable.coin)
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Spend coins") { _, _ -> unlockAnswer() }
+            .show()
+    }
+
+    private fun unlockAnswer() {
+        answerButton.isEnabled = false
+        GamificationRepository.spendCoins(this, ANSWER_UNLOCK_COST.toLong()) { success ->
+            answerButton.isEnabled = true
+            if (success) {
+                answerUnlocked = true
+                prefs.edit { putBoolean(answerUnlockedKey(), true) }
+                updateAnswerButton()
+                editor.setText(currentExercise.answer)
+                persistDraft()
+                scheduleLint()
+                showUnlockedAnswer()
+            } else {
+                outputTitle.text = "Not enough coins"
+                outputText.text = "You need $ANSWER_UNLOCK_COST coins to unlock this answer."
+                shakeOutputCard()
+            }
+        }
+    }
+
+    private fun showUnlockedAnswer() {
+        outputTitle.text = "Unlocked answer"
+        outputText.text = currentExercise.answer
+        shakeOutputCard()
+    }
+
+    private fun updateAnswerButton() {
+        answerButton.text = if (answerUnlocked) "Answer" else "Unlock"
+    }
+
+    private fun shakeOutputCard() {
         outputCard.animate()
             .translationY(-8f)
             .setDuration(110)
@@ -759,6 +810,8 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private fun inputKey(): String = "${KEY_INPUT}_$nodeId"
 
+    private fun answerUnlockedKey(): String = "${KEY_ANSWER_UNLOCKED}_$nodeId"
+
     private enum class Status {
         READY,
         RUNNING,
@@ -770,6 +823,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         private const val PREFS_NAME = "goCode_prefs"
         private const val KEY_CODE = "exercise_code"
         private const val KEY_INPUT = "exercise_input"
+        private const val KEY_ANSWER_UNLOCKED = "exercise_answer_unlocked"
         private const val KEY_DARK = "exercise_dark"
         private const val STATE_CODE = "state_code"
         private const val STATE_INPUT = "state_input"
