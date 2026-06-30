@@ -11,7 +11,7 @@ import com.example.gocode.lessons.PathNodeType
 import com.example.gocode.lessons.PracticeQuestion
 import com.example.gocode.lessons.PracticeQuestionType
 import com.example.gocode.lessons.JavaPracticeRepository
-import com.example.gocode.lessons.lesson.JavaLessonsRepository
+import com.example.gocode.lessons.JavaLessonsRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
@@ -263,11 +263,11 @@ object FirebaseContentRepository {
 
     private fun codeTasks(): Map<String, Map<String, String>> = mapOf(
         "java_u1_c1" to mapOf(
-            "task" to "Print Hello World",
+            "task" to "Print Hello GoCode!",
             "template" to """
                 public class Main {
                     public static void main(String[] args) {
-                        System.out.println("Hello GoCode!");
+                        // TODO: Print Hello GoCode!
                     }
                 }
             """.trimIndent()

@@ -1,8 +1,11 @@
 package com.example.gocode
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.LayoutInflater
@@ -14,6 +17,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
@@ -28,6 +32,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -112,6 +118,9 @@ class ArenaFragment : Fragment() {
     private var opponentAnswered = false
     private var currentCorrectIndex = -1
     private var correctStreak = 0
+    private var opponentCorrectStreak = 0
+    private var matchInProgress = false
+    private var matchResolved = false
 
     private var matchmakingJob: Job? = null
     private var idleAnimationJob: Job? = null
@@ -135,12 +144,21 @@ class ArenaFragment : Fragment() {
 
         startButton.setOnClickListener { startMatchmaking() }
         playAgainButton.setOnClickListener { startMatchmaking() }
-        arenaBackButton.setOnClickListener { findNavController().navigate(R.id.homeFragment) }
+        arenaBackButton.setOnClickListener { requestExitArena() }
         battleTabButton.setOnClickListener { showArenaTab(ArenaTab.BATTLE) }
         leaderboardTabButton.setOnClickListener { showArenaTab(ArenaTab.LEADERBOARD) }
         globalLeaderboardButton.setOnClickListener { showLeaderboardScope(LeaderboardScope.GLOBAL) }
         localLeaderboardButton.setOnClickListener { showLeaderboardScope(LeaderboardScope.LOCAL) }
         friendsLeaderboardButton.setOnClickListener { showLeaderboardScope(LeaderboardScope.FRIENDS) }
+
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    requestExitArena()
+                }
+            }
+        )
     }
 
     override fun onDestroyView() {
@@ -260,6 +278,8 @@ class ArenaFragment : Fragment() {
     }
 
     private fun renderIdle() {
+        matchInProgress = false
+        matchResolved = false
         showArenaTab(ArenaTab.BATTLE)
         matchmakingPanel.visibility = View.GONE
         matchPanel.visibility = View.GONE
@@ -319,6 +339,39 @@ class ArenaFragment : Fragment() {
             if (visible) View.VISIBLE else View.GONE
     }
 
+    private fun requestExitArena() {
+        if (!matchInProgress || matchResolved) {
+            findNavController().navigate(R.id.homeFragment)
+            return
+        }
+
+        val dialog = Dialog(requireContext())
+        dialog.setContentView(R.layout.dialog_arena_exit)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setDimAmount(0.74f)
+        dialog.setCanceledOnTouchOutside(true)
+
+        dialog.findViewById<TextView>(R.id.exitScoreText).text =
+            "$playerName $playerScore  -  ${activeOpponent?.name ?: "Opponent"} $opponentScore"
+        dialog.findViewById<TextView>(R.id.exitRatingText).text = when {
+            playerScore < 0 -> "Leaving now can drop your rating because your score is below zero."
+            else -> "Leaving now will not increase your rating, even if you are ahead."
+        }
+        dialog.findViewById<MaterialButton>(R.id.keepPlayingButton).setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.findViewById<MaterialButton>(R.id.exitMatchButton).setOnClickListener {
+            dialog.dismiss()
+            forfeitAndExit()
+        }
+
+        dialog.show()
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.9f).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
+
     @SuppressLint("SetTextI18n")
     private fun startMatchmaking() {
         timer?.cancel()
@@ -326,6 +379,8 @@ class ArenaFragment : Fragment() {
         stopIdleAnimation()
         searchAnimationJob?.cancel()
         opponentJob?.cancel()
+        matchInProgress = false
+        matchResolved = false
 
         startButton.visibility = View.GONE
         resultPanel.visibility = View.GONE
@@ -396,6 +451,9 @@ class ArenaFragment : Fragment() {
         playerScore = 0
         opponentScore = 0
         correctStreak = 0
+        opponentCorrectStreak = 0
+        matchInProgress = true
+        matchResolved = false
 
         matchmakingPanel.visibility = View.GONE
         matchPanel.visibility = View.VISIBLE
@@ -403,7 +461,7 @@ class ArenaFragment : Fragment() {
         statusLabel.text = "Ranked match live"
         stageTitle.text = "Battle Live"
         stageSubtitle.text = "${playerName} vs ${opponent.name}"
-        arenaTicker.text = "FIRST TO THINK FAST  Wrong answers lose $WRONG_ANSWER_PENALTY"
+        arenaTicker.text = "FIRST TO THINK FAST  Wrong answers lose ${abs(WRONG_ANSWER_PENALTY)}"
         matchPanel.popIn()
         animateVersusEntry()
         showQuestion()
@@ -466,12 +524,18 @@ class ArenaFragment : Fragment() {
             optionsContainer.addView(button, params)
         }
 
-        showQuestionIntro(question) {
+        val startQuestion = {
             scrollToQuestion()
             questionStartMs = System.currentTimeMillis()
             animateQuestionEntry()
             startQuestionTimer()
             scheduleOpponentAnswer(question)
+        }
+
+        if (questionIndex == 0) {
+            showQuestionIntro(question, startQuestion)
+        } else {
+            startQuestion()
         }
     }
 
@@ -563,7 +627,12 @@ class ArenaFragment : Fragment() {
 
         val elapsed = System.currentTimeMillis() - questionStartMs
         val correct = selectedIndex == currentCorrectIndex
-        val delta = scoreForAnswer(correct, elapsed)
+        val delta = scoreForAnswer(
+            correct = correct,
+            elapsedMs = elapsed,
+            streak = correctStreak,
+            timeout = selectedIndex == -1
+        )
         playerScore += delta
         correctStreak = if (correct) correctStreak + 1 else 0
 
@@ -598,7 +667,14 @@ class ArenaFragment : Fragment() {
         opponentAnswered = true
 
         val correct = selectedIndex == currentCorrectIndex
-        opponentScore += scoreForAnswer(correct, elapsed)
+        val delta = scoreForAnswer(
+            correct = correct,
+            elapsedMs = elapsed,
+            streak = opponentCorrectStreak,
+            timeout = false
+        )
+        opponentScore += delta
+        opponentCorrectStreak = if (correct) opponentCorrectStreak + 1 else 0
         opponentAvatarImage.pulse()
         updateScoreboard()
         opponentScoreValue.flashScore()
@@ -645,20 +721,19 @@ class ArenaFragment : Fragment() {
 
     @SuppressLint("SetTextI18n")
     private fun finishMatch() {
+        if (matchResolved) return
+        matchResolved = true
+        matchInProgress = false
         timer?.cancel()
         opponentJob?.cancel()
 
         val won = playerScore > opponentScore
         val tied = playerScore == opponentScore
-        val ratingDelta = when {
-            won -> 28
-            tied -> 4
-            else -> -18
-        }
+        val ratingDelta = ratingDeltaForMatch(won = won, tied = tied, forfeit = false)
 
         playerRating = (playerRating + ratingDelta).coerceAtLeast(0)
         renderProfile()
-        updateArenaStats(ratingDelta, won)
+        updateArenaStats(ratingDelta, won, forfeit = false)
         renderLeaderboards()
 
         matchPanel.visibility = View.GONE
@@ -680,7 +755,55 @@ class ArenaFragment : Fragment() {
         resultPanel.popIn()
     }
 
-    private fun updateArenaStats(ratingDelta: Int, won: Boolean) {
+    private fun forfeitAndExit() {
+        if (matchResolved) {
+            findNavController().navigate(R.id.homeFragment)
+            return
+        }
+
+        matchResolved = true
+        matchInProgress = false
+        timer?.cancel()
+        opponentJob?.cancel()
+        matchmakingJob?.cancel()
+        stopSearchAnimation()
+
+        val ratingDelta = ratingDeltaForMatch(won = false, tied = false, forfeit = true)
+        playerRating = (playerRating + ratingDelta).coerceAtLeast(0)
+        updateArenaStats(ratingDelta, won = false, forfeit = true)
+        findNavController().navigate(R.id.homeFragment)
+    }
+
+    private fun ratingDeltaForMatch(
+        won: Boolean,
+        tied: Boolean,
+        forfeit: Boolean
+    ): Int {
+        if (forfeit) {
+            return if (playerScore < 0) {
+                (-8 - (abs(playerScore) / 35)).coerceAtLeast(-24)
+            } else {
+                0
+            }
+        }
+
+        val opponentRating = activeOpponent?.rating ?: playerRating
+        val expected = 1.0 / (1.0 + 10.0.pow((opponentRating - playerRating) / 400.0))
+        val actual = when {
+            won -> 1.0
+            tied -> 0.5
+            else -> 0.0
+        }
+        val marginBonus = (abs(playerScore - opponentScore) / 80).coerceAtMost(6)
+        val delta = (RATING_K_FACTOR * (actual - expected)).roundToInt()
+        return when {
+            won -> (delta + marginBonus).coerceIn(8, 32)
+            tied -> delta.coerceIn(-6, 6)
+            else -> (delta - marginBonus).coerceIn(-32, -8)
+        }
+    }
+
+    private fun updateArenaStats(ratingDelta: Int, won: Boolean, forfeit: Boolean) {
         val uid = auth.currentUser?.uid ?: return
         val updates = mutableMapOf<String, Any>(
             "rating" to playerRating,
@@ -688,6 +811,10 @@ class ArenaFragment : Fragment() {
             "arenaRatingDeltaTotal" to FieldValue.increment(ratingDelta.toLong())
         )
         if (won) updates["arenaWins"] = FieldValue.increment(1)
+        if (forfeit) {
+            updates["arenaForfeits"] = FieldValue.increment(1)
+            updates["lastOpponentRatingDelta"] = 10L
+        }
 
         db.collection("users").document(uid).update(updates)
     }
@@ -875,10 +1002,18 @@ class ArenaFragment : Fragment() {
         return title to code
     }
 
-    private fun scoreForAnswer(correct: Boolean, elapsedMs: Long): Int {
-        if (!correct) return WRONG_ANSWER_PENALTY
-        val speedBonus = ((QUESTION_TIME_MS - elapsedMs).coerceAtLeast(0) / 90L).toInt()
-        return 420 + speedBonus
+    private fun scoreForAnswer(
+        correct: Boolean,
+        elapsedMs: Long,
+        streak: Int,
+        timeout: Boolean
+    ): Int {
+        if (!correct) return if (timeout) TIMEOUT_PENALTY else WRONG_ANSWER_PENALTY
+        val speedBonus = ((QUESTION_TIME_MS - elapsedMs).coerceAtLeast(0) / 180L)
+            .toInt()
+            .coerceAtMost(60)
+        val streakBonus = (streak * 8).coerceAtMost(32)
+        return CORRECT_ANSWER_POINTS + speedBonus + streakBonus
     }
 
     private fun rankName(rating: Int): String {
@@ -1148,9 +1283,12 @@ class ArenaFragment : Fragment() {
     }
 
     private companion object {
-        private const val QUESTION_COUNT = 5
+        private const val QUESTION_COUNT = 7
         private const val QUESTION_TIME_MS = 12_000L
-        private const val WRONG_ANSWER_PENALTY = -180
+        private const val CORRECT_ANSWER_POINTS = 100
+        private const val WRONG_ANSWER_PENALTY = -35
+        private const val TIMEOUT_PENALTY = -50
+        private const val RATING_K_FACTOR = 28
 
         private val arenaOpponents = listOf(
             ArenaOpponent("NullPointer", 1260, listOf("Java", "C"), 74, R.drawable.avatar_alien),
@@ -1180,6 +1318,83 @@ class ArenaFragment : Fragment() {
                 course = "Loops",
                 prompt = "How many times does this loop run?\nfor (int i = 0; i < 3; i++)",
                 options = listOf("2", "3", "4", "Infinite"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Getting Started",
+                prompt = "What is printed?\nSystem.out.println(\"Hello GoCode!\");",
+                options = listOf("Hello GoCode!", "\"Hello GoCode!\"", "Hello Java!", "Nothing"),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Variables",
+                prompt = "What is printed?\nint age = 14;\nSystem.out.println(age + 1);",
+                options = listOf("14", "15", "age1", "Compilation error"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Variables",
+                prompt = "Which type should store true or false?\nboolean isReady = true;",
+                options = listOf("int", "String", "boolean", "double"),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "If / Else",
+                prompt = "What is printed?\nint score = 80;\nif (score >= 75) {\n    System.out.println(\"Pass\");\n} else {\n    System.out.println(\"Try again\");\n}",
+                options = listOf("Pass", "Try again", "75", "Compilation error"),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Loops",
+                prompt = "What is printed last?\nfor (int i = 1; i <= 4; i++) {\n    System.out.println(i);\n}",
+                options = listOf("1", "3", "4", "5"),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Arrays",
+                prompt = "What is printed?\nString[] names = {\"Leo\", \"Maya\", \"Dan\"};\nSystem.out.println(names[1]);",
+                options = listOf("Leo", "Maya", "Dan", "1"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Methods",
+                prompt = "What is printed?\nstatic int doubleIt(int n) {\n    return n * 2;\n}\nSystem.out.println(doubleIt(6));",
+                options = listOf("6", "8", "12", "Compilation error"),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Scanner Input",
+                prompt = "If the input is 16, what is printed?\nint age = input.nextInt();\nif (age >= 13) System.out.println(\"Welcome\");\nelse System.out.println(\"Too young\");",
+                options = listOf("Welcome", "Too young", "16", "Nothing"),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "String Tools",
+                prompt = "What is printed?\nString name = \"  Leo  \";\nSystem.out.println(name.trim().equals(\"Leo\"));",
+                options = listOf("Leo", "true", "false", "Compilation error"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Classes & Objects",
+                prompt = "What is printed?\nStudent s = new Student();\ns.name = \"Maya\";\nSystem.out.println(s.name);",
+                options = listOf("Student", "name", "Maya", "null"),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Debugging Basics",
+                prompt = "Which block handles a failed parse?\ntry {\n    int n = Integer.parseInt(text);\n} catch (NumberFormatException e) {\n    System.out.println(\"Invalid number\");\n}",
+                options = listOf("try", "catch", "class", "main"),
                 correctIndex = 1
             ),
             ArenaQuestion(

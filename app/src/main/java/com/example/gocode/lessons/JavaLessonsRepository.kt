@@ -1,6 +1,4 @@
-package com.example.gocode.lessons.lesson
-
-import com.example.gocode.lessons.LessonStep
+package com.example.gocode.lessons
 
 object JavaLessonsRepository {
 
