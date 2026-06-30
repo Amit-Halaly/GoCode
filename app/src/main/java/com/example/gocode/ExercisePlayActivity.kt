@@ -3,10 +3,14 @@ package com.example.gocode
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
+import android.app.Dialog
+import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
 import android.widget.EditText
 import android.widget.ProgressBar
@@ -29,7 +33,6 @@ import com.example.gocode.network.models.runModels.RunRequest
 import com.example.gocode.network.models.runModels.RunResponse
 import com.example.gocode.network.models.runModels.RunTestCase
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
@@ -574,11 +577,23 @@ class ExercisePlayActivity : AppCompatActivity() {
             return
         }
 
-        MaterialAlertDialogBuilder(this)
-            .setView(layoutInflater.inflate(R.layout.dialog_unlock_answer, null))
-            .setNegativeButton("No", null)
-            .setPositiveButton("Yes") { _, _ -> unlockAnswer() }
-            .show()
+        val dialog = Dialog(this)
+        val content = layoutInflater.inflate(R.layout.dialog_unlock_answer, null)
+        dialog.setContentView(content)
+
+        content.findViewById<MaterialButton>(R.id.unlockNoButton).setOnClickListener {
+            dialog.dismiss()
+        }
+        content.findViewById<MaterialButton>(R.id.unlockYesButton).setOnClickListener {
+            dialog.dismiss()
+            unlockAnswer()
+        }
+        dialog.show()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.88f).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 
     private fun unlockAnswer() {
