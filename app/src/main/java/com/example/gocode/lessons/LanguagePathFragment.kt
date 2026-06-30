@@ -9,7 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.gocode.ExerciseRunActivity
+import com.example.gocode.ExercisePlayActivity
 import com.example.gocode.R
 import com.example.gocode.adapters.PathNodesAdapter
 import com.example.gocode.firebase.FirebaseContentRepository
@@ -83,7 +83,7 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
 
                     PathNodeType.CODE -> {
                         startActivity(
-                            Intent(requireContext(), ExerciseRunActivity::class.java)
+                            Intent(requireContext(), ExercisePlayActivity::class.java)
                                 .putExtra(EXTRA_NODE_ID, clickedNode.id)
                         )
                     }

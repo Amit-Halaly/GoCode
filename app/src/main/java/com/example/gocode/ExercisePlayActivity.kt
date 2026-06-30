@@ -16,6 +16,9 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
+import com.example.gocode.lessons.CodeExercise
+import com.example.gocode.lessons.JavaCodeExerciseRepository
+import com.example.gocode.lessons.LanguagePathFragment
 import com.airbnb.lottie.LottieAnimationView
 import com.example.gocode.network.ApiClient
 import com.example.gocode.network.models.hintModels.HintRequest
@@ -90,15 +93,8 @@ class ExercisePlayActivity : AppCompatActivity() {
     private var hintRequestInFlight = false
     private var lastRun: RunResponse? = null
 
-    private val taskTitleText = "Add two numbers"
-    private val taskSubtitleText = "Read two integers and print their sum."
-    private val requiredTaskInputCount = 2
-
-    private val exerciseTests = listOf(
-        RunTestCase(name = "Warm up", input = "1 2\n", expectedOutput = "3"),
-        RunTestCase(name = "Negative values", input = "10 -4\n", expectedOutput = "6"),
-        RunTestCase(name = "Hidden check", input = "41 1\n", expectedOutput = "42", hidden = true),
-    )
+    private var nodeId: String = "java_u1_c1"
+    private lateinit var currentExercise: CodeExercise
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,8 +106,11 @@ class ExercisePlayActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_exercise_play)
 
-        findViewById<TextView>(R.id.taskTitle).text = taskTitleText
-        findViewById<TextView>(R.id.taskSubtitle).text = taskSubtitleText
+        nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_c1"
+        currentExercise = JavaCodeExerciseRepository.getExercise(nodeId)
+
+        findViewById<TextView>(R.id.taskTitle).text = currentExercise.title
+        findViewById<TextView>(R.id.taskSubtitle).text = currentExercise.subtitle
 
         editor = findViewById(R.id.codeEditor)
         symbolInput = findViewById(R.id.symbolInput)
@@ -150,11 +149,11 @@ class ExercisePlayActivity : AppCompatActivity() {
         setupSymbolBar()
         updateThemeButtonIcon()
 
-        val savedCode = savedInstanceState?.getString(STATE_CODE) ?: prefs.getString(KEY_CODE, null)
-        val savedInput = savedInstanceState?.getString(STATE_INPUT) ?: prefs.getString(KEY_INPUT, "") ?: ""
+        val savedCode = savedInstanceState?.getString(STATE_CODE) ?: prefs.getString(codeKey(), null)
+        val savedInput = savedInstanceState?.getString(STATE_INPUT) ?: prefs.getString(inputKey(), "") ?: ""
 
-        editor.setText(savedCode ?: defaultTemplate())
-        inputField.setText(savedInput)
+        editor.setText(savedCode ?: currentExercise.template)
+        inputField.setText(savedInput.ifBlank { currentExercise.defaultInput })
 
         hideLeoHard()
         hideLottie(immediate = true)
@@ -303,8 +302,8 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private fun persistDraft() {
         prefs.edit {
-            putString(KEY_CODE, editor.text.toString())
-            putString(KEY_INPUT, inputField.text.toString())
+            putString(codeKey(), editor.text.toString())
+            putString(inputKey(), inputField.text.toString())
         }
     }
 
@@ -326,8 +325,8 @@ class ExercisePlayActivity : AppCompatActivity() {
         hintLoadedForThisRun = false
         hintRequestInFlight = false
 
-        editor.setText(defaultTemplate())
-        inputField.setText("")
+        editor.setText(currentExercise.template)
+        inputField.setText(currentExercise.defaultInput)
 
         renderReadyState()
         clearDiagnostics()
@@ -361,9 +360,9 @@ class ExercisePlayActivity : AppCompatActivity() {
         } else {
             executeRun(
                 code = pendingRunCode,
-                fallbackInput = "",
-                fallbackExpectedOutput = exerciseTests.first().expectedOutput,
-                tests = exerciseTests
+                fallbackInput = currentExercise.defaultInput,
+                fallbackExpectedOutput = currentExercise.tests.first().expectedOutput,
+                tests = currentExercise.tests
             )
         }
     }
@@ -382,7 +381,7 @@ class ExercisePlayActivity : AppCompatActivity() {
                         code = code,
                         input = fallbackInput,
                         expectedOutput = fallbackExpectedOutput,
-                        compareMode = "trim",
+                        compareMode = currentExercise.compareMode,
                         testCases = tests
                     )
                 )
@@ -435,7 +434,7 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private fun showIntroOverlay() {
-        introTaskText.text = taskTitleText
+        introTaskText.text = currentExercise.title
         introOverlay.visibility = View.VISIBLE
         introOverlay.alpha = 0f
         introReadyText.scaleX = 0.72f
@@ -522,8 +521,8 @@ class ExercisePlayActivity : AppCompatActivity() {
                 executeRun(
                     code = pendingRunCode,
                     fallbackInput = "$inputText\n",
-                    fallbackExpectedOutput = expectedSum(promptedInputs).toString(),
-                    tests = buildRunTests(promptedInputs)
+                    fallbackExpectedOutput = currentExercise.tests.first().expectedOutput,
+                    tests = currentExercise.tests
                 )
             }
             .start()
@@ -536,28 +535,6 @@ class ExercisePlayActivity : AppCompatActivity() {
         setBusy(false)
         setStatus(Status.READY)
         renderReadyState()
-    }
-
-    private fun buildRunTests(userInputs: List<String>): List<RunTestCase> {
-        val learnerTest = RunTestCase(
-            name = "Your input",
-            input = "${userInputs.joinToString(separator = " ")}\n",
-            expectedOutput = expectedSum(userInputs).toString()
-        )
-        return listOf(learnerTest) + exerciseTests.drop(1).map { test ->
-            test.copy(input = padTestInput(test.input))
-        }
-    }
-
-    private fun expectedSum(inputs: List<String>): Int {
-        return inputs.take(requiredTaskInputCount).sumOf { it.toIntOrNull() ?: 0 }
-    }
-
-    private fun padTestInput(input: String): String {
-        val values = input.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
-        if (pendingInputCount <= values.size) return input
-        val padded = values + List(pendingInputCount - values.size) { "0" }
-        return "${padded.joinToString(separator = " ")}\n"
     }
 
     private fun detectInputReadCount(code: String): Int {
@@ -648,7 +625,7 @@ class ExercisePlayActivity : AppCompatActivity() {
             runCatching {
                 ApiClient.execApi.hint(
                     HintRequest(
-                        task = "$taskTitleText. $taskSubtitleText",
+                        task = "${currentExercise.title}. ${currentExercise.subtitle}",
                         language = "java",
                         code = editor.text.toString(),
                         input = inputField.text.toString(),
@@ -658,7 +635,7 @@ class ExercisePlayActivity : AppCompatActivity() {
                         passed = res.passed,
                         expectedOutput = res.expectedOutput,
                         actualOutput = res.actualOutput,
-                        compareMode = "trim"
+                        compareMode = currentExercise.compareMode
                     )
                 )
             }.onSuccess { hintRes ->
@@ -768,19 +745,9 @@ class ExercisePlayActivity : AppCompatActivity() {
         editor.invalidate()
     }
 
-    private fun defaultTemplate() = """
-        import java.util.Scanner;
+    private fun codeKey(): String = "${KEY_CODE}_$nodeId"
 
-        public class Main {
-            public static void main(String[] args) {
-                Scanner scanner = new Scanner(System.in);
-                int first = scanner.nextInt();
-                int second = scanner.nextInt();
-
-                System.out.println(first + second);
-            }
-        }
-    """.trimIndent()
+    private fun inputKey(): String = "${KEY_INPUT}_$nodeId"
 
     private enum class Status {
         READY,
