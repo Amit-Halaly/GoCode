@@ -575,11 +575,9 @@ class ExercisePlayActivity : AppCompatActivity() {
         }
 
         MaterialAlertDialogBuilder(this)
-            .setTitle("Unlock answer")
-            .setMessage("Do you want to spend $ANSWER_UNLOCK_COST coins to reveal the full solution? You will not earn XP or coins for completing this code exercise after unlocking it.")
-            .setIcon(R.drawable.coin)
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Spend coins") { _, _ -> unlockAnswer() }
+            .setView(layoutInflater.inflate(R.layout.dialog_unlock_answer, null))
+            .setNegativeButton("No", null)
+            .setPositiveButton("Yes") { _, _ -> unlockAnswer() }
             .show()
     }
 
