@@ -609,11 +609,26 @@ class ExercisePlayActivity : AppCompatActivity() {
                 scheduleLint()
                 showUnlockedAnswer()
             } else {
-                outputTitle.text = "Not enough coins"
-                outputText.text = "You need $ANSWER_UNLOCK_COST coins to unlock this answer."
-                shakeOutputCard()
+                showNotEnoughCoinsDialog()
             }
         }
+    }
+
+    private fun showNotEnoughCoinsDialog() {
+        val dialog = Dialog(this)
+        val content = layoutInflater.inflate(R.layout.dialog_not_enough_coins, null)
+        dialog.setContentView(content)
+
+        content.findViewById<MaterialButton>(R.id.notEnoughCoinsOkButton).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.88f).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 
     private fun showUnlockedAnswer() {
