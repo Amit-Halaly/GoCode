@@ -19,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.gocode.lessons.CodeExercise
 import com.example.gocode.lessons.JavaCodeExerciseRepository
 import com.example.gocode.lessons.LanguagePathFragment
+import com.example.gocode.lessons.LessonProgressStore
 import com.airbnb.lottie.LottieAnimationView
 import com.example.gocode.network.ApiClient
 import com.example.gocode.network.models.hintModels.HintRequest
@@ -404,7 +405,12 @@ class ExercisePlayActivity : AppCompatActivity() {
             val passed = (res.passed == true) && !runtimeError
 
             setStatus(if (passed) Status.PASSED else Status.FAILED)
-            if (passed) playResultAnimation(pass = true) { } else showFailThenLeo()
+            if (passed) {
+                LessonProgressStore.saveProgress(this@ExercisePlayActivity, nodeId, 100)
+                playResultAnimation(pass = true) { finish() }
+            } else {
+                showFailThenLeo()
+            }
             setBusy(false)
         }
     }
