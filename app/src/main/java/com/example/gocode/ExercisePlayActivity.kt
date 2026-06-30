@@ -64,6 +64,7 @@ class ExercisePlayActivity : AppCompatActivity() {
     private lateinit var editorTouchOverlay: View
 
     private lateinit var resultLottie: LottieAnimationView
+    private lateinit var backButton: MaterialButton
     private lateinit var runButton: MaterialButton
     private lateinit var themeButton: MaterialButton
     private lateinit var resetButton: MaterialButton
@@ -129,6 +130,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         editorTouchOverlay = findViewById(R.id.editorTouchOverlay)
 
         resultLottie = findViewById(R.id.resultLottie)
+        backButton = findViewById(R.id.backButton)
         runButton = findViewById(R.id.runButton)
         themeButton = findViewById(R.id.themeButton)
         resetButton = findViewById(R.id.resetButton)
@@ -164,6 +166,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         setupHideLeoOnEditorTouch()
 
         runButton.setOnClickListener { runSolution() }
+        backButton.setOnClickListener { resetExercise() }
         resetButton.setOnClickListener { resetExercise() }
         themeButton.setOnClickListener { toggleTheme() }
         leoTipGroup.setOnClickListener { requestHint() }
@@ -310,6 +313,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private fun setBusy(busy: Boolean) {
         runButton.isEnabled = !busy
+        backButton.isEnabled = !busy
         resetButton.isEnabled = !busy
         themeButton.isEnabled = !busy
         answerButton.isEnabled = !busy
@@ -558,7 +562,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private fun showLockedAnswerHint() {
         outputTitle.text = "Answer locked"
-        outputText.text = "The full answer is locked for a future unlock flow."
+        outputText.text = "The full answer is locked. Unlocking it costs $ANSWER_UNLOCK_COST coins."
         outputCard.animate()
             .translationY(-8f)
             .setDuration(110)
@@ -770,5 +774,6 @@ class ExercisePlayActivity : AppCompatActivity() {
         private const val STATE_CODE = "state_code"
         private const val STATE_INPUT = "state_input"
         private const val LINT_DEBOUNCE_MS = 850L
+        private const val ANSWER_UNLOCK_COST = 50
     }
 }
