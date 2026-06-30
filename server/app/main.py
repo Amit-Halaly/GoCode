@@ -1,14 +1,16 @@
-from fastapi import FastAPI
-from models import LintRequest, RunRequest, LintResponse, RunResponse, HintRequest, HintResponse
-from services.java_runner import lint_java, run_java
+import os
+from fastapi import FastAPI, HTTPException
+from app.models import LintRequest, RunRequest, LintResponse, RunResponse, HintRequest, HintResponse
+from app.services.java_runner import lint_java, run_java
 from openai import OpenAI
-from typing import Literal
 
-
-
-client = OpenAI()
 
 app = FastAPI(title="GoCode Execution API", version="0.1.0")
+
+
+@app.get("/")
+def root():
+    return {"service": "GoCode Execution API", "ok": True}
 
 
 @app.get("/health")
@@ -34,6 +36,10 @@ def run(req: RunRequest):
 
 @app.post("/hint", response_model=HintResponse)
 def hint(req: HintRequest):
+    if not os.environ.get("OPENAI_API_KEY"):
+        raise HTTPException(status_code=503, detail="AI hints are not configured")
+
+    client = OpenAI()
     instructions = (
         "You are a teaching assistant for beginner programmers. "
         "ABSOLUTE RULES (NO EXCEPTIONS): "
@@ -90,7 +96,6 @@ EXIT CODE: {req.exitCode}
 
 
 if __name__ == "__main__":
-    import os
     import uvicorn
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug")

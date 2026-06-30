@@ -20,7 +20,7 @@ The system is designed with a clear separation between the client (Android appli
 The system is built using a **Client–Server architecture** and consists of four main components:
 
 1. **Android Application (Client)**
-2. **Dockerized Execution API (Server – Railway)**
+2. **Dockerized Execution API (Server / Cloud deployment)**
 3. **Java Runtime Environment (OpenJDK 17)**
 4. **AI Hint Service**
 
@@ -42,8 +42,9 @@ The application does **not** execute code locally and does **not** contain any s
 
 ---
 
-## 2️⃣ Execution API (FastAPI + Docker + Railway)
-The server is implemented using **FastAPI** and runs inside a **Docker container** deployed on **Railway**.
+## 2️⃣ Execution API (FastAPI + Docker)
+The server is implemented using **FastAPI** and runs inside a **Docker container**.
+It can be deployed to a container host and exposed through Cloudflare with an HTTPS API domain.
 
 ### Responsibilities:
 - Receive code from the Android client
@@ -95,6 +96,13 @@ The AI is accessed **only from the server**, ensuring API key security.
 
 Base URL (local): `http://localhost:8080`
 
+Android debug builds use `http://10.0.2.2:8080/`.
+Android release builds should be built with:
+
+```bash
+./gradlew :app:assembleRelease -PGOCODE_API_BASE_URL=https://api.gocode.app/
+```
+
 - `GET /health`  
   Checks server availability
 
@@ -125,7 +133,7 @@ Base URL (local): `http://localhost:8080`
 
 ### Deployment
 - Docker
-- Railway
+- Cloudflare DNS / HTTPS in front of a container deployment
 
 ---
 

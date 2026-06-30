@@ -16,7 +16,7 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/gocode_logo"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
+        android:usesCleartextTraffic="${usesCleartextTraffic}"
         android:theme="@style/Theme.GoCode">
 
         <activity
