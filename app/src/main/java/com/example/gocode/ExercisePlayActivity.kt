@@ -3,10 +3,14 @@ package com.example.gocode
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
+import android.app.Dialog
+import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
 import android.widget.EditText
 import android.widget.ProgressBar
@@ -16,12 +20,12 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
-import com.airbnb.lottie.LottieAnimationView
-import com.example.gocode.firebase.FirebaseContentRepository
 import com.example.gocode.gamification.GamificationRepository
-import com.example.gocode.gamification.GamificationResult
+import com.example.gocode.lessons.CodeExercise
+import com.example.gocode.lessons.JavaCodeExerciseRepository
 import com.example.gocode.lessons.LanguagePathFragment
 import com.example.gocode.lessons.LessonProgressStore
+import com.airbnb.lottie.LottieAnimationView
 import com.example.gocode.network.ApiClient
 import com.example.gocode.network.models.hintModels.HintRequest
 import com.example.gocode.network.models.lintModels.LintRequest
@@ -65,6 +69,7 @@ class ExercisePlayActivity : AppCompatActivity() {
     private lateinit var editorTouchOverlay: View
 
     private lateinit var resultLottie: LottieAnimationView
+    private lateinit var backButton: MaterialButton
     private lateinit var runButton: MaterialButton
     private lateinit var themeButton: MaterialButton
     private lateinit var resetButton: MaterialButton
@@ -94,13 +99,10 @@ class ExercisePlayActivity : AppCompatActivity() {
     private var hintLoadedForThisRun = false
     private var hintRequestInFlight = false
     private var lastRun: RunResponse? = null
+    private var answerUnlocked = false
 
     private var nodeId: String = "java_u1_c1"
-    private var taskTitleText = "Print Hello GoCode"
-    private var taskSubtitleText = "Use main and System.out.println to print the exact text."
-    private var requiredTaskInputCount = 0
-    private var exerciseTests = emptyList<RunTestCase>()
-    private var starterTemplate = ""
+    private lateinit var currentExercise: CodeExercise
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,10 +115,10 @@ class ExercisePlayActivity : AppCompatActivity() {
         setContentView(R.layout.activity_exercise_play)
 
         nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_c1"
-        applyExerciseSpec(specForNode(nodeId))
+        currentExercise = JavaCodeExerciseRepository.getExercise(nodeId)
 
-        findViewById<TextView>(R.id.taskTitle).text = taskTitleText
-        findViewById<TextView>(R.id.taskSubtitle).text = taskSubtitleText
+        findViewById<TextView>(R.id.taskTitle).text = currentExercise.title
+        findViewById<TextView>(R.id.taskSubtitle).text = currentExercise.subtitle
 
         editor = findViewById(R.id.codeEditor)
         symbolInput = findViewById(R.id.symbolInput)
@@ -134,6 +136,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         editorTouchOverlay = findViewById(R.id.editorTouchOverlay)
 
         resultLottie = findViewById(R.id.resultLottie)
+        backButton = findViewById(R.id.backButton)
         runButton = findViewById(R.id.runButton)
         themeButton = findViewById(R.id.themeButton)
         resetButton = findViewById(R.id.resetButton)
@@ -157,10 +160,11 @@ class ExercisePlayActivity : AppCompatActivity() {
 
         val savedCode = savedInstanceState?.getString(STATE_CODE) ?: prefs.getString(codeKey(), null)
         val savedInput = savedInstanceState?.getString(STATE_INPUT) ?: prefs.getString(inputKey(), "") ?: ""
+        answerUnlocked = prefs.getBoolean(answerUnlockedKey(), false)
 
-        editor.setText(savedCode ?: defaultTemplate())
-        inputField.setText(savedInput)
-        loadRemoteTask(savedCode)
+        editor.setText(savedCode ?: currentExercise.template)
+        inputField.setText(savedInput.ifBlank { currentExercise.defaultInput })
+        updateAnswerButton()
 
         hideLeoHard()
         hideLottie(immediate = true)
@@ -170,10 +174,11 @@ class ExercisePlayActivity : AppCompatActivity() {
         setupHideLeoOnEditorTouch()
 
         runButton.setOnClickListener { runSolution() }
+        backButton.setOnClickListener { finish() }
         resetButton.setOnClickListener { resetExercise() }
         themeButton.setOnClickListener { toggleTheme() }
         leoTipGroup.setOnClickListener { requestHint() }
-        answerButton.setOnClickListener { showLockedAnswerHint() }
+        answerButton.setOnClickListener { showUnlockAnswerDialog() }
         inputPromptButton.setOnClickListener { submitPromptedInput() }
         inputPromptCancel.setOnClickListener { cancelPromptedRun() }
 
@@ -316,6 +321,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private fun setBusy(busy: Boolean) {
         runButton.isEnabled = !busy
+        backButton.isEnabled = !busy
         resetButton.isEnabled = !busy
         themeButton.isEnabled = !busy
         answerButton.isEnabled = !busy
@@ -332,8 +338,8 @@ class ExercisePlayActivity : AppCompatActivity() {
         hintLoadedForThisRun = false
         hintRequestInFlight = false
 
-        editor.setText(defaultTemplate())
-        inputField.setText("")
+        editor.setText(currentExercise.template)
+        inputField.setText(currentExercise.defaultInput)
 
         renderReadyState()
         clearDiagnostics()
@@ -367,9 +373,9 @@ class ExercisePlayActivity : AppCompatActivity() {
         } else {
             executeRun(
                 code = pendingRunCode,
-                fallbackInput = "",
-                fallbackExpectedOutput = exerciseTests.first().expectedOutput,
-                tests = exerciseTests
+                fallbackInput = currentExercise.defaultInput,
+                fallbackExpectedOutput = currentExercise.tests.first().expectedOutput,
+                tests = currentExercise.tests
             )
         }
     }
@@ -388,7 +394,7 @@ class ExercisePlayActivity : AppCompatActivity() {
                         code = code,
                         input = fallbackInput,
                         expectedOutput = fallbackExpectedOutput,
-                        compareMode = "trim",
+                        compareMode = currentExercise.compareMode,
                         testCases = tests
                     )
                 )
@@ -412,8 +418,11 @@ class ExercisePlayActivity : AppCompatActivity() {
 
             setStatus(if (passed) Status.PASSED else Status.FAILED)
             if (passed) {
-                markCompleted()
-                playResultAnimation(pass = true) { }
+                LessonProgressStore.saveProgress(this@ExercisePlayActivity, nodeId, 100)
+                if (!answerUnlocked) {
+                    GamificationRepository.awardNodeCompleted(this@ExercisePlayActivity, nodeId)
+                }
+                playResultAnimation(pass = true) { finish() }
             } else {
                 showFailThenLeo()
             }
@@ -446,7 +455,7 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private fun showIntroOverlay() {
-        introTaskText.text = taskTitleText
+        introTaskText.text = currentExercise.title
         introOverlay.visibility = View.VISIBLE
         introOverlay.alpha = 0f
         introReadyText.scaleX = 0.72f
@@ -533,8 +542,8 @@ class ExercisePlayActivity : AppCompatActivity() {
                 executeRun(
                     code = pendingRunCode,
                     fallbackInput = "$inputText\n",
-                    fallbackExpectedOutput = exerciseTests.first().expectedOutput,
-                    tests = buildRunTests(promptedInputs)
+                    fallbackExpectedOutput = currentExercise.tests.first().expectedOutput,
+                    tests = currentExercise.tests
                 )
             }
             .start()
@@ -547,19 +556,6 @@ class ExercisePlayActivity : AppCompatActivity() {
         setBusy(false)
         setStatus(Status.READY)
         renderReadyState()
-    }
-
-    private fun buildRunTests(userInputs: List<String>): List<RunTestCase> {
-        return exerciseTests.map { test ->
-            test.copy(input = padTestInput(test.input))
-        }
-    }
-
-    private fun padTestInput(input: String): String {
-        val values = input.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
-        if (pendingInputCount <= values.size) return input
-        val padded = values + List(pendingInputCount - values.size) { "0" }
-        return "${padded.joinToString(separator = " ")}\n"
     }
 
     private fun detectInputReadCount(code: String): Int {
@@ -575,9 +571,77 @@ class ExercisePlayActivity : AppCompatActivity() {
         return scannerReads + bufferedReaderReads + streamReads + passwordReads + dataInputReads
     }
 
-    private fun showLockedAnswerHint() {
-        outputTitle.text = "Answer locked"
-        outputText.text = "The full answer is locked for a future unlock flow."
+    private fun showUnlockAnswerDialog() {
+        if (answerUnlocked) {
+            showUnlockedAnswer()
+            return
+        }
+
+        val dialog = Dialog(this)
+        val content = layoutInflater.inflate(R.layout.dialog_unlock_answer, null)
+        dialog.setContentView(content)
+
+        content.findViewById<MaterialButton>(R.id.unlockNoButton).setOnClickListener {
+            dialog.dismiss()
+        }
+        content.findViewById<MaterialButton>(R.id.unlockYesButton).setOnClickListener {
+            dialog.dismiss()
+            unlockAnswer()
+        }
+        dialog.show()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.88f).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
+
+    private fun unlockAnswer() {
+        answerButton.isEnabled = false
+        GamificationRepository.spendCoins(this, ANSWER_UNLOCK_COST.toLong()) { success ->
+            answerButton.isEnabled = true
+            if (success) {
+                answerUnlocked = true
+                prefs.edit { putBoolean(answerUnlockedKey(), true) }
+                updateAnswerButton()
+                showUnlockedAnswer()
+            } else {
+                showNotEnoughCoinsDialog()
+            }
+        }
+    }
+
+    private fun showNotEnoughCoinsDialog() {
+        val dialog = Dialog(this)
+        val content = layoutInflater.inflate(R.layout.dialog_not_enough_coins, null)
+        dialog.setContentView(content)
+
+        content.findViewById<MaterialButton>(R.id.notEnoughCoinsOkButton).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.88f).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
+
+    private fun showUnlockedAnswer() {
+        editor.setText(currentExercise.answer)
+        persistDraft()
+        scheduleLint()
+        outputTitle.text = "Unlocked answer"
+        outputText.text = currentExercise.answer
+        shakeOutputCard()
+    }
+
+    private fun updateAnswerButton() {
+        answerButton.text = if (answerUnlocked) "Answer" else "Unlock"
+    }
+
+    private fun shakeOutputCard() {
         outputCard.animate()
             .translationY(-8f)
             .setDuration(110)
@@ -650,7 +714,7 @@ class ExercisePlayActivity : AppCompatActivity() {
             runCatching {
                 ApiClient.execApi.hint(
                     HintRequest(
-                        task = "$taskTitleText. $taskSubtitleText",
+                        task = "${currentExercise.title}. ${currentExercise.subtitle}",
                         language = "java",
                         code = editor.text.toString(),
                         input = inputField.text.toString(),
@@ -660,7 +724,7 @@ class ExercisePlayActivity : AppCompatActivity() {
                         passed = res.passed,
                         expectedOutput = res.expectedOutput,
                         actualOutput = res.actualOutput,
-                        compareMode = "trim"
+                        compareMode = currentExercise.compareMode
                     )
                 )
             }.onSuccess { hintRes ->
@@ -770,235 +834,11 @@ class ExercisePlayActivity : AppCompatActivity() {
         editor.invalidate()
     }
 
-    private fun loadRemoteTask(savedCode: String?) {
-        FirebaseContentRepository.getCodeTask(nodeId) { task ->
-            val remoteTask = task["task"]
-            val remoteTemplate = task["template"]
-            if (!remoteTask.isNullOrBlank()) {
-                taskTitleText = remoteTask
-                findViewById<TextView>(R.id.taskTitle).text = taskTitleText
-            }
-            if (savedCode == null && !remoteTemplate.isNullOrBlank()) {
-                starterTemplate = remoteTemplate
-                editor.setText(remoteTemplate)
-            }
-        }
-    }
-
-    private fun markCompleted() {
-        LessonProgressStore.saveProgress(this, nodeId, 100)
-        GamificationRepository.awardNodeCompleted(this, nodeId) { result ->
-            result?.let { showReward(it) }
-        }
-    }
-
-    private fun showReward(result: GamificationResult) {
-        AchievementBottomSheet.newRewardInstance(result)
-            .show(supportFragmentManager, "reward_sheet")
-    }
-
-    private fun applyExerciseSpec(spec: ExerciseSpec) {
-        taskTitleText = spec.title
-        taskSubtitleText = spec.subtitle
-        requiredTaskInputCount = spec.requiredInputCount
-        exerciseTests = spec.tests
-        starterTemplate = spec.template
-    }
-
-    private fun defaultTemplate() = starterTemplate
-
     private fun codeKey(): String = "${KEY_CODE}_$nodeId"
 
     private fun inputKey(): String = "${KEY_INPUT}_$nodeId"
 
-    private fun specForNode(nodeId: String): ExerciseSpec {
-        return when (nodeId) {
-            "java_u2_c1" -> ExerciseSpec(
-                title = "Access with if / else",
-                subtitle = "Print Access granted only when age is at least 13 and hasPassword is true.",
-                template = """
-                    public class Main {
-                        public static void main(String[] args) {
-                            int age = 16;
-                            boolean hasPassword = true;
-
-                            // TODO: Print "Access granted" or "Access denied".
-                        }
-                    }
-                """.trimIndent(),
-                tests = listOf(
-                    RunTestCase("Access case", "", "Access granted"),
-                    RunTestCase("Hidden check", "", "Access granted", hidden = true)
-                )
-            )
-
-            "java_u3_c1" -> ExerciseSpec(
-                title = "Loop from 1 to 5",
-                subtitle = "Use a for loop and print Middle when the number is 3.",
-                template = """
-                    public class Main {
-                        public static void main(String[] args) {
-                            // TODO: Print 1 to 5. Print Middle when the number is 3.
-                        }
-                    }
-                """.trimIndent(),
-                tests = listOf(RunTestCase("Loop output", "", "1\n2\n3\nMiddle\n4\n5"))
-            )
-
-            "java_u4_c1" -> ExerciseSpec(
-                title = "Print array values",
-                subtitle = "Loop over the favorites array and print every value.",
-                template = """
-                    public class Main {
-                        public static void main(String[] args) {
-                            String[] favorites = {"Java", "Android", "GoCode"};
-
-                            // TODO: Print every value in favorites.
-                        }
-                    }
-                """.trimIndent(),
-                tests = listOf(RunTestCase("Array output", "", "Java\nAndroid\nGoCode"))
-            )
-
-            "java_u5_c1" -> ExerciseSpec(
-                title = "Complete greet",
-                subtitle = "Finish the method so each call prints Hello plus the name.",
-                template = """
-                    public class Main {
-                        static void greet(String name) {
-                            // TODO: Print "Hello " plus name.
-                        }
-
-                        public static void main(String[] args) {
-                            greet("Leo");
-                            greet("Maya");
-                        }
-                    }
-                """.trimIndent(),
-                tests = listOf(RunTestCase("Method output", "", "Hello Leo\nHello Maya"))
-            )
-
-            "java_u6_c1" -> ExerciseSpec(
-                title = "Read age with Scanner",
-                subtitle = "Read one integer and print Welcome if age is at least 13, otherwise Too young.",
-                requiredInputCount = 1,
-                template = """
-                    import java.util.Scanner;
-
-                    public class Main {
-                        public static void main(String[] args) {
-                            Scanner input = new Scanner(System.in);
-
-                            // TODO: Read age and print Welcome or Too young.
-
-                            input.close();
-                        }
-                    }
-                """.trimIndent(),
-                tests = listOf(
-                    RunTestCase("Teen user", "16\n", "Welcome"),
-                    RunTestCase("Young user", "10\n", "Too young", hidden = true)
-                )
-            )
-
-            "java_u7_c1" -> ExerciseSpec(
-                title = "Trim and compare strings",
-                subtitle = "Trim the name and use equals to check if it is Leo.",
-                template = """
-                    public class Main {
-                        public static void main(String[] args) {
-                            String name = "  Leo  ";
-
-                            // TODO: Print Found Leo if the trimmed value equals Leo.
-                        }
-                    }
-                """.trimIndent(),
-                tests = listOf(RunTestCase("String output", "", "Found Leo"))
-            )
-
-            "java_u8_c1" -> ExerciseSpec(
-                title = "Object introduction",
-                subtitle = "Complete introduce so the object prints its name and age.",
-                template = """
-                    class Student {
-                        String name;
-                        int age;
-
-                        void introduce() {
-                            // TODO: Print name and age.
-                        }
-                    }
-
-                    public class Main {
-                        public static void main(String[] args) {
-                            Student student = new Student();
-                            student.name = "Maya";
-                            student.age = 14;
-                            student.introduce();
-                        }
-                    }
-                """.trimIndent(),
-                tests = listOf(RunTestCase("Object output", "", "Maya 14"))
-            )
-
-            "java_u9_c1" -> ExerciseSpec(
-                title = "Catch parse errors",
-                subtitle = "Use try / catch to parse text and print either the number or Invalid number.",
-                template = """
-                    public class Main {
-                        public static void main(String[] args) {
-                            String text = "42";
-
-                            // TODO: Parse text inside try / catch.
-                        }
-                    }
-                """.trimIndent(),
-                tests = listOf(RunTestCase("Parse output", "", "42"))
-            )
-
-            "java_u10_c1" -> ExerciseSpec(
-                title = "Print long names",
-                subtitle = "Write a method that prints only names longer than 3 characters.",
-                template = """
-                    public class Main {
-                        static void printLongNames(String[] names) {
-                            // TODO: Print only names longer than 3 characters.
-                        }
-
-                        public static void main(String[] args) {
-                            String[] names = {"Leo", "Maya", "Noam", "Dan"};
-                            printLongNames(names);
-                        }
-                    }
-                """.trimIndent(),
-                tests = listOf(RunTestCase("Final review output", "", "Maya\nNoam"))
-            )
-
-            else -> ExerciseSpec(
-                title = "Print Hello GoCode",
-                subtitle = "Use main and System.out.println to print the exact text.",
-                template = """
-                    public class Main {
-                        public static void main(String[] args) {
-                            // TODO: Print Hello GoCode!
-                        }
-                    }
-                """.trimIndent(),
-                tests = listOf(
-                    RunTestCase("Hello output", "", "Hello GoCode!"),
-                    RunTestCase("Hidden exact text", "", "Hello GoCode!", hidden = true)
-                )
-            )
-        }
-    }
-
-    private data class ExerciseSpec(
-        val title: String,
-        val subtitle: String,
-        val template: String,
-        val tests: List<RunTestCase>,
-        val requiredInputCount: Int = 0
-    )
+    private fun answerUnlockedKey(): String = "${KEY_ANSWER_UNLOCKED}_$nodeId"
 
     private enum class Status {
         READY,
@@ -1011,9 +851,11 @@ class ExercisePlayActivity : AppCompatActivity() {
         private const val PREFS_NAME = "goCode_prefs"
         private const val KEY_CODE = "exercise_code"
         private const val KEY_INPUT = "exercise_input"
+        private const val KEY_ANSWER_UNLOCKED = "exercise_answer_unlocked"
         private const val KEY_DARK = "exercise_dark"
         private const val STATE_CODE = "state_code"
         private const val STATE_INPUT = "state_input"
         private const val LINT_DEBOUNCE_MS = 850L
+        private const val ANSWER_UNLOCK_COST = 50
     }
 }

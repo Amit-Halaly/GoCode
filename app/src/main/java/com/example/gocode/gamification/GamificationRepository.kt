@@ -134,6 +134,32 @@ object GamificationRepository {
         }
     }
 
+    fun spendCoins(
+        context: Context,
+        amount: Long,
+        onResult: (Boolean) -> Unit = {}
+    ) {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            onResult(spendLocalCoins(context, amount))
+            return
+        }
+
+        val userRef = FirebaseFirestore.getInstance().collection("users").document(user.uid)
+        FirebaseFirestore.getInstance().runTransaction { transaction ->
+            val snapshot = transaction.get(userRef)
+            val coins = snapshot.getLong(KEY_COINS) ?: 0L
+            if (coins < amount) return@runTransaction false
+
+            transaction.set(userRef, mapOf(KEY_COINS to coins - amount), SetOptions.merge())
+            true
+        }.addOnSuccessListener { success ->
+            onResult(success)
+        }.addOnFailureListener {
+            onResult(false)
+        }
+    }
+
     fun resetProgress(
         context: Context,
         onComplete: (Boolean) -> Unit = {}
@@ -219,6 +245,17 @@ object GamificationRepository {
             .apply()
 
         return GamificationResult(reward, levelBefore, level, bonusCoins, newAchievements)
+    }
+
+    private fun spendLocalCoins(context: Context, amount: Long): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val coins = prefs.getLong(KEY_COINS, 0L)
+        if (coins < amount) return false
+
+        prefs.edit()
+            .putLong(KEY_COINS, coins - amount)
+            .apply()
+        return true
     }
 
     private fun unlockedAchievements(

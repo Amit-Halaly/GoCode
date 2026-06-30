@@ -28,6 +28,21 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/backButton"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_marginEnd="10dp"
+                android:contentDescription="Reset to starter code"
+                android:text=""
+                android:textAllCaps="false"
+                app:backgroundTint="#152436"
+                app:cornerRadius="8dp"
+                app:icon="@drawable/ic_arrowback"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconTint="#EAF2FF" />
+
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -183,8 +198,8 @@
                         android:id="@+id/answerButton"
                         android:layout_width="wrap_content"
                         android:layout_height="34dp"
-                        android:minWidth="82dp"
-                        android:text="Answer"
+                        android:minWidth="104dp"
+                        android:text="Unlock"
                         android:textAllCaps="false"
                         android:textColor="#FFFFFF"
                         android:textSize="12sp"
