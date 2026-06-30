@@ -174,7 +174,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         setupHideLeoOnEditorTouch()
 
         runButton.setOnClickListener { runSolution() }
-        backButton.setOnClickListener { resetExercise() }
+        backButton.setOnClickListener { finish() }
         resetButton.setOnClickListener { resetExercise() }
         themeButton.setOnClickListener { toggleTheme() }
         leoTipGroup.setOnClickListener { requestHint() }
@@ -604,9 +604,6 @@ class ExercisePlayActivity : AppCompatActivity() {
                 answerUnlocked = true
                 prefs.edit { putBoolean(answerUnlockedKey(), true) }
                 updateAnswerButton()
-                editor.setText(currentExercise.answer)
-                persistDraft()
-                scheduleLint()
                 showUnlockedAnswer()
             } else {
                 showNotEnoughCoinsDialog()
@@ -632,6 +629,9 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private fun showUnlockedAnswer() {
+        editor.setText(currentExercise.answer)
+        persistDraft()
+        scheduleLint()
         outputTitle.text = "Unlocked answer"
         outputText.text = currentExercise.answer
         shakeOutputCard()
