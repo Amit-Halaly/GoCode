@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_arena_exit_dialog"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="LEAVE ARENA?"
+        android:textColor="@color/accent_green"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="Your match is still live"
+        android:textColor="@color/gc_text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/exitScoreText"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_arena_exit_score"
+        android:gravity="center"
+        android:text="YOU 0  -  OPPONENT 0"
+        android:textColor="@color/gc_text_primary"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:gravity="center"
+        android:lineSpacingExtra="3dp"
+        android:text="Leaving now will end the match and remove your current battle progress."
+        android:textColor="@color/gc_text_secondary"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/exitRatingText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_arena_exit_warning"
+        android:gravity="center"
+        android:padding="12dp"
+        android:textColor="#FACC15"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keepPlayingButton"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:text="Keep playing"
+            android:textAllCaps="false"
+            android:textColor="@color/gc_text_primary"
+            android:textStyle="bold"
+            app:backgroundTint="#243B58"
+            app:cornerRadius="16dp"
+            app:strokeColor="#6637F2B6"
+            app:strokeWidth="1dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/exitMatchButton"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:text="Exit match"
+            android:textAllCaps="false"
+            android:textColor="@color/gc_text_primary"
+            android:textStyle="bold"
+            app:backgroundTint="@color/profile_lo_red"
+            app:cornerRadius="16dp" />
+    </LinearLayout>
+</LinearLayout>

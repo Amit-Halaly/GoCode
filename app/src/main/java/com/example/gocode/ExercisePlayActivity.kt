@@ -17,6 +17,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import com.airbnb.lottie.LottieAnimationView
+import com.example.gocode.firebase.FirebaseContentRepository
+import com.example.gocode.gamification.GamificationRepository
+import com.example.gocode.gamification.GamificationResult
+import com.example.gocode.lessons.LanguagePathFragment
+import com.example.gocode.lessons.LessonProgressStore
 import com.example.gocode.network.ApiClient
 import com.example.gocode.network.models.hintModels.HintRequest
 import com.example.gocode.network.models.lintModels.LintRequest
@@ -90,15 +95,12 @@ class ExercisePlayActivity : AppCompatActivity() {
     private var hintRequestInFlight = false
     private var lastRun: RunResponse? = null
 
-    private val taskTitleText = "Add two numbers"
-    private val taskSubtitleText = "Read two integers and print their sum."
-    private val requiredTaskInputCount = 2
-
-    private val exerciseTests = listOf(
-        RunTestCase(name = "Warm up", input = "1 2\n", expectedOutput = "3"),
-        RunTestCase(name = "Negative values", input = "10 -4\n", expectedOutput = "6"),
-        RunTestCase(name = "Hidden check", input = "41 1\n", expectedOutput = "42", hidden = true),
-    )
+    private var nodeId: String = "java_u1_c1"
+    private var taskTitleText = "Print Hello GoCode"
+    private var taskSubtitleText = "Use main and System.out.println to print the exact text."
+    private var requiredTaskInputCount = 0
+    private var exerciseTests = emptyList<RunTestCase>()
+    private var starterTemplate = ""
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,6 +111,9 @@ class ExercisePlayActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_exercise_play)
+
+        nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_c1"
+        applyExerciseSpec(specForNode(nodeId))
 
         findViewById<TextView>(R.id.taskTitle).text = taskTitleText
         findViewById<TextView>(R.id.taskSubtitle).text = taskSubtitleText
@@ -150,11 +155,12 @@ class ExercisePlayActivity : AppCompatActivity() {
         setupSymbolBar()
         updateThemeButtonIcon()
 
-        val savedCode = savedInstanceState?.getString(STATE_CODE) ?: prefs.getString(KEY_CODE, null)
-        val savedInput = savedInstanceState?.getString(STATE_INPUT) ?: prefs.getString(KEY_INPUT, "") ?: ""
+        val savedCode = savedInstanceState?.getString(STATE_CODE) ?: prefs.getString(codeKey(), null)
+        val savedInput = savedInstanceState?.getString(STATE_INPUT) ?: prefs.getString(inputKey(), "") ?: ""
 
         editor.setText(savedCode ?: defaultTemplate())
         inputField.setText(savedInput)
+        loadRemoteTask(savedCode)
 
         hideLeoHard()
         hideLottie(immediate = true)
@@ -303,8 +309,8 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private fun persistDraft() {
         prefs.edit {
-            putString(KEY_CODE, editor.text.toString())
-            putString(KEY_INPUT, inputField.text.toString())
+            putString(codeKey(), editor.text.toString())
+            putString(inputKey(), inputField.text.toString())
         }
     }
 
@@ -405,7 +411,12 @@ class ExercisePlayActivity : AppCompatActivity() {
             val passed = (res.passed == true) && !runtimeError
 
             setStatus(if (passed) Status.PASSED else Status.FAILED)
-            if (passed) playResultAnimation(pass = true) { } else showFailThenLeo()
+            if (passed) {
+                markCompleted()
+                playResultAnimation(pass = true) { }
+            } else {
+                showFailThenLeo()
+            }
             setBusy(false)
         }
     }
@@ -522,7 +533,7 @@ class ExercisePlayActivity : AppCompatActivity() {
                 executeRun(
                     code = pendingRunCode,
                     fallbackInput = "$inputText\n",
-                    fallbackExpectedOutput = expectedSum(promptedInputs).toString(),
+                    fallbackExpectedOutput = exerciseTests.first().expectedOutput,
                     tests = buildRunTests(promptedInputs)
                 )
             }
@@ -539,18 +550,9 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private fun buildRunTests(userInputs: List<String>): List<RunTestCase> {
-        val learnerTest = RunTestCase(
-            name = "Your input",
-            input = "${userInputs.joinToString(separator = " ")}\n",
-            expectedOutput = expectedSum(userInputs).toString()
-        )
-        return listOf(learnerTest) + exerciseTests.drop(1).map { test ->
+        return exerciseTests.map { test ->
             test.copy(input = padTestInput(test.input))
         }
-    }
-
-    private fun expectedSum(inputs: List<String>): Int {
-        return inputs.take(requiredTaskInputCount).sumOf { it.toIntOrNull() ?: 0 }
     }
 
     private fun padTestInput(input: String): String {
@@ -768,19 +770,235 @@ class ExercisePlayActivity : AppCompatActivity() {
         editor.invalidate()
     }
 
-    private fun defaultTemplate() = """
-        import java.util.Scanner;
-
-        public class Main {
-            public static void main(String[] args) {
-                Scanner scanner = new Scanner(System.in);
-                int first = scanner.nextInt();
-                int second = scanner.nextInt();
-
-                System.out.println(first + second);
+    private fun loadRemoteTask(savedCode: String?) {
+        FirebaseContentRepository.getCodeTask(nodeId) { task ->
+            val remoteTask = task["task"]
+            val remoteTemplate = task["template"]
+            if (!remoteTask.isNullOrBlank()) {
+                taskTitleText = remoteTask
+                findViewById<TextView>(R.id.taskTitle).text = taskTitleText
+            }
+            if (savedCode == null && !remoteTemplate.isNullOrBlank()) {
+                starterTemplate = remoteTemplate
+                editor.setText(remoteTemplate)
             }
         }
-    """.trimIndent()
+    }
+
+    private fun markCompleted() {
+        LessonProgressStore.saveProgress(this, nodeId, 100)
+        GamificationRepository.awardNodeCompleted(this, nodeId) { result ->
+            result?.let { showReward(it) }
+        }
+    }
+
+    private fun showReward(result: GamificationResult) {
+        AchievementBottomSheet.newRewardInstance(result)
+            .show(supportFragmentManager, "reward_sheet")
+    }
+
+    private fun applyExerciseSpec(spec: ExerciseSpec) {
+        taskTitleText = spec.title
+        taskSubtitleText = spec.subtitle
+        requiredTaskInputCount = spec.requiredInputCount
+        exerciseTests = spec.tests
+        starterTemplate = spec.template
+    }
+
+    private fun defaultTemplate() = starterTemplate
+
+    private fun codeKey(): String = "${KEY_CODE}_$nodeId"
+
+    private fun inputKey(): String = "${KEY_INPUT}_$nodeId"
+
+    private fun specForNode(nodeId: String): ExerciseSpec {
+        return when (nodeId) {
+            "java_u2_c1" -> ExerciseSpec(
+                title = "Access with if / else",
+                subtitle = "Print Access granted only when age is at least 13 and hasPassword is true.",
+                template = """
+                    public class Main {
+                        public static void main(String[] args) {
+                            int age = 16;
+                            boolean hasPassword = true;
+
+                            // TODO: Print "Access granted" or "Access denied".
+                        }
+                    }
+                """.trimIndent(),
+                tests = listOf(
+                    RunTestCase("Access case", "", "Access granted"),
+                    RunTestCase("Hidden check", "", "Access granted", hidden = true)
+                )
+            )
+
+            "java_u3_c1" -> ExerciseSpec(
+                title = "Loop from 1 to 5",
+                subtitle = "Use a for loop and print Middle when the number is 3.",
+                template = """
+                    public class Main {
+                        public static void main(String[] args) {
+                            // TODO: Print 1 to 5. Print Middle when the number is 3.
+                        }
+                    }
+                """.trimIndent(),
+                tests = listOf(RunTestCase("Loop output", "", "1\n2\n3\nMiddle\n4\n5"))
+            )
+
+            "java_u4_c1" -> ExerciseSpec(
+                title = "Print array values",
+                subtitle = "Loop over the favorites array and print every value.",
+                template = """
+                    public class Main {
+                        public static void main(String[] args) {
+                            String[] favorites = {"Java", "Android", "GoCode"};
+
+                            // TODO: Print every value in favorites.
+                        }
+                    }
+                """.trimIndent(),
+                tests = listOf(RunTestCase("Array output", "", "Java\nAndroid\nGoCode"))
+            )
+
+            "java_u5_c1" -> ExerciseSpec(
+                title = "Complete greet",
+                subtitle = "Finish the method so each call prints Hello plus the name.",
+                template = """
+                    public class Main {
+                        static void greet(String name) {
+                            // TODO: Print "Hello " plus name.
+                        }
+
+                        public static void main(String[] args) {
+                            greet("Leo");
+                            greet("Maya");
+                        }
+                    }
+                """.trimIndent(),
+                tests = listOf(RunTestCase("Method output", "", "Hello Leo\nHello Maya"))
+            )
+
+            "java_u6_c1" -> ExerciseSpec(
+                title = "Read age with Scanner",
+                subtitle = "Read one integer and print Welcome if age is at least 13, otherwise Too young.",
+                requiredInputCount = 1,
+                template = """
+                    import java.util.Scanner;
+
+                    public class Main {
+                        public static void main(String[] args) {
+                            Scanner input = new Scanner(System.in);
+
+                            // TODO: Read age and print Welcome or Too young.
+
+                            input.close();
+                        }
+                    }
+                """.trimIndent(),
+                tests = listOf(
+                    RunTestCase("Teen user", "16\n", "Welcome"),
+                    RunTestCase("Young user", "10\n", "Too young", hidden = true)
+                )
+            )
+
+            "java_u7_c1" -> ExerciseSpec(
+                title = "Trim and compare strings",
+                subtitle = "Trim the name and use equals to check if it is Leo.",
+                template = """
+                    public class Main {
+                        public static void main(String[] args) {
+                            String name = "  Leo  ";
+
+                            // TODO: Print Found Leo if the trimmed value equals Leo.
+                        }
+                    }
+                """.trimIndent(),
+                tests = listOf(RunTestCase("String output", "", "Found Leo"))
+            )
+
+            "java_u8_c1" -> ExerciseSpec(
+                title = "Object introduction",
+                subtitle = "Complete introduce so the object prints its name and age.",
+                template = """
+                    class Student {
+                        String name;
+                        int age;
+
+                        void introduce() {
+                            // TODO: Print name and age.
+                        }
+                    }
+
+                    public class Main {
+                        public static void main(String[] args) {
+                            Student student = new Student();
+                            student.name = "Maya";
+                            student.age = 14;
+                            student.introduce();
+                        }
+                    }
+                """.trimIndent(),
+                tests = listOf(RunTestCase("Object output", "", "Maya 14"))
+            )
+
+            "java_u9_c1" -> ExerciseSpec(
+                title = "Catch parse errors",
+                subtitle = "Use try / catch to parse text and print either the number or Invalid number.",
+                template = """
+                    public class Main {
+                        public static void main(String[] args) {
+                            String text = "42";
+
+                            // TODO: Parse text inside try / catch.
+                        }
+                    }
+                """.trimIndent(),
+                tests = listOf(RunTestCase("Parse output", "", "42"))
+            )
+
+            "java_u10_c1" -> ExerciseSpec(
+                title = "Print long names",
+                subtitle = "Write a method that prints only names longer than 3 characters.",
+                template = """
+                    public class Main {
+                        static void printLongNames(String[] names) {
+                            // TODO: Print only names longer than 3 characters.
+                        }
+
+                        public static void main(String[] args) {
+                            String[] names = {"Leo", "Maya", "Noam", "Dan"};
+                            printLongNames(names);
+                        }
+                    }
+                """.trimIndent(),
+                tests = listOf(RunTestCase("Final review output", "", "Maya\nNoam"))
+            )
+
+            else -> ExerciseSpec(
+                title = "Print Hello GoCode",
+                subtitle = "Use main and System.out.println to print the exact text.",
+                template = """
+                    public class Main {
+                        public static void main(String[] args) {
+                            // TODO: Print Hello GoCode!
+                        }
+                    }
+                """.trimIndent(),
+                tests = listOf(
+                    RunTestCase("Hello output", "", "Hello GoCode!"),
+                    RunTestCase("Hidden exact text", "", "Hello GoCode!", hidden = true)
+                )
+            )
+        }
+    }
+
+    private data class ExerciseSpec(
+        val title: String,
+        val subtitle: String,
+        val template: String,
+        val tests: List<RunTestCase>,
+        val requiredInputCount: Int = 0
+    )
 
     private enum class Status {
         READY,

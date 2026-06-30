@@ -11,7 +11,6 @@ import com.example.gocode.R
 import com.example.gocode.firebase.FirebaseContentRepository
 import com.example.gocode.gamification.GamificationRepository
 import com.example.gocode.gamification.GamificationResult
-import com.example.gocode.lessons.lesson.JavaLessonsRepository
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.LinearProgressIndicator
 
