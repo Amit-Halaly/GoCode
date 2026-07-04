@@ -3,6 +3,8 @@ package com.example.gocode.friends
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -22,6 +24,9 @@ class FriendsActivity : AppCompatActivity() {
     private lateinit var subtitle: TextView
     private lateinit var requestsPanel: View
     private lateinit var requestsContainer: LinearLayout
+    private lateinit var searchInput: EditText
+    private lateinit var searchEmpty: TextView
+    private lateinit var searchResults: LinearLayout
     private lateinit var friendsList: LinearLayout
     private lateinit var emptyText: TextView
 
@@ -33,8 +38,23 @@ class FriendsActivity : AppCompatActivity() {
         subtitle = findViewById(R.id.friendsSubtitle)
         requestsPanel = findViewById(R.id.friendRequestsPanel)
         requestsContainer = findViewById(R.id.friendRequestsContainer)
+        searchInput = findViewById(R.id.friendsSearchInput)
+        searchEmpty = findViewById(R.id.friendsSearchEmpty)
+        searchResults = findViewById(R.id.friendsSearchResults)
         friendsList = findViewById(R.id.friendsList)
         emptyText = findViewById(R.id.friendsEmptyText)
+
+        findViewById<MaterialButton>(R.id.friendsSearchButton).setOnClickListener {
+            executeSearch()
+        }
+        searchInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                executeSearch()
+                true
+            } else {
+                false
+            }
+        }
 
         FriendsRepository.syncCurrentUserSearchFields()
         FriendsRepository.syncCurrentUserPresence()
@@ -82,6 +102,47 @@ class FriendsActivity : AppCompatActivity() {
         }
     }
 
+    private fun executeSearch() {
+        val query = searchInput.text.toString().trim()
+        searchResults.removeAllViews()
+        if (query.isBlank()) {
+            searchEmpty.text = "Type a username first"
+            searchEmpty.visibility = View.VISIBLE
+            return
+        }
+
+        searchEmpty.text = "Searching..."
+        searchEmpty.visibility = View.VISIBLE
+        FriendsRepository.searchUsers(
+            query = query,
+            onResult = { users ->
+                runOnUiThread {
+                    renderSearchResults(users)
+                }
+            },
+            onError = { error ->
+                runOnUiThread {
+                    searchEmpty.text = error.message ?: "Search unavailable"
+                    searchEmpty.visibility = View.VISIBLE
+                }
+            },
+        )
+    }
+
+    private fun renderSearchResults(users: List<FriendSearchResult>) {
+        searchResults.removeAllViews()
+        if (users.isEmpty()) {
+            searchEmpty.text = "No users found"
+            searchEmpty.visibility = View.VISIBLE
+            return
+        }
+
+        searchEmpty.visibility = View.GONE
+        users.forEach { user ->
+            searchResults.addView(searchResultRow(user))
+        }
+    }
+
     private fun friendRow(friend: FriendProfile): View {
         return LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -117,6 +178,46 @@ class FriendsActivity : AppCompatActivity() {
                     typeface = android.graphics.Typeface.DEFAULT_BOLD
                 })
             }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        }.withBottomMargin()
+    }
+
+    private fun searchResultRow(user: FriendSearchResult): View {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            setBackgroundResource(R.drawable.bg_arena_leaderboard_row)
+
+            addView(ImageView(this@FriendsActivity).apply {
+                setImageResource(avatarRes(user.avatarId))
+                setBackgroundResource(R.drawable.bg_avatar_circle)
+                setPadding(dp(6), dp(6), dp(6), dp(6))
+            }, LinearLayout.LayoutParams(dp(48), dp(48)))
+
+            addView(LinearLayout(this@FriendsActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(10), 0, dp(10), 0)
+                addView(TextView(this@FriendsActivity).apply {
+                    text = user.username
+                    setTextColor(ContextCompat.getColor(context, R.color.gc_text_primary))
+                    textSize = 15f
+                    typeface = android.graphics.Typeface.DEFAULT_BOLD
+                })
+                addView(TextView(this@FriendsActivity).apply {
+                    text = "${user.primaryLanguage} - Rating ${user.rating}"
+                    setTextColor(ContextCompat.getColor(context, R.color.gc_text_secondary))
+                    textSize = 12f
+                })
+            }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+
+            addView(actionButton("Add", R.color.accent_green) {
+                FriendsRepository.sendFriendRequest(user.uid) { success, message ->
+                    runOnUiThread {
+                        showActionResult(success, message)
+                        if (success) executeSearch()
+                    }
+                }
+            }, LinearLayout.LayoutParams(dp(76), dp(42)))
         }.withBottomMargin()
     }
 
