@@ -21,6 +21,18 @@
         app:srcCompat="@drawable/ic_more_vert"
         app:tint="@android:color/white" />
 
+    <View
+        android:id="@+id/friendsRequestDot"
+        android:layout_width="11dp"
+        android:layout_height="11dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/bg_notification_dot"
+        android:elevation="18dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@id/btnProfileMenu"
+        app:layout_constraintTop_toTopOf="@id/btnProfileMenu" />
+
     <androidx.core.widget.NestedScrollView
         android:id="@+id/profileScroll"
         android:layout_width="0dp"

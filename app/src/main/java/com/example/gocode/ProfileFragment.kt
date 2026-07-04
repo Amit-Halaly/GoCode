@@ -16,6 +16,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.gocode.friends.FriendsActivity
+import com.example.gocode.friends.FriendsRepository
 import com.example.gocode.gamification.AchievementCatalog
 import com.example.gocode.gamification.AchievementDefinition
 import com.example.gocode.gamification.GamificationRepository
@@ -33,6 +34,7 @@ class ProfileFragment : Fragment() {
     private val db by lazy { FirebaseFirestore.getInstance() }
 
     private var userListener: ListenerRegistration? = null
+    private var friendRequestsListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -43,6 +45,7 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val btnProfileMenu = view.findViewById<ImageButton>(R.id.btnProfileMenu)
+        val friendsRequestDot = view.findViewById<View>(R.id.friendsRequestDot)
 
         val avatarWithStatus = view.findViewById<View>(R.id.avatarWithStatus)
         val avatarIv = avatarWithStatus.findViewById<ImageView>(R.id.avatarImage)
@@ -65,6 +68,20 @@ class ProfileFragment : Fragment() {
         arenaWinsTv.text = "0"
 
         val user = auth.currentUser ?: return
+
+        friendRequestsListener = FriendsRepository.listenIncomingRequests(
+            onChanged = { requests ->
+                activity?.runOnUiThread {
+                    friendsRequestDot.visibility =
+                        if (requests.isEmpty()) View.GONE else View.VISIBLE
+                }
+            },
+            onError = {
+                activity?.runOnUiThread {
+                    friendsRequestDot.visibility = View.GONE
+                }
+            },
+        )
 
         userListener = db.collection("users").document(user.uid).addSnapshotListener { doc, e ->
             if (e != null || doc == null || !doc.exists()) return@addSnapshotListener
@@ -326,5 +343,7 @@ class ProfileFragment : Fragment() {
         super.onDestroyView()
         userListener?.remove()
         userListener = null
+        friendRequestsListener?.remove()
+        friendRequestsListener = null
     }
 }

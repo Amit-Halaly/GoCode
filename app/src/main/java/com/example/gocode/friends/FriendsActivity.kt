@@ -265,7 +265,7 @@ class FriendsActivity : AppCompatActivity() {
                         if (success) executeSearch()
                     }
                 }
-            }, LinearLayout.LayoutParams(dp(76), dp(42)))
+            }, LinearLayout.LayoutParams(dp(92), dp(42)))
         }.withBottomMargin()
     }
 
@@ -303,6 +303,10 @@ class FriendsActivity : AppCompatActivity() {
         return MaterialButton(this).apply {
             text = label
             isAllCaps = false
+            minWidth = 0
+            minHeight = 0
+            setPadding(dp(8), 0, dp(8), 0)
+            textSize = 13f
             cornerRadius = dp(8)
             setTextColor(ContextCompat.getColor(context, android.R.color.black))
             backgroundTintList = android.content.res.ColorStateList.valueOf(
