@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket
 from app.models import LintRequest, RunRequest, LintResponse, RunResponse, HintRequest, HintResponse
 from app.services.java_runner import lint_java, run_java
 from app.arena import arena_manager
@@ -19,8 +19,13 @@ def health():
     return {"ok": True}
 
 
+@app.get("/arena/status")
+def arena_status():
+    return {"ok": True, "websocket": "/arena/ws"}
+
+
 @app.websocket("/arena/ws")
-async def arena_ws(websocket):
+async def arena_ws(websocket: WebSocket):
     await arena_manager.connect(websocket)
 
 
