@@ -17,6 +17,10 @@ data class FriendProfile(
     val primaryLanguage: String,
     val onlineStatus: String,
     val arenaState: String,
+    val level: Int,
+    val xp: Int,
+    val arenaWins: Int,
+    val challengesSolved: Int,
     val lastActiveAtText: String,
 )
 
@@ -321,6 +325,13 @@ object FriendsRepository {
             primaryLanguage = getString("primaryLanguage") ?: "Java",
             onlineStatus = getString("onlineStatus") ?: "offline",
             arenaState = getString("arenaState") ?: "idle",
+            level = (getLong("level") ?: 1L).toInt(),
+            xp = (getLong("xp") ?: 0L).toInt(),
+            arenaWins = (getLong("arenaWins") ?: 0L).toInt(),
+            challengesSolved = (
+                (getLong("practiceNodesCompleted") ?: 0L) +
+                    (getLong("codeNodesCompleted") ?: 0L)
+                ).toInt(),
             lastActiveAtText = if (getTimestamp("lastActiveAt") == null) "Unknown" else "Recently active",
         )
     }

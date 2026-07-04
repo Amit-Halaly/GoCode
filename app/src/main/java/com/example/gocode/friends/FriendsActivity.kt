@@ -1,5 +1,6 @@
 package com.example.gocode.friends
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -149,6 +150,9 @@ class FriendsActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(14), dp(12), dp(14), dp(12))
             setBackgroundResource(R.drawable.bg_cards)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { showFriendDetails(friend) }
 
             addView(ImageView(this@FriendsActivity).apply {
                 setImageResource(avatarRes(friend.avatarId))
@@ -179,6 +183,27 @@ class FriendsActivity : AppCompatActivity() {
                 })
             }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         }.withBottomMargin()
+    }
+
+    private fun showFriendDetails(friend: FriendProfile) {
+        val details = listOf(
+            statusLine(friend),
+            "${friend.primaryLanguage} - Rating ${friend.rating}",
+            "Level ${friend.level} - XP ${friend.xp}",
+            "Arena wins ${friend.arenaWins}",
+            "Challenges solved ${friend.challengesSolved}",
+        ).joinToString("\n")
+
+        AlertDialog.Builder(this)
+            .setTitle(friend.username)
+            .setMessage(details)
+            .setNegativeButton("Close", null)
+            .setPositiveButton("Remove friend") { _, _ ->
+                FriendsRepository.removeFriend(friend.uid) { success, message ->
+                    runOnUiThread { showActionResult(success, message) }
+                }
+            }
+            .show()
     }
 
     private fun searchResultRow(user: FriendSearchResult): View {
