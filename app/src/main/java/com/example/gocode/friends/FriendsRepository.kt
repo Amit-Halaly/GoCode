@@ -12,6 +12,7 @@ import com.google.firebase.firestore.SetOptions
 data class FriendProfile(
     val uid: String,
     val username: String,
+    val friendCode: String,
     val avatarId: String?,
     val rating: Int,
     val primaryLanguage: String,
@@ -36,6 +37,7 @@ data class FriendRequest(
 data class FriendSearchResult(
     val uid: String,
     val username: String,
+    val friendCode: String,
     val avatarId: String?,
     val rating: Int,
     val primaryLanguage: String,
@@ -75,16 +77,32 @@ object FriendsRepository {
                 ?: user.displayName
                 ?: user.email?.substringBefore("@")
                 ?: "Player"
+            val friendCode = friendCodeForUid(user.uid)
             ref.set(
                 mapOf(
                     "username" to username,
                     "usernameLower" to username.lowercase(),
-                    "friendCode" to username.lowercase().filter { it.isLetterOrDigit() },
+                    "friendCode" to friendCode,
+                    "friendCodeSearch" to friendCode.normalizedSearch(),
                     "email" to (user.email ?: ""),
                     "updatedAt" to FieldValue.serverTimestamp(),
                 ),
                 SetOptions.merge()
             )
+        }
+    }
+
+    fun listenCurrentUserFriendCode(
+        onChanged: (String) -> Unit,
+        onError: (Exception) -> Unit,
+    ): ListenerRegistration? {
+        val user = auth.currentUser ?: return null
+        return db.collection(USERS).document(user.uid).addSnapshotListener { doc, error ->
+            if (error != null) {
+                onError(error)
+                return@addSnapshotListener
+            }
+            onChanged(doc?.getString("friendCode") ?: friendCodeForUid(user.uid))
         }
     }
 
@@ -134,9 +152,33 @@ object FriendsRepository {
     ) {
         val currentUid = auth.currentUser?.uid
         val normalized = query.trim().lowercase()
+        val codeSearch = query.normalizedSearch()
         if (normalized.isBlank()) {
             onResult(emptyList())
             return
+        }
+
+        val results = linkedMapOf<String, FriendSearchResult>()
+        var completed = 0
+        var reported = false
+
+        fun finish(snapshotResults: List<DocumentSnapshot>) {
+            snapshotResults
+                .filter { it.id != currentUid }
+                .map { it.toSearchResult() }
+                .forEach { results[it.uid] = it }
+            completed++
+            if (completed == 2 && !reported) {
+                reported = true
+                onResult(results.values.sortedBy { it.username.lowercase() })
+            }
+        }
+
+        fun fail(error: Exception) {
+            if (!reported) {
+                reported = true
+                onError(error)
+            }
         }
 
         db.collection(USERS)
@@ -145,13 +187,18 @@ object FriendsRepository {
             .limit(12)
             .get()
             .addOnSuccessListener { snapshot ->
-                onResult(
-                    snapshot.documents
-                        .filter { it.id != currentUid }
-                        .map { it.toSearchResult() }
-                )
+                finish(snapshot.documents)
             }
-            .addOnFailureListener(onError)
+            .addOnFailureListener(::fail)
+
+        db.collection(USERS)
+            .whereEqualTo("friendCodeSearch", codeSearch)
+            .limit(3)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                finish(snapshot.documents)
+            }
+            .addOnFailureListener(::fail)
     }
 
     fun sendFriendRequest(
@@ -320,6 +367,7 @@ object FriendsRepository {
         return FriendProfile(
             uid = id,
             username = displayName(),
+            friendCode = getString("friendCode") ?: friendCodeForUid(id),
             avatarId = getString("avatarId"),
             rating = (getLong("rating") ?: 0L).toInt(),
             primaryLanguage = getString("primaryLanguage") ?: "Java",
@@ -340,6 +388,7 @@ object FriendsRepository {
         return FriendSearchResult(
             uid = id,
             username = displayName(),
+            friendCode = getString("friendCode") ?: friendCodeForUid(id),
             avatarId = getString("avatarId"),
             rating = (getLong("rating") ?: 0L).toInt(),
             primaryLanguage = getString("primaryLanguage") ?: "Java",
@@ -367,6 +416,7 @@ object FriendsRepository {
         return mapOf(
             "friendUid" to id,
             "username" to displayName(),
+            "friendCode" to (getString("friendCode") ?: friendCodeForUid(id)),
             "avatarId" to (getString("avatarId") ?: ""),
             "rating" to (getLong("rating") ?: 0L),
             "primaryLanguage" to (getString("primaryLanguage") ?: "Java"),
@@ -374,4 +424,14 @@ object FriendsRepository {
             "updatedAt" to FieldValue.serverTimestamp(),
         )
     }
+
+    fun friendCodeForUid(uid: String): String {
+        val suffix = uid.filter { it.isLetterOrDigit() }
+            .take(8)
+            .uppercase()
+            .padEnd(8, '0')
+        return "GC-$suffix"
+    }
+
+    private fun String.normalizedSearch(): String = filter { it.isLetterOrDigit() }.lowercase()
 }

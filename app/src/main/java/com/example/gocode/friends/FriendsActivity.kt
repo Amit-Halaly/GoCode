@@ -1,6 +1,9 @@
 package com.example.gocode.friends
 
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -21,8 +24,11 @@ class FriendsActivity : AppCompatActivity() {
 
     private var friendsListener: ListenerRegistration? = null
     private var requestsListener: ListenerRegistration? = null
+    private var currentCodeListener: ListenerRegistration? = null
+    private var currentFriendCode: String = ""
 
     private lateinit var subtitle: TextView
+    private lateinit var myFriendCodeText: TextView
     private lateinit var requestsPanel: View
     private lateinit var requestsContainer: LinearLayout
     private lateinit var searchInput: EditText
@@ -37,6 +43,7 @@ class FriendsActivity : AppCompatActivity() {
 
         findViewById<ImageView>(R.id.friendsBackButton).setOnClickListener { finish() }
         subtitle = findViewById(R.id.friendsSubtitle)
+        myFriendCodeText = findViewById(R.id.myFriendCodeText)
         requestsPanel = findViewById(R.id.friendRequestsPanel)
         requestsContainer = findViewById(R.id.friendRequestsContainer)
         searchInput = findViewById(R.id.friendsSearchInput)
@@ -47,6 +54,9 @@ class FriendsActivity : AppCompatActivity() {
 
         findViewById<MaterialButton>(R.id.friendsSearchButton).setOnClickListener {
             executeSearch()
+        }
+        findViewById<MaterialButton>(R.id.copyFriendCodeButton).setOnClickListener {
+            copyFriendCode()
         }
         searchInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -59,8 +69,21 @@ class FriendsActivity : AppCompatActivity() {
 
         FriendsRepository.syncCurrentUserSearchFields()
         FriendsRepository.syncCurrentUserPresence()
+        listenToCurrentCode()
         listenToFriends()
         listenToRequests()
+    }
+
+    private fun listenToCurrentCode() {
+        currentCodeListener = FriendsRepository.listenCurrentUserFriendCode(
+            onChanged = { code ->
+                runOnUiThread {
+                    currentFriendCode = code
+                    myFriendCodeText.text = "My code: $code"
+                }
+            },
+            onError = { error -> runOnUiThread { showError(error.message) } },
+        )
     }
 
     private fun listenToFriends() {
@@ -107,7 +130,7 @@ class FriendsActivity : AppCompatActivity() {
         val query = searchInput.text.toString().trim()
         searchResults.removeAllViews()
         if (query.isBlank()) {
-            searchEmpty.text = "Type a username first"
+            searchEmpty.text = "Type a username or friend code first"
             searchEmpty.visibility = View.VISIBLE
             return
         }
@@ -229,7 +252,7 @@ class FriendsActivity : AppCompatActivity() {
                     typeface = android.graphics.Typeface.DEFAULT_BOLD
                 })
                 addView(TextView(this@FriendsActivity).apply {
-                    text = "${user.primaryLanguage} - Rating ${user.rating}"
+                    text = "${user.friendCode} - ${user.primaryLanguage} - Rating ${user.rating}"
                     setTextColor(ContextCompat.getColor(context, R.color.gc_text_secondary))
                     textSize = 12f
                 })
@@ -311,6 +334,13 @@ class FriendsActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
+    private fun copyFriendCode() {
+        if (currentFriendCode.isBlank()) return
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("GoCode friend code", currentFriendCode))
+        Toast.makeText(this, "Friend code copied", Toast.LENGTH_SHORT).show()
+    }
+
     private fun showError(message: String?) {
         Toast.makeText(this, message ?: "Friends unavailable", Toast.LENGTH_SHORT).show()
     }
@@ -331,5 +361,6 @@ class FriendsActivity : AppCompatActivity() {
         super.onDestroy()
         friendsListener?.remove()
         requestsListener?.remove()
+        currentCodeListener?.remove()
     }
 }

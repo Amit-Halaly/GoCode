@@ -9,6 +9,7 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gocode.adapters.AvatarAdapter
+import com.example.gocode.friends.FriendsRepository
 import com.example.gocode.repositories.AvatarRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -129,6 +130,9 @@ class OnboardingActivity : AppCompatActivity() {
 
         val data = hashMapOf<String, Any>(
             "username" to username,
+            "usernameLower" to username.lowercase(),
+            "friendCode" to FriendsRepository.friendCodeForUid(uid),
+            "friendCodeSearch" to FriendsRepository.friendCodeForUid(uid).filter { it.isLetterOrDigit() }.lowercase(),
             "primaryLanguage" to selectedLanguage,
             "skillLevel" to selectedSkill,
             "avatarId" to selectedAvatarId,

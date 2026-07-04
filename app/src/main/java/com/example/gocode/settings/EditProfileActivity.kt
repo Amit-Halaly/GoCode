@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import com.example.gocode.R
+import com.example.gocode.friends.FriendsRepository
 import com.example.gocode.repositories.AvatarRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -139,7 +140,13 @@ class EditProfileActivity : AppCompatActivity() {
             }
 
             val updates = mapOf(
-                "username" to username, "primaryLanguage" to selectedLanguage
+                "username" to username,
+                "usernameLower" to username.lowercase(),
+                "friendCode" to FriendsRepository.friendCodeForUid(user.uid),
+                "friendCodeSearch" to FriendsRepository.friendCodeForUid(user.uid)
+                    .filter { it.isLetterOrDigit() }
+                    .lowercase(),
+                "primaryLanguage" to selectedLanguage
             )
 
             db.collection("users").document(user.uid).update(updates).addOnSuccessListener {
