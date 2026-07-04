@@ -1,8 +1,9 @@
 import asyncio
+import random
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -72,7 +73,9 @@ class ArenaPlayer:
     rating: int
     languages: list[str]
     avatar_id: str | None
-    websocket: WebSocket
+    websocket: Optional[WebSocket]
+    is_bot: bool = False
+    skill: int = 82
 
     def public(self) -> dict[str, Any]:
         return {
@@ -81,7 +84,7 @@ class ArenaPlayer:
             "rating": self.rating,
             "languages": self.languages,
             "avatarId": self.avatar_id,
-            "isBot": False,
+            "isBot": self.is_bot,
         }
 
 
@@ -95,11 +98,13 @@ class ArenaMatch:
     streaks: dict[str, int] = field(default_factory=dict)
     answers: dict[str, dict[str, Any]] = field(default_factory=dict)
     question_started_at: float = field(default_factory=time.monotonic)
+    tasks: list[asyncio.Task] = field(default_factory=list)
 
 
 class ArenaManager:
     def __init__(self) -> None:
         self.waiting: ArenaPlayer | None = None
+        self.waiting_timeout_task: asyncio.Task | None = None
         self.matches: dict[str, ArenaMatch] = {}
         self.player_matches: dict[str, str] = {}
         self.lock = asyncio.Lock()
@@ -142,13 +147,26 @@ class ArenaManager:
         async with self.lock:
             if self.waiting is None or self.waiting.id == player.id:
                 self.waiting = player
+                self._cancel_waiting_timeout()
+                self.waiting_timeout_task = asyncio.create_task(self._match_with_bot_after_timeout(player.id))
                 await player.websocket.send_json({"type": "matchmaking_started", "timeoutMs": 30_000})
                 return
 
             opponent = self.waiting
             self.waiting = None
+            self._cancel_waiting_timeout()
 
         await self.start_match(opponent, player)
+
+    async def _match_with_bot_after_timeout(self, waiting_player_id: str) -> None:
+        await asyncio.sleep(30)
+        async with self.lock:
+            if self.waiting is None or self.waiting.id != waiting_player_id:
+                return
+            player = self.waiting
+            self.waiting = None
+
+        await self.start_match(player, self._create_bot_for(player))
 
     async def start_match(self, first: ArenaPlayer, second: ArenaPlayer) -> None:
         questions = self._select_questions(first.languages, second.languages)
@@ -172,6 +190,7 @@ class ArenaManager:
         await self.send_question(match)
 
     async def send_question(self, match: ArenaMatch) -> None:
+        self._cancel_match_tasks(match)
         match.answers.clear()
         match.question_started_at = time.monotonic()
         question = match.questions[match.question_index]
@@ -184,15 +203,25 @@ class ArenaManager:
             "timeLimitMs": QUESTION_TIME_MS,
             "question": public_question,
         })
+        for player in match.players:
+            if player.is_bot:
+                match.tasks.append(asyncio.create_task(self._answer_as_bot(match.id, player.id)))
+        match.tasks.append(asyncio.create_task(self._timeout_unanswered(match.id, match.question_index)))
 
     async def submit_answer(self, player_id: str, message: dict[str, Any]) -> None:
         match = self._match_for_player(player_id)
         if match is None or player_id in match.answers:
             return
 
+        await self._record_answer(player_id, int(message.get("selectedIndex", -1)))
+
+    async def _record_answer(self, player_id: str, selected_index: int) -> None:
+        match = self._match_for_player(player_id)
+        if match is None or player_id in match.answers:
+            return
+
         elapsed_ms = int((time.monotonic() - match.question_started_at) * 1000)
         question = match.questions[match.question_index]
-        selected_index = int(message.get("selectedIndex", -1))
         timed_out = elapsed_ms > QUESTION_TIME_MS
         correct = (not timed_out) and selected_index == question["correctIndex"]
         delta = self._score_answer(player_id, match, correct, elapsed_ms, timed_out)
@@ -217,6 +246,37 @@ class ArenaManager:
         if len(match.answers) == len(match.players):
             await self.advance_or_finish(match)
 
+    async def _answer_as_bot(self, match_id: str, bot_id: str) -> None:
+        match = self.matches.get(match_id)
+        bot = self._player_in_match(match, bot_id)
+        if match is None or bot is None:
+            return
+
+        delay_ms = self._bot_reaction_ms(bot, match.question_index)
+        await asyncio.sleep(delay_ms / 1000)
+        match = self.matches.get(match_id)
+        bot = self._player_in_match(match, bot_id)
+        if match is None or bot is None or bot_id in match.answers:
+            return
+
+        question = match.questions[match.question_index]
+        accuracy = min(max(bot.skill + random.randint(-7, 5), 55), 92) / 100
+        if random.random() <= accuracy:
+            selected_index = question["correctIndex"]
+        else:
+            wrong_options = [index for index in range(len(question["options"])) if index != question["correctIndex"]]
+            selected_index = random.choice(wrong_options)
+        await self._record_answer(bot_id, selected_index)
+
+    async def _timeout_unanswered(self, match_id: str, question_index: int) -> None:
+        await asyncio.sleep((QUESTION_TIME_MS + 700) / 1000)
+        match = self.matches.get(match_id)
+        if match is None or match.question_index != question_index:
+            return
+        missing_player_ids = [player.id for player in match.players if player.id not in match.answers]
+        for player_id in missing_player_ids:
+            await self._record_answer(player_id, -1)
+
     async def advance_or_finish(self, match: ArenaMatch) -> None:
         await self.broadcast(match, {
             "type": "question_finished",
@@ -233,6 +293,7 @@ class ArenaManager:
         await self.send_question(match)
 
     async def finish_match(self, match: ArenaMatch) -> None:
+        self._cancel_match_tasks(match)
         winner_id = max(match.scores, key=match.scores.get)
         if len(set(match.scores.values())) == 1:
             winner_id = None
@@ -264,6 +325,7 @@ class ArenaManager:
         async with self.lock:
             if self.waiting and self.waiting.id == player_id:
                 self.waiting = None
+                self._cancel_waiting_timeout()
 
         match = self._match_for_player(player_id)
         if match is not None:
@@ -271,7 +333,8 @@ class ArenaManager:
 
     async def broadcast(self, match: ArenaMatch, payload: dict[str, Any]) -> None:
         for player in match.players:
-            await player.websocket.send_json(payload)
+            if player.websocket is not None:
+                await player.websocket.send_json(payload)
 
     def _score_answer(
         self,
@@ -305,6 +368,48 @@ class ArenaManager:
             return ["Java"]
         languages = [str(item).strip() for item in value if str(item).strip()]
         return languages or ["Java"]
+
+    def _create_bot_for(self, player: ArenaPlayer) -> ArenaPlayer:
+        bot_names = ["ByteRunner", "StackQueen", "LoopMage", "AlgoNinja", "NullPointer"]
+        bot_rating = player.rating + random.randint(-90, 130)
+        return ArenaPlayer(
+            id=f"bot-{uuid.uuid4()}",
+            name=random.choice(bot_names),
+            rating=max(bot_rating, 700),
+            languages=player.languages or ["Java"],
+            avatar_id=random.choice(["robot", "ninja", "owl", "alien"]),
+            websocket=None,
+            is_bot=True,
+            skill=random.randint(76, 88),
+        )
+
+    def _bot_reaction_ms(self, bot: ArenaPlayer, question_index: int) -> int:
+        base = random.randint(3_000, 8_600)
+        if bot.skill >= 85:
+            base -= random.randint(350, 1_200)
+        if question_index == 0:
+            base += random.randint(350, 900)
+        return max(1_900, min(base, 10_500))
+
+    def _player_in_match(self, match: ArenaMatch | None, player_id: str) -> ArenaPlayer | None:
+        if match is None:
+            return None
+        return next((player for player in match.players if player.id == player_id), None)
+
+    def _cancel_waiting_timeout(self) -> None:
+        if self.waiting_timeout_task is not None:
+            self.waiting_timeout_task.cancel()
+            self.waiting_timeout_task = None
+
+    def _cancel_match_tasks(self, match: ArenaMatch) -> None:
+        current_task = asyncio.current_task()
+        remaining_tasks = []
+        for task in match.tasks:
+            if task is current_task:
+                remaining_tasks.append(task)
+            else:
+                task.cancel()
+        match.tasks = remaining_tasks
 
     def _match_for_player(self, player_id: str) -> ArenaMatch | None:
         match_id = self.player_matches.get(player_id)
