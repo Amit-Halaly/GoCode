@@ -167,7 +167,7 @@ object FriendsRepository {
                 .map { it.toSearchResult() }
                 .forEach { results[it.uid] = it }
             completed++
-            if (completed == 2 && !reported) {
+            if (completed == 3 && !reported) {
                 reported = true
                 onResult(results.values.sortedBy { it.username.lowercase() })
             }
@@ -183,6 +183,16 @@ object FriendsRepository {
         db.collection(USERS)
             .whereGreaterThanOrEqualTo("usernameLower", normalized)
             .whereLessThanOrEqualTo("usernameLower", normalized + "\uf8ff")
+            .limit(12)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                finish(snapshot.documents)
+            }
+            .addOnFailureListener(::fail)
+
+        db.collection(USERS)
+            .whereGreaterThanOrEqualTo("username", query.trim())
+            .whereLessThanOrEqualTo("username", query.trim() + "\uf8ff")
             .limit(12)
             .get()
             .addOnSuccessListener { snapshot ->
