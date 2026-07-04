@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI, HTTPException
 from app.models import LintRequest, RunRequest, LintResponse, RunResponse, HintRequest, HintResponse
 from app.services.java_runner import lint_java, run_java
+from app.arena import arena_manager
 from openai import OpenAI
 
 
@@ -16,6 +17,11 @@ def root():
 @app.get("/health")
 def health():
     return {"ok": True}
+
+
+@app.websocket("/arena/ws")
+async def arena_ws(websocket):
+    await arena_manager.connect(websocket)
 
 
 @app.post("/lint", response_model=LintResponse)
