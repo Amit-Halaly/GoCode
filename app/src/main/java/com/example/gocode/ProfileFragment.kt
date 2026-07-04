@@ -15,6 +15,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.gocode.friends.FriendsActivity
 import com.example.gocode.gamification.AchievementCatalog
 import com.example.gocode.gamification.AchievementDefinition
 import com.example.gocode.gamification.GamificationRepository
@@ -145,6 +146,13 @@ class ProfileFragment : Fragment() {
                     R.id.action_settings -> {
                         startActivity(
                             Intent(requireContext(), SettingsActivity::class.java)
+                        )
+                        true
+                    }
+
+                    R.id.action_friends -> {
+                        startActivity(
+                            Intent(requireContext(), FriendsActivity::class.java)
                         )
                         true
                     }

@@ -6,6 +6,10 @@
         android:title="Settings" />
 
     <item
+        android:id="@+id/action_friends"
+        android:title="Friends" />
+
+    <item
         android:id="@+id/action_reset_progress"
         android:title="Reset Progress" />
 

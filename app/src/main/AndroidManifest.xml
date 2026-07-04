@@ -71,6 +71,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".friends.FriendsActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".lessons.LessonFlowActivity"
             android:exported="false" />
 
