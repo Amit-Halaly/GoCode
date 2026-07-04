@@ -662,6 +662,13 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         }
 
         dialog.setContentView(content)
+        dialog.setOnDismissListener {
+            if (!matchInProgress) {
+                arenaClient.cancelMatchmaking()
+                arenaClient.close()
+                restoreArenaActions()
+            }
+        }
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
         dialog.window?.setLayout(
