@@ -23,6 +23,11 @@ import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.gocode.network.ArenaEvent
+import com.example.gocode.network.ArenaPlayerProfile
+import com.example.gocode.network.ArenaRealtimeClient
+import com.example.gocode.network.ArenaRemotePlayer
+import com.example.gocode.network.ArenaRemoteQuestion
 import com.example.gocode.repositories.AvatarRepository
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
@@ -36,8 +41,9 @@ import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.random.Random
+import java.util.UUID
 
-class ArenaFragment : Fragment() {
+class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
 
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val db by lazy { FirebaseFirestore.getInstance() }
@@ -105,20 +111,25 @@ class ArenaFragment : Fragment() {
     private lateinit var questionTitleText: TextView
 
     private var playerName = "You"
+    private var playerId = UUID.randomUUID().toString()
     private var playerRating = 1000
     private var playerLanguages = listOf("Java")
+    private var playerAvatarId: String? = null
     private var playerAvatarResId = 0
     private var activeOpponent: ArenaOpponent? = null
     private var activeQuestions = emptyList<ArenaQuestion>()
+    private var remoteQuestionCount = QUESTION_COUNT
     private var questionIndex = 0
     private var playerScore = 0
     private var opponentScore = 0
+    private var lastSelectedIndex = -1
     private var questionStartMs = 0L
     private var playerAnswered = false
     private var opponentAnswered = false
     private var currentCorrectIndex = -1
     private var correctStreak = 0
     private var opponentCorrectStreak = 0
+    private var realtimeMatchActive = false
     private var matchInProgress = false
     private var matchResolved = false
 
@@ -127,6 +138,7 @@ class ArenaFragment : Fragment() {
     private var searchAnimationJob: Job? = null
     private var opponentJob: Job? = null
     private var timer: CountDownTimer? = null
+    private val arenaClient by lazy { ArenaRealtimeClient(this) }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -168,6 +180,7 @@ class ArenaFragment : Fragment() {
         searchAnimationJob?.cancel()
         opponentJob?.cancel()
         timer?.cancel()
+        arenaClient.close()
         setMainBottomNavigationVisible(true)
     }
 
@@ -244,6 +257,7 @@ class ArenaFragment : Fragment() {
             return
         }
 
+        playerId = user.uid
         db.collection("users").document(user.uid).get()
             .addOnSuccessListener { doc ->
                 playerName = doc.getString("username")?.takeIf { it.isNotBlank() }
@@ -257,6 +271,7 @@ class ArenaFragment : Fragment() {
                 val avatarId = requestedAvatarId
                     ?.takeIf { it in ownedAvatarIds }
                     ?: AvatarRepository.DEFAULT_AVATAR_ID
+                playerAvatarId = avatarId
                 if (requestedAvatarId != avatarId) {
                     db.collection("users").document(user.uid).update("avatarId", avatarId)
                 }
@@ -280,6 +295,7 @@ class ArenaFragment : Fragment() {
     private fun renderIdle() {
         matchInProgress = false
         matchResolved = false
+        realtimeMatchActive = false
         showArenaTab(ArenaTab.BATTLE)
         matchmakingPanel.visibility = View.GONE
         matchPanel.visibility = View.GONE
@@ -381,6 +397,7 @@ class ArenaFragment : Fragment() {
         opponentJob?.cancel()
         matchInProgress = false
         matchResolved = false
+        realtimeMatchActive = false
 
         startButton.visibility = View.GONE
         resultPanel.visibility = View.GONE
@@ -399,32 +416,159 @@ class ArenaFragment : Fragment() {
         matchmakingPanel.popIn()
         startSearchAnimation()
 
-        matchmakingJob = viewLifecycleOwner.lifecycleScope.launch {
-            delay(950)
-            searchingText.text = "Checking shared languages"
-            arenaTicker.flashText("SYNCING SKILLS  ${playerLanguages.joinToString("  ")}")
-            delay(900)
-            val opponent = findOpponent()
-            activeOpponent = opponent
-            opponentNameText.text = opponent.name
-            opponentMetaText.text = "${opponent.languages.joinToString(" / ")} - ${rankName(opponent.rating)}"
-            opponentRatingText.text = "${opponent.rating}"
-            opponentSearchAvatar.setImageResource(opponent.avatarRes)
-            opponentAvatarImage.setImageResource(opponent.avatarRes)
-            opponentCardName.text = opponent.name
-            opponentCardRank.text = "${rankName(opponent.rating)} - ${opponent.rating}"
-            searchingProgress.visibility = View.GONE
-            searchingText.text = "Match found"
-            stageTitle.text = "Match Found"
-            stageSubtitle.text = "${playerName} vs ${opponent.name}"
-            arenaTicker.flashText("LOCKED  ${opponent.languages.joinToString("  ")}  ${rankName(opponent.rating)}")
-            stopSearchAnimation()
-            opponentSearchAvatar.popIn()
-            searchVsBadge.pulse()
-            matchmakingPanel.popIn()
-            delay(900)
-            startRound(opponent)
+        arenaClient.findMatch(
+            ArenaPlayerProfile(
+                userId = playerId,
+                name = playerName,
+                rating = playerRating,
+                languages = playerLanguages,
+                avatarId = playerAvatarId,
+            )
+        )
+    }
+
+    override fun onArenaEvent(event: ArenaEvent) {
+        activity?.runOnUiThread {
+            when (event) {
+                is ArenaEvent.MatchmakingStarted -> handleMatchmakingStarted(event.timeoutMs)
+                is ArenaEvent.MatchFound -> handleMatchFound(event)
+                is ArenaEvent.Question -> handleRemoteQuestion(event)
+                is ArenaEvent.AnswerResult -> handleAnswerResult(event)
+                is ArenaEvent.QuestionFinished -> handleQuestionFinished(event)
+                is ArenaEvent.MatchFinished -> handleMatchFinished(event)
+                is ArenaEvent.Error -> handleArenaError(event.message)
+                ArenaEvent.MatchmakingCancelled -> renderIdle()
+            }
         }
+    }
+
+    override fun onArenaError(message: String) {
+        activity?.runOnUiThread { handleArenaError(message) }
+    }
+
+    override fun onArenaClosed() {
+        activity?.runOnUiThread {
+            if (!matchResolved && matchInProgress) {
+                handleArenaError("Arena connection closed")
+            }
+        }
+    }
+
+    private fun handleMatchmakingStarted(timeoutMs: Long) {
+        searchingText.text = "Finding opponent"
+        opponentMetaText.text = "Bot joins if nobody appears in ${timeoutMs / 1000}s"
+        arenaTicker.flashText("LIVE QUEUE  ${playerLanguages.joinToString("  ")}")
+    }
+
+    private fun handleMatchFound(event: ArenaEvent.MatchFound) {
+        val opponentPlayer = event.players.firstOrNull { it.id != playerId } ?: return
+        val opponent = opponentPlayer.toArenaOpponent()
+        activeOpponent = opponent
+        remoteQuestionCount = event.questionCount
+        questionIndex = 0
+        playerScore = 0
+        opponentScore = 0
+        correctStreak = 0
+        opponentCorrectStreak = 0
+        matchInProgress = true
+        matchResolved = false
+        realtimeMatchActive = true
+
+        opponentNameText.text = opponent.name
+        opponentMetaText.text = "${opponent.languages.joinToString(" / ")} - ${rankName(opponent.rating)}"
+        opponentRatingText.text = if (opponentPlayer.isBot) "Bot ${opponent.rating}" else "${opponent.rating}"
+        opponentSearchAvatar.setImageResource(opponent.avatarRes)
+        opponentAvatarImage.setImageResource(opponent.avatarRes)
+        opponentCardName.text = opponent.name
+        opponentCardRank.text = "${rankName(opponent.rating)} - ${opponent.rating}"
+        searchingProgress.visibility = View.GONE
+        searchingText.text = if (opponentPlayer.isBot) "Training rival joined" else "Match found"
+        stageTitle.text = "Match Found"
+        stageSubtitle.text = "${playerName} vs ${opponent.name}"
+        arenaTicker.flashText("LOCKED  ${opponent.languages.joinToString("  ")}  ${rankName(opponent.rating)}")
+        stopSearchAnimation()
+        opponentSearchAvatar.popIn()
+        searchVsBadge.pulse()
+        matchmakingPanel.visibility = View.GONE
+        matchPanel.visibility = View.VISIBLE
+        resultPanel.visibility = View.GONE
+        statusLabel.text = "Ranked match live"
+        stageTitle.text = "Battle Live"
+        arenaTicker.text = "FIRST TO THINK FAST  Wrong answers lose ${abs(WRONG_ANSWER_PENALTY)}"
+        matchPanel.popIn()
+        animateVersusEntry()
+    }
+
+    private fun handleRemoteQuestion(event: ArenaEvent.Question) {
+        questionIndex = event.questionIndex
+        remoteQuestionCount = event.questionCount
+        activeQuestions = listOf(event.question.toArenaQuestion())
+        showQuestion()
+    }
+
+    private fun handleAnswerResult(event: ArenaEvent.AnswerResult) {
+        playerScore = event.scores[playerId] ?: playerScore
+        val opponentId = activeOpponent?.remoteId
+        if (opponentId != null) opponentScore = event.scores[opponentId] ?: opponentScore
+        updateScoreboard()
+
+        if (event.playerId == playerId) {
+            val correct = event.correct
+            correctStreak = if (correct) correctStreak + 1 else 0
+            comboText.text = when {
+                correct && correctStreak >= 3 -> "HOT STREAK x$correctStreak"
+                correct -> "CLEAN HIT"
+                lastSelectedIndex == -1 -> "TIMEOUT"
+                else -> "RANK HIT"
+            }
+            comboText.setTextColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    if (correct) android.R.color.holo_green_light else android.R.color.holo_red_light
+                )
+            )
+            comboText.popIn()
+            feedbackText.text = when {
+                correct -> "+${event.delta} quick points"
+                lastSelectedIndex == -1 -> "${event.delta} timeout"
+                else -> "${event.delta} wrong answer"
+            }
+            playerScoreValue.flashScore()
+        } else {
+            opponentAvatarImage.pulse()
+            opponentScoreValue.flashScore()
+            arenaTicker.flashText(if (event.correct) "OPPONENT SCORED" else "OPPONENT MISSED")
+        }
+    }
+
+    private fun handleQuestionFinished(event: ArenaEvent.QuestionFinished) {
+        currentCorrectIndex = event.correctIndex
+        colorAnswerButtons(lastSelectedIndex)
+        playerScore = event.scores[playerId] ?: playerScore
+        val opponentId = activeOpponent?.remoteId
+        if (opponentId != null) opponentScore = event.scores[opponentId] ?: opponentScore
+        updateScoreboard()
+        timer?.cancel()
+    }
+
+    private fun handleMatchFinished(event: ArenaEvent.MatchFinished) {
+        playerScore = event.scores[playerId] ?: playerScore
+        val opponentId = activeOpponent?.remoteId
+        if (opponentId != null) opponentScore = event.scores[opponentId] ?: opponentScore
+        finishMatch()
+        arenaClient.close()
+    }
+
+    private fun handleArenaError(message: String) {
+        timer?.cancel()
+        stopSearchAnimation()
+        searchingProgress.visibility = View.GONE
+        searchingText.text = "Arena unavailable"
+        statusLabel.text = "Connection problem"
+        stageTitle.text = "Arena Offline"
+        stageSubtitle.text = message
+        startButton.visibility = View.VISIBLE
+        matchInProgress = false
     }
 
     private fun findOpponent(): ArenaOpponent {
@@ -454,6 +598,7 @@ class ArenaFragment : Fragment() {
         opponentCorrectStreak = 0
         matchInProgress = true
         matchResolved = false
+        realtimeMatchActive = false
 
         matchmakingPanel.visibility = View.GONE
         matchPanel.visibility = View.VISIBLE
@@ -472,7 +617,7 @@ class ArenaFragment : Fragment() {
         timer?.cancel()
         opponentJob?.cancel()
 
-        val question = activeQuestions.getOrNull(questionIndex) ?: run {
+        val question = activeQuestions.getOrNull(if (realtimeMatchActive) 0 else questionIndex) ?: run {
             finishMatch()
             return
         }
@@ -484,7 +629,7 @@ class ArenaFragment : Fragment() {
         comboText.text = ""
         optionsContainer.removeAllViews()
 
-        roundText.text = "Question ${questionIndex + 1}/$QUESTION_COUNT"
+        roundText.text = "Question ${questionIndex + 1}/${if (realtimeMatchActive) remoteQuestionCount else QUESTION_COUNT}"
         updateScoreboard()
         questionCourseText.text = "${question.language} - ${question.course}"
         val titleAndCode = question.toTitleAndCode()
@@ -529,7 +674,7 @@ class ArenaFragment : Fragment() {
             questionStartMs = System.currentTimeMillis()
             animateQuestionEntry()
             startQuestionTimer()
-            scheduleOpponentAnswer(question)
+            if (!realtimeMatchActive) scheduleOpponentAnswer(question)
         }
 
         if (questionIndex == 0) {
@@ -622,8 +767,16 @@ class ArenaFragment : Fragment() {
     private fun submitPlayerAnswer(selectedIndex: Int) {
         if (playerAnswered) return
         playerAnswered = true
+        lastSelectedIndex = selectedIndex
 
         optionsContainer.childrenAsButtons().forEach { it.isEnabled = false }
+
+        if (realtimeMatchActive) {
+            arenaClient.submitAnswer(selectedIndex)
+            optionsContainer.childrenAsButtons().getOrNull(selectedIndex)?.alpha = 0.82f
+            feedbackText.text = if (selectedIndex == -1) "Waiting for arena result" else "Answer locked"
+            return
+        }
 
         val elapsed = System.currentTimeMillis() - questionStartMs
         val correct = selectedIndex == currentCorrectIndex
@@ -724,8 +877,10 @@ class ArenaFragment : Fragment() {
         if (matchResolved) return
         matchResolved = true
         matchInProgress = false
+        realtimeMatchActive = false
         timer?.cancel()
         opponentJob?.cancel()
+        arenaClient.close()
 
         val won = playerScore > opponentScore
         val tied = playerScore == opponentScore
@@ -763,10 +918,13 @@ class ArenaFragment : Fragment() {
 
         matchResolved = true
         matchInProgress = false
+        realtimeMatchActive = false
         timer?.cancel()
         opponentJob?.cancel()
         matchmakingJob?.cancel()
         stopSearchAnimation()
+        arenaClient.forfeit()
+        arenaClient.close()
 
         val ratingDelta = ratingDeltaForMatch(won = false, tied = false, forfeit = true)
         playerRating = (playerRating + ratingDelta).coerceAtLeast(0)
@@ -1251,6 +1409,37 @@ class ArenaFragment : Fragment() {
         return fallback
     }
 
+    private fun ArenaRemotePlayer.toArenaOpponent(): ArenaOpponent {
+        return ArenaOpponent(
+            name = name,
+            rating = rating,
+            languages = languages.ifEmpty { listOf("Java") },
+            skill = if (isBot) 84 else 72,
+            avatarRes = avatarDrawableForRemoteId(avatarId),
+            remoteId = id,
+        )
+    }
+
+    private fun ArenaRemoteQuestion.toArenaQuestion(): ArenaQuestion {
+        return ArenaQuestion(
+            language = language,
+            course = course,
+            prompt = prompt,
+            options = options,
+            correctIndex = -1,
+        )
+    }
+
+    private fun avatarDrawableForRemoteId(avatarId: String?): Int {
+        return when (avatarId) {
+            "robot" -> R.drawable.avatar_robot
+            "ninja" -> R.drawable.avatar_ninja
+            "owl" -> R.drawable.avatar_owl
+            "alien" -> R.drawable.avatar_alien
+            else -> avatarDrawableForId(avatarId, R.drawable.avatar_robot)
+        }
+    }
+
     private fun LinearLayout.childrenAsButtons(): List<MaterialButton> {
         return (0 until childCount).mapNotNull { getChildAt(it) as? MaterialButton }
     }
@@ -1268,7 +1457,8 @@ class ArenaFragment : Fragment() {
         val rating: Int,
         val languages: List<String>,
         val skill: Int,
-        val avatarRes: Int
+        val avatarRes: Int,
+        val remoteId: String? = null
     )
 
     private enum class ArenaTab {
