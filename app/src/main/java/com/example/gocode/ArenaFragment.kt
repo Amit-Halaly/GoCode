@@ -150,6 +150,8 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         val inviteCode = parseInviteCode(result.contents)
         if (inviteCode != null) {
             startMatchmaking(inviteCode = inviteCode)
+        } else if (!matchInProgress) {
+            restoreArenaActions()
         }
     }
 
@@ -675,6 +677,21 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
             .setBeepEnabled(false)
             .setOrientationLocked(false)
         scanInviteLauncher.launch(options)
+    }
+
+    private fun restoreArenaActions() {
+        stopSearchAnimation()
+        matchmakingPanel.visibility = View.GONE
+        matchPanel.visibility = View.GONE
+        resultPanel.visibility = View.GONE
+        startButton.visibility = View.VISIBLE
+        inviteFriendButton.visibility = View.VISIBLE
+        scanInviteButton.visibility = View.VISIBLE
+        searchingProgress.visibility = View.GONE
+        statusLabel.text = "Ready for a ranked code duel"
+        stageTitle.text = "Ranked Output Duel"
+        stageSubtitle.text = "Fast answers. Clean logic. Real rank."
+        startIdleAnimation()
     }
 
     private fun arenaPlayerProfile(): ArenaPlayerProfile {
