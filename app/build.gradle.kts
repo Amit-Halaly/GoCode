@@ -12,10 +12,10 @@ android {
         buildConfig = true
     }
 
-    val releaseApiBaseUrl =
+    val apiBaseUrl =
         providers.gradleProperty("GOCODE_API_BASE_URL")
             .orElse(providers.environmentVariable("GOCODE_API_BASE_URL"))
-            .orElse("https://api.gocode.example/")
+            .orElse("https://gocode-production.up.railway.app/")
             .map { url -> if (url.endsWith("/")) url else "$url/" }
 
     defaultConfig {
@@ -27,19 +27,19 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "EXEC_API_BASE_URL", "\"http://10.0.2.2:8080/\"")
-        manifestPlaceholders["usesCleartextTraffic"] = true
+        buildConfigField("String", "EXEC_API_BASE_URL", "\"${apiBaseUrl.get()}\"")
+        manifestPlaceholders["usesCleartextTraffic"] = false
     }
 
     buildTypes {
         debug {
-            buildConfigField("String", "EXEC_API_BASE_URL", "\"http://10.0.2.2:8080/\"")
-            manifestPlaceholders["usesCleartextTraffic"] = true
+            buildConfigField("String", "EXEC_API_BASE_URL", "\"${apiBaseUrl.get()}\"")
+            manifestPlaceholders["usesCleartextTraffic"] = false
         }
 
         release {
             isMinifyEnabled = false
-            buildConfigField("String", "EXEC_API_BASE_URL", "\"${releaseApiBaseUrl.get()}\"")
+            buildConfigField("String", "EXEC_API_BASE_URL", "\"${apiBaseUrl.get()}\"")
             manifestPlaceholders["usesCleartextTraffic"] = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
