@@ -683,6 +683,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
             .setPrompt("Scan your friend's arena QR")
             .setBeepEnabled(false)
             .setOrientationLocked(false)
+            .setCaptureActivity(ArenaQrScanActivity::class.java)
         scanInviteLauncher.launch(options)
     }
 

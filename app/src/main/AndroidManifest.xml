@@ -87,6 +87,11 @@
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:exported="false" />
 
+        <activity
+            android:name=".ArenaQrScanActivity"
+            android:screenOrientation="fullSensor"
+            android:exported="false" />
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
