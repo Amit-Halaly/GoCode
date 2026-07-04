@@ -286,6 +286,39 @@
                             app:icon="@drawable/ic_play_arrow_24"
                             app:iconGravity="textStart"
                             app:iconTint="#07111E" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/inviteFriendButton"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_marginEnd="5dp"
+                                android:layout_weight="1"
+                                android:text="Invite"
+                                android:textAllCaps="false"
+                                android:textColor="#DDF7FF"
+                                android:textStyle="bold"
+                                app:backgroundTint="#1D2E44"
+                                app:cornerRadius="8dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/scanInviteButton"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_marginStart="5dp"
+                                android:layout_weight="1"
+                                android:text="Scan QR"
+                                android:textAllCaps="false"
+                                android:textColor="#DDF7FF"
+                                android:textStyle="bold"
+                                app:backgroundTint="#1D2E44"
+                                app:cornerRadius="8dp" />
+                        </LinearLayout>
                     </LinearLayout>
                 </FrameLayout>
 

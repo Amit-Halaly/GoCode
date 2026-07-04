@@ -89,4 +89,5 @@ dependencies {
     implementation(libs.editor.lsp)
     implementation(libs.okhttp)
     implementation(libs.json)
+    implementation(libs.zxing.embedded)
 }

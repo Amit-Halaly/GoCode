@@ -74,6 +74,7 @@ class ArenaPlayer:
     languages: list[str]
     avatar_id: str | None
     websocket: Optional[WebSocket]
+    invite_code: str | None = None
     is_bot: bool = False
     skill: int = 82
 
@@ -104,6 +105,7 @@ class ArenaMatch:
 class ArenaManager:
     def __init__(self) -> None:
         self.waiting: ArenaPlayer | None = None
+        self.waiting_invites: dict[str, ArenaPlayer] = {}
         self.waiting_timeout_task: asyncio.Task | None = None
         self.matches: dict[str, ArenaMatch] = {}
         self.player_matches: dict[str, str] = {}
@@ -126,6 +128,7 @@ class ArenaManager:
                 languages=self._normalize_languages(hello.get("languages")),
                 avatar_id=hello.get("avatarId"),
                 websocket=websocket,
+                invite_code=self._normalize_invite_code(hello.get("inviteCode")),
             )
             await self.enqueue(player)
 
@@ -144,6 +147,10 @@ class ArenaManager:
                 await self.remove_player(player.id)
 
     async def enqueue(self, player: ArenaPlayer) -> None:
+        if player.invite_code:
+            await self.enqueue_invite(player)
+            return
+
         async with self.lock:
             if self.waiting is None or self.waiting.id == player.id:
                 self.waiting = player
@@ -155,6 +162,19 @@ class ArenaManager:
             opponent = self.waiting
             self.waiting = None
             self._cancel_waiting_timeout()
+
+        await self.start_match(opponent, player)
+
+    async def enqueue_invite(self, player: ArenaPlayer) -> None:
+        assert player.invite_code is not None
+        async with self.lock:
+            opponent = self.waiting_invites.get(player.invite_code)
+            if opponent is None or opponent.id == player.id:
+                self.waiting_invites[player.invite_code] = player
+                await player.websocket.send_json({"type": "matchmaking_started", "timeoutMs": 0})
+                return
+
+            self.waiting_invites.pop(player.invite_code, None)
 
         await self.start_match(opponent, player)
 
@@ -326,6 +346,12 @@ class ArenaManager:
             if self.waiting and self.waiting.id == player_id:
                 self.waiting = None
                 self._cancel_waiting_timeout()
+            invite_code = next(
+                (code for code, player in self.waiting_invites.items() if player.id == player_id),
+                None,
+            )
+            if invite_code is not None:
+                self.waiting_invites.pop(invite_code, None)
 
         match = self._match_for_player(player_id)
         if match is not None:
@@ -368,6 +394,12 @@ class ArenaManager:
             return ["Java"]
         languages = [str(item).strip() for item in value if str(item).strip()]
         return languages or ["Java"]
+
+    def _normalize_invite_code(self, value: Any) -> str | None:
+        if value is None:
+            return None
+        code = "".join(ch for ch in str(value).upper() if ch.isalnum())
+        return code[:12] or None
 
     def _create_bot_for(self, player: ArenaPlayer) -> ArenaPlayer:
         bot_names = ["ByteRunner", "StackQueen", "LoopMage", "AlgoNinja", "NullPointer"]

@@ -3,6 +3,7 @@ package com.example.gocode
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.res.ColorStateList
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
@@ -29,11 +30,15 @@ import com.example.gocode.network.ArenaRealtimeClient
 import com.example.gocode.network.ArenaRemotePlayer
 import com.example.gocode.network.ArenaRemoteQuestion
 import com.example.gocode.repositories.AvatarRepository
+import com.google.zxing.BarcodeFormat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.journeyapps.barcodescanner.BarcodeEncoder
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -54,6 +59,8 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     private lateinit var rankText: TextView
     private lateinit var languageText: TextView
     private lateinit var startButton: MaterialButton
+    private lateinit var inviteFriendButton: MaterialButton
+    private lateinit var scanInviteButton: MaterialButton
     private lateinit var arenaBackButton: MaterialButton
     private lateinit var battleTabButton: MaterialButton
     private lateinit var leaderboardTabButton: MaterialButton
@@ -139,6 +146,12 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     private var opponentJob: Job? = null
     private var timer: CountDownTimer? = null
     private val arenaClient by lazy { ArenaRealtimeClient(this) }
+    private val scanInviteLauncher = registerForActivityResult(ScanContract()) { result ->
+        val inviteCode = parseInviteCode(result.contents)
+        if (inviteCode != null) {
+            startMatchmaking(inviteCode = inviteCode)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -155,6 +168,8 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         loadPlayerProfile()
 
         startButton.setOnClickListener { startMatchmaking() }
+        inviteFriendButton.setOnClickListener { showFriendInvite() }
+        scanInviteButton.setOnClickListener { scanFriendInvite() }
         playAgainButton.setOnClickListener { startMatchmaking() }
         arenaBackButton.setOnClickListener { requestExitArena() }
         battleTabButton.setOnClickListener { showArenaTab(ArenaTab.BATTLE) }
@@ -191,6 +206,8 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         rankText = view.findViewById(R.id.arenaRank)
         languageText = view.findViewById(R.id.arenaLanguages)
         startButton = view.findViewById(R.id.startArenaButton)
+        inviteFriendButton = view.findViewById(R.id.inviteFriendButton)
+        scanInviteButton = view.findViewById(R.id.scanInviteButton)
         arenaBackButton = view.findViewById(R.id.arenaBackButton)
         battleTabButton = view.findViewById(R.id.battleTabButton)
         leaderboardTabButton = view.findViewById(R.id.leaderboardTabButton)
@@ -301,6 +318,8 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         matchPanel.visibility = View.GONE
         resultPanel.visibility = View.GONE
         startButton.visibility = View.VISIBLE
+        inviteFriendButton.visibility = View.VISIBLE
+        scanInviteButton.visibility = View.VISIBLE
         statusLabel.text = "Ready for a ranked code duel"
         stageTitle.text = "Ranked Output Duel"
         stageSubtitle.text = "Fast answers. Clean logic. Real rank."
@@ -340,8 +359,11 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
             if (tab == ArenaTab.LEADERBOARD) android.R.color.holo_orange_light else android.R.color.transparent
         )
         if (tab == ArenaTab.LEADERBOARD) showLeaderboardScope(LeaderboardScope.GLOBAL)
-        startButton.visibility = if (tab == ArenaTab.BATTLE && isIdleBattleState()) View.VISIBLE else View.GONE
-        if (tab == ArenaTab.BATTLE && isIdleBattleState()) startIdleAnimation() else stopIdleAnimation()
+        val showBattleActions = tab == ArenaTab.BATTLE && isIdleBattleState()
+        startButton.visibility = if (showBattleActions) View.VISIBLE else View.GONE
+        inviteFriendButton.visibility = if (showBattleActions) View.VISIBLE else View.GONE
+        scanInviteButton.visibility = if (showBattleActions) View.VISIBLE else View.GONE
+        if (showBattleActions) startIdleAnimation() else stopIdleAnimation()
     }
 
     private fun isIdleBattleState(): Boolean {
@@ -389,7 +411,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun startMatchmaking() {
+    private fun startMatchmaking(inviteCode: String? = null) {
         timer?.cancel()
         matchmakingJob?.cancel()
         stopIdleAnimation()
@@ -400,12 +422,18 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         realtimeMatchActive = false
 
         startButton.visibility = View.GONE
+        inviteFriendButton.visibility = View.GONE
+        scanInviteButton.visibility = View.GONE
         resultPanel.visibility = View.GONE
         matchPanel.visibility = View.GONE
         matchmakingPanel.visibility = View.VISIBLE
         searchingProgress.visibility = View.VISIBLE
         opponentNameText.text = "Searching..."
-        opponentMetaText.text = "Matching course, language and rating"
+        opponentMetaText.text = if (inviteCode == null) {
+            "Matching course, language and rating"
+        } else {
+            "Waiting for your friend to join"
+        }
         opponentRatingText.text = "Ranked"
         searchingText.text = "Finding opponent"
         statusLabel.text = "Searching arena"
@@ -416,15 +444,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         matchmakingPanel.popIn()
         startSearchAnimation()
 
-        arenaClient.findMatch(
-            ArenaPlayerProfile(
-                userId = playerId,
-                name = playerName,
-                rating = playerRating,
-                languages = playerLanguages,
-                avatarId = playerAvatarId,
-            )
-        )
+        arenaClient.findMatch(arenaPlayerProfile(), inviteCode)
     }
 
     override fun onArenaEvent(event: ArenaEvent) {
@@ -456,7 +476,11 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
 
     private fun handleMatchmakingStarted(timeoutMs: Long) {
         searchingText.text = "Finding opponent"
-        opponentMetaText.text = "Bot joins if nobody appears in ${timeoutMs / 1000}s"
+        opponentMetaText.text = if (timeoutMs == 0L) {
+            "Waiting for your friend to scan"
+        } else {
+            "Matching language, rank and availability"
+        }
         arenaTicker.flashText("LIVE QUEUE  ${playerLanguages.joinToString("  ")}")
     }
 
@@ -476,13 +500,13 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
 
         opponentNameText.text = opponent.name
         opponentMetaText.text = "${opponent.languages.joinToString(" / ")} - ${rankName(opponent.rating)}"
-        opponentRatingText.text = if (opponentPlayer.isBot) "Bot ${opponent.rating}" else "${opponent.rating}"
+        opponentRatingText.text = "${opponent.rating}"
         opponentSearchAvatar.setImageResource(opponent.avatarRes)
         opponentAvatarImage.setImageResource(opponent.avatarRes)
         opponentCardName.text = opponent.name
         opponentCardRank.text = "${rankName(opponent.rating)} - ${opponent.rating}"
         searchingProgress.visibility = View.GONE
-        searchingText.text = if (opponentPlayer.isBot) "Training rival joined" else "Match found"
+        searchingText.text = "Match found"
         stageTitle.text = "Match Found"
         stageSubtitle.text = "${playerName} vs ${opponent.name}"
         arenaTicker.flashText("LOCKED  ${opponent.languages.joinToString("  ")}  ${rankName(opponent.rating)}")
@@ -568,7 +592,123 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         stageTitle.text = "Arena Offline"
         stageSubtitle.text = message
         startButton.visibility = View.VISIBLE
+        inviteFriendButton.visibility = View.VISIBLE
+        scanInviteButton.visibility = View.VISIBLE
         matchInProgress = false
+    }
+
+    private fun showFriendInvite() {
+        val inviteCode = generateInviteCode()
+        val qrPayload = invitePayload(inviteCode)
+        startMatchmaking(inviteCode = inviteCode)
+
+        val dialog = Dialog(requireContext())
+        val qrBitmap = createInviteQr(qrPayload)
+        val content = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER_HORIZONTAL
+            setPadding(dp(20), dp(18), dp(20), dp(18))
+            setBackgroundResource(R.drawable.bg_arena_result_panel)
+
+            addView(TextView(requireContext()).apply {
+                text = "Friend Match"
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                textSize = 24f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = android.view.Gravity.CENTER
+            })
+
+            addView(TextView(requireContext()).apply {
+                text = "Ask your friend to scan this QR"
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_color))
+                textSize = 13f
+                gravity = android.view.Gravity.CENTER
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(6) })
+
+            addView(ImageView(requireContext()).apply {
+                setImageBitmap(qrBitmap)
+                setBackgroundColor(Color.WHITE)
+                setPadding(dp(10), dp(10), dp(10), dp(10))
+            }, LinearLayout.LayoutParams(dp(250), dp(250)).apply { topMargin = dp(14) })
+
+            addView(TextView(requireContext()).apply {
+                text = inviteCode
+                letterSpacing = 0.08f
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_green))
+                textSize = 20f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = android.view.Gravity.CENTER
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(12) })
+
+            addView(MaterialButton(requireContext()).apply {
+                text = "Close"
+                isAllCaps = false
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.black))
+                backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.accent_green))
+                cornerRadius = dp(8)
+                setOnClickListener { dialog.dismiss() }
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(48)
+            ).apply { topMargin = dp(14) })
+        }
+
+        dialog.setContentView(content)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.9f).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
+
+    private fun scanFriendInvite() {
+        val options = ScanOptions()
+            .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+            .setPrompt("Scan your friend's arena QR")
+            .setBeepEnabled(false)
+            .setOrientationLocked(false)
+        scanInviteLauncher.launch(options)
+    }
+
+    private fun arenaPlayerProfile(): ArenaPlayerProfile {
+        return ArenaPlayerProfile(
+            userId = playerId,
+            name = playerName,
+            rating = playerRating,
+            languages = playerLanguages,
+            avatarId = playerAvatarId,
+        )
+    }
+
+    private fun generateInviteCode(): String {
+        val alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        return (1..8).map { alphabet.random() }.joinToString("")
+    }
+
+    private fun invitePayload(inviteCode: String): String = "gocode-arena://invite/$inviteCode"
+
+    private fun parseInviteCode(value: String?): String? {
+        if (value.isNullOrBlank()) return null
+        val raw = value.trim()
+        val code = when {
+            raw.startsWith("gocode-arena://invite/", ignoreCase = true) -> raw.substringAfterLast("/")
+            raw.startsWith("GOCODE_ARENA:", ignoreCase = true) -> raw.substringAfter(":")
+            else -> raw
+        }
+        return code.filter { it.isLetterOrDigit() }
+            .uppercase()
+            .takeIf { it.length in 4..12 }
+    }
+
+    private fun createInviteQr(payload: String): Bitmap {
+        return BarcodeEncoder().encodeBitmap(payload, BarcodeFormat.QR_CODE, dp(230), dp(230))
     }
 
     private fun findOpponent(): ArenaOpponent {

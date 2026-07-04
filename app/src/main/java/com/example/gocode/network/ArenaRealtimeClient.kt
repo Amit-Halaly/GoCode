@@ -25,14 +25,14 @@ class ArenaRealtimeClient(
 
     private var webSocket: WebSocket? = null
 
-    fun findMatch(profile: ArenaPlayerProfile) {
+    fun findMatch(profile: ArenaPlayerProfile, inviteCode: String? = null) {
         close()
         val request = Request.Builder()
             .url(arenaWebSocketUrl())
             .build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                webSocket.send(profile.toFindMatchJson().toString())
+                webSocket.send(profile.toFindMatchJson(inviteCode).toString())
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -91,14 +91,18 @@ data class ArenaPlayerProfile(
     val languages: List<String>,
     val avatarId: String?,
 ) {
-    fun toFindMatchJson(): JSONObject {
-        return JSONObject()
+    fun toFindMatchJson(inviteCode: String? = null): JSONObject {
+        val payload = JSONObject()
             .put("type", "find_match")
             .put("userId", userId)
             .put("name", name)
             .put("rating", rating)
             .put("languages", JSONArray(languages))
             .put("avatarId", avatarId)
+        if (!inviteCode.isNullOrBlank()) {
+            payload.put("inviteCode", inviteCode)
+        }
+        return payload
     }
 }
 
