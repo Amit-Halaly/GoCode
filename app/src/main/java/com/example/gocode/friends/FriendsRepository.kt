@@ -135,7 +135,6 @@ object FriendsRepository {
         return db.collection(FRIEND_REQUESTS)
             .whereEqualTo("toUid", uid)
             .whereEqualTo("status", STATUS_PENDING)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     onError(error)
