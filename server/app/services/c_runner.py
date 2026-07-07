@@ -9,7 +9,41 @@ from app.services.java_runner import normalize_output
 COMPILE_TIMEOUT_SEC = 3
 RUN_TIMEOUT_SEC = 3
 
-GCC_ERR_RE = re.compile(r"(?:^|/|\\)main\.c:(\d+):(?:(\d+):)?\s*(?:error|warning):\s*(.*)")
+GCC_ERR_RE = re.compile(r"(?:^|/|\\)main\.c:(\d+):(?:(\d+):)?\s*(?:fatal error|error|warning):\s*(.*)")
+MISSING_HEADER_RE = re.compile(r"(?:fatal error:\s*)?([^:\s]+\.h):\s*No such file or directory")
+INCLUDE_RE = re.compile(r"^\s*#\s*include\s*([<\"])([^>\"]+)[>\"]", re.MULTILINE)
+
+STANDARD_C_HEADERS = {
+    "assert.h",
+    "complex.h",
+    "ctype.h",
+    "errno.h",
+    "fenv.h",
+    "float.h",
+    "inttypes.h",
+    "iso646.h",
+    "limits.h",
+    "locale.h",
+    "math.h",
+    "setjmp.h",
+    "signal.h",
+    "stdalign.h",
+    "stdarg.h",
+    "stdatomic.h",
+    "stdbool.h",
+    "stddef.h",
+    "stdint.h",
+    "stdio.h",
+    "stdlib.h",
+    "stdnoreturn.h",
+    "string.h",
+    "tgmath.h",
+    "threads.h",
+    "time.h",
+    "uchar.h",
+    "wchar.h",
+    "wctype.h",
+}
 
 
 def _write_main_c(tmp_dir: str, code: str) -> str:
@@ -35,17 +69,7 @@ def lint_c(code: str) -> Dict[str, Any]:
         except subprocess.TimeoutExpired:
             return {"errors": [{"line": 0, "col": None, "message": "Compilation timed out"}]}
 
-        errors = []
-        for line_text in proc.stderr.splitlines():
-            match = GCC_ERR_RE.search(line_text)
-            if match:
-                errors.append({
-                    "line": int(match.group(1)),
-                    "col": int(match.group(2)) if match.group(2) else None,
-                    "message": match.group(3).strip(),
-                })
-
-        return {"errors": errors}
+        return {"errors": _parse_gcc_errors(proc.stderr, code)}
 
 
 def run_c(
@@ -72,7 +96,12 @@ def run_c(
             return _compile_failure("Compilation timed out", 124, expected_output, test_cases)
 
         if compile_proc.returncode != 0:
-            return _compile_failure(compile_proc.stderr, compile_proc.returncode, expected_output, test_cases)
+            return _compile_failure(
+                _format_compile_error(compile_proc.stderr, code),
+                compile_proc.returncode,
+                expected_output,
+                test_cases,
+            )
 
         if test_cases:
             return _run_test_cases(binary_path, test_cases, compare_mode)
@@ -115,6 +144,50 @@ def _execute_binary(binary_path: str, input_data: str):
         capture_output=True,
         text=True,
         timeout=RUN_TIMEOUT_SEC,
+    )
+
+
+def _parse_gcc_errors(stderr: str, code: str) -> list[Dict[str, Any]]:
+    errors = []
+    for line_text in stderr.splitlines():
+        match = GCC_ERR_RE.search(line_text)
+        if match:
+            errors.append({
+                "line": int(match.group(1)),
+                "col": int(match.group(2)) if match.group(2) else None,
+                "message": _format_compile_error(match.group(3).strip(), code),
+            })
+
+    if not errors and stderr.strip():
+        errors.append({"line": 0, "col": None, "message": _format_compile_error(stderr, code)})
+
+    return errors
+
+
+def _format_compile_error(stderr: str, code: str) -> str:
+    missing = MISSING_HEADER_RE.search(stderr)
+    if not missing:
+        return stderr
+
+    header = missing.group(1)
+    includes = {name: opener for opener, name in INCLUDE_RE.findall(code)}
+    opener = includes.get(header)
+
+    if opener == "\"":
+        return (
+            f"{header} was not found. GoCode C exercises run one file at a time, "
+            "so put helper code in the editor or use standard headers with angle brackets."
+        )
+
+    if header in STANDARD_C_HEADERS or header.startswith("bits/"):
+        return (
+            f"The server is missing the C standard header {header}. "
+            "Rebuild and deploy the execution server with libc6-dev installed."
+        )
+
+    return (
+        f"{header} is not available on the execution server. "
+        "Use the standard C headers taught in the course, or add that library to the server image."
     )
 
 

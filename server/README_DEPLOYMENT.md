@@ -8,6 +8,7 @@ It must run as a container because it needs:
 - OpenJDK 17
 - `javac` and `java` subprocess execution
 - `gcc` subprocess execution for C
+- C standard headers from `libc6-dev`, including `stdio.h` and `string.h`
 - server-side OpenAI access for hints
 
 ## Required Environment Variables
@@ -77,6 +78,7 @@ which maps the Android emulator to the host machine.
 - Confirm `GET /health` returns `{"ok": true}` and includes `c` in `languages`.
 - Confirm `/run` compiles and runs Java.
 - Confirm `/run` compiles and runs C with `language: "c"`.
+- Confirm `/run` handles standard C headers such as `stdio.h` and `string.h`.
 - Confirm `/lint` returns compiler errors.
 - Confirm `/hint` works only when `OPENAI_API_KEY` is configured.
 - Use HTTPS API URLs in Android release builds.
