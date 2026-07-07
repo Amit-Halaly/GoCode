@@ -83,14 +83,17 @@ class PracticeFlowActivity : AppCompatActivity() {
         btnCheckOrNext = findViewById(R.id.btnCheckOrNext)
 
         nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_p1"
-        questions = JavaPracticeRepository.getQuestions(nodeId)
+        questions = when {
+            nodeId.startsWith("py_") -> PythonPracticeRepository.getQuestions(nodeId)
+            else -> JavaPracticeRepository.getQuestions(nodeId)
+        }
 
         if (questions.isEmpty()) {
             finish()
             return
         }
 
-        FirebaseContentRepository.getQuestions(nodeId) { remoteQuestions ->
+        FirebaseContentRepository.getQuestions(nodeId, languageForNode()) { remoteQuestions ->
             if (remoteQuestions.isNotEmpty()) {
                 questions = remoteQuestions
                 currentIndex = 0
@@ -470,7 +473,7 @@ class PracticeFlowActivity : AppCompatActivity() {
 
         tvQuestionCounter.text = "${correctCount}/${questions.size}"
         practiceProgress.progress = 100
-        tvPracticeTitle.text = "Section 1 complete"
+        tvPracticeTitle.text = "Section ${sectionNumberForNode()} complete"
         tvPracticeQuestion.visibility = View.GONE
         cardPracticeCode.visibility = View.GONE
         optionsContainer.visibility = View.GONE
@@ -488,7 +491,11 @@ class PracticeFlowActivity : AppCompatActivity() {
         tvQuizResultBody.text = if (shouldContinue) {
             "Nice work. You understand enough to move into the next section. Leo still wants you to practice this section again later so the basics stay sharp."
         } else {
-            "You are close, but Leo recommends repeating this section before moving on. Focus on main(), println, and choosing the right variable type."
+            if (languageForNode() == "python") {
+                "You are close, but Leo recommends repeating this section before moving on. Focus on print(), indentation, variables, and the core Python pattern."
+            } else {
+                "You are close, but Leo recommends repeating this section before moving on. Focus on main(), println, and choosing the right variable type."
+            }
         }
 
         btnCheckOrNext.text = "Finish"
@@ -506,8 +513,24 @@ class PracticeFlowActivity : AppCompatActivity() {
             "java_u7_q1",
             "java_u8_q1",
             "java_u9_q1",
-            "java_u10_q1"
+            "java_u10_q1",
+            "py_u1_q1",
+            "py_u2_q1",
+            "py_u3_q1",
+            "py_u4_q1",
+            "py_u5_q1",
+            "py_u6_q1",
+            "py_u7_q1",
+            "py_u8_q1",
+            "py_u9_q1",
+            "py_u10_q1"
         )
+    }
+
+    private fun languageForNode(): String = if (nodeId.startsWith("py_")) "python" else "java"
+
+    private fun sectionNumberForNode(): Int {
+        return Regex("""_u(\d+)_""").find(nodeId)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: 1
     }
 
     private fun awardCompletion() {

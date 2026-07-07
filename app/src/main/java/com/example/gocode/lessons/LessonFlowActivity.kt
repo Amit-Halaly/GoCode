@@ -58,13 +58,16 @@ class LessonFlowActivity : AppCompatActivity() {
         btnNext = findViewById(R.id.btnNext)
 
         nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_l1"
-        steps = JavaLessonsRepository.getSteps(nodeId)
+        steps = when {
+            nodeId.startsWith("py_") -> PythonLessonsRepository.getSteps(nodeId)
+            else -> JavaLessonsRepository.getSteps(nodeId)
+        }
 
         if (steps.isEmpty()) {
             finish()
             return
         }
-        FirebaseContentRepository.getLessonSteps(nodeId) { remoteSteps ->
+        FirebaseContentRepository.getLessonSteps(nodeId, languageForNode()) { remoteSteps ->
             if (remoteSteps.isNotEmpty()) {
                 steps = remoteSteps
                 currentIndex = currentIndex.coerceAtMost(steps.lastIndex)
@@ -93,6 +96,8 @@ class LessonFlowActivity : AppCompatActivity() {
 
         renderStep()
     }
+
+    private fun languageForNode(): String = if (nodeId.startsWith("py_")) "python" else "java"
 
     @SuppressLint("SetTextI18n")
     private fun renderStep() {

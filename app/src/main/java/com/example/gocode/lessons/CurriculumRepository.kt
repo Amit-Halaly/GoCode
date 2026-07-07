@@ -38,43 +38,43 @@ object CurriculumRepository {
         }
     }
 
-    private fun pythonSection1(): List<PathNodeItem> = listOf(
-        PathNodeItem(
-            id = "py_u1_l1",
-            type = PathNodeType.LESSON,
-            title = "Print basics",
-            offsetDp = 0
-        ),
-        PathNodeItem(
-            id = "py_u1_p1",
-            type = PathNodeType.PRACTICE,
-            title = "Practice: prints",
-            offsetDp = 40
-        ),
-        PathNodeItem(
-            id = "py_u1_l2",
-            type = PathNodeType.LESSON,
-            title = "Variables",
-            offsetDp = 10
-        ),
-        PathNodeItem(
-            id = "py_u1_q1",
-            type = PathNodeType.QUIZ,
-            title = "Quiz: basics",
-            offsetDp = 70
-        ),
-        PathNodeItem(
-            id = "py_u1_l2",
-            type = PathNodeType.LESSON,
-            title = "Variables",
-            offsetDp = 10
-        ),
-        PathNodeItem(
-            id = "py_u1_c1",
-            type = PathNodeType.CODE,
-            title = "Code: Hello World",
-            offsetDp = 30
+    private fun pythonSection1(): List<PathNodeItem> = path(
+        prefix = "py",
+        sections = listOf(
+            SectionNodes("Print basics", "Practice: prints", "Variables", "Practice: variables", "Quiz: basics", "Code: Hello World"),
+            SectionNodes("Comparisons + if", "Practice: if", "else + logic", "Practice: decisions", "Quiz: if / else", "Code: Access check"),
+            SectionNodes("while loops", "Practice: while", "for loops", "Practice: loops", "Quiz: loops", "Code: Count loop"),
+            SectionNodes("Lists", "Practice: lists", "List changes", "Practice: indexes", "Quiz: lists", "Code: Favorite list"),
+            SectionNodes("Functions", "Practice: functions", "Parameters + return", "Practice: return", "Quiz: functions", "Code: Helper function"),
+            SectionNodes("Input", "Practice: input", "Input decisions", "Practice: input logic", "Quiz: input", "Code: Ask age"),
+            SectionNodes("String tools", "Practice: strings", "String checks", "Practice: text", "Quiz: strings", "Code: Name checker"),
+            SectionNodes("Dictionaries", "Practice: dictionaries", "Dictionary updates", "Practice: records", "Quiz: dictionaries", "Code: Student dictionary"),
+            SectionNodes("Reading errors", "Practice: errors", "try / except", "Practice: debugging", "Quiz: debugging", "Code: Safe number"),
+            SectionNodes("Final review", "Practice: review", "Build confidence", "Practice: mixed", "Final quiz", "Code: Final check")
         )
+    )
+
+    private fun path(prefix: String, sections: List<SectionNodes>): List<PathNodeItem> {
+        return sections.flatMapIndexed { sectionIndex, section ->
+            val unit = sectionIndex + 1
+            listOf(
+                PathNodeItem("${prefix}_u${unit}_l1", PathNodeType.LESSON, section.lesson1, offsetDp = 0),
+                PathNodeItem("${prefix}_u${unit}_p1", PathNodeType.PRACTICE, section.practice1, offsetDp = 45),
+                PathNodeItem("${prefix}_u${unit}_l2", PathNodeType.LESSON, section.lesson2, offsetDp = 12),
+                PathNodeItem("${prefix}_u${unit}_p2", PathNodeType.PRACTICE, section.practice2, offsetDp = 72),
+                PathNodeItem("${prefix}_u${unit}_q1", PathNodeType.QUIZ, section.quiz, offsetDp = 18),
+                PathNodeItem("${prefix}_u${unit}_c1", PathNodeType.CODE, section.code, offsetDp = 36)
+            )
+        }
+    }
+
+    private data class SectionNodes(
+        val lesson1: String,
+        val practice1: String,
+        val lesson2: String,
+        val practice2: String,
+        val quiz: String,
+        val code: String
     )
 
     private fun javaSection1(): List<PathNodeItem> = listOf(

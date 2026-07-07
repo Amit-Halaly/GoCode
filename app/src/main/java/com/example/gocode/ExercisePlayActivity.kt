@@ -25,6 +25,7 @@ import com.example.gocode.lessons.CodeExercise
 import com.example.gocode.lessons.JavaCodeExerciseRepository
 import com.example.gocode.lessons.LanguagePathFragment
 import com.example.gocode.lessons.LessonProgressStore
+import com.example.gocode.lessons.PythonCodeExerciseRepository
 import com.airbnb.lottie.LottieAnimationView
 import com.example.gocode.network.ApiClient
 import com.example.gocode.network.models.hintModels.HintRequest
@@ -115,7 +116,10 @@ class ExercisePlayActivity : AppCompatActivity() {
         setContentView(R.layout.activity_exercise_play)
 
         nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_c1"
-        currentExercise = JavaCodeExerciseRepository.getExercise(nodeId)
+        currentExercise = when {
+            nodeId.startsWith("py_") -> PythonCodeExerciseRepository.getExercise(nodeId)
+            else -> JavaCodeExerciseRepository.getExercise(nodeId)
+        }
 
         findViewById<TextView>(R.id.taskTitle).text = currentExercise.title
         findViewById<TextView>(R.id.taskSubtitle).text = currentExercise.subtitle
@@ -390,7 +394,7 @@ class ExercisePlayActivity : AppCompatActivity() {
             val res = runCatching {
                 ApiClient.execApi.run(
                     RunRequest(
-                        language = "java",
+                        language = currentExercise.language,
                         code = code,
                         input = fallbackInput,
                         expectedOutput = fallbackExpectedOutput,
@@ -559,6 +563,7 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private fun detectInputReadCount(code: String): Int {
+        val pythonInputReads = Regex("""\binput\s*\(""").findAll(code).count()
         val scannerReads = Regex(
             """\.\s*next(?:Int|Long|Double|Float|Short|Byte|Line|Boolean|BigInteger|BigDecimal)?\s*\("""
         ).findAll(code).count()
@@ -568,7 +573,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         val dataInputReads = Regex(
             """\.\s*read(?:Int|Long|Double|Float|Short|Byte|Boolean|Char|UTF|Fully)\s*\("""
         ).findAll(code).count()
-        return scannerReads + bufferedReaderReads + streamReads + passwordReads + dataInputReads
+        return pythonInputReads + scannerReads + bufferedReaderReads + streamReads + passwordReads + dataInputReads
     }
 
     private fun showUnlockAnswerDialog() {
@@ -715,7 +720,7 @@ class ExercisePlayActivity : AppCompatActivity() {
                 ApiClient.execApi.hint(
                     HintRequest(
                         task = "${currentExercise.title}. ${currentExercise.subtitle}",
-                        language = "java",
+                        language = currentExercise.language,
                         code = editor.text.toString(),
                         input = inputField.text.toString(),
                         output = res.summary ?: res.output,
@@ -785,7 +790,9 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private suspend fun runLint() {
         runCatching {
-            ApiClient.execApi.lint(LintRequest(code = editor.text.toString()))
+            ApiClient.execApi.lint(
+                LintRequest(language = currentExercise.language, code = editor.text.toString())
+            )
         }.onSuccess { res ->
             val first = res.errors.firstOrNull() ?: run {
                 clearDiagnostics()

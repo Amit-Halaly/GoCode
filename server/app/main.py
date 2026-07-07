@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI, HTTPException, WebSocket
 from app.models import LintRequest, RunRequest, LintResponse, RunResponse, HintRequest, HintResponse
 from app.services.java_runner import lint_java, run_java
+from app.services.python_runner import lint_python, run_python
 from app.arena import arena_manager
 from openai import OpenAI
 
@@ -31,11 +32,21 @@ async def arena_ws(websocket: WebSocket):
 
 @app.post("/lint", response_model=LintResponse)
 def lint(req: LintRequest):
+    if req.language.lower() == "python":
+        return lint_python(req.code)
     return lint_java(req.code)
 
 
 @app.post("/run", response_model=RunResponse)
 def run(req: RunRequest):
+    if req.language.lower() == "python":
+        return run_python(
+            req.code,
+            req.input or "",
+            expected_output=req.expectedOutput,
+            compare_mode=req.compareMode,
+            test_cases=[tc.model_dump() for tc in req.testCases] if req.testCases else None,
+        )
     return run_java(
         req.code,
         req.input or "",

@@ -12,13 +12,16 @@ import com.example.gocode.lessons.PracticeQuestion
 import com.example.gocode.lessons.PracticeQuestionType
 import com.example.gocode.lessons.JavaPracticeRepository
 import com.example.gocode.lessons.JavaLessonsRepository
+import com.example.gocode.lessons.PythonCodeExerciseRepository
+import com.example.gocode.lessons.PythonLessonsRepository
+import com.example.gocode.lessons.PythonPracticeRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
 object FirebaseContentRepository {
     private const val PREFS_NAME = "firebase_content"
     private const val KEY_SEEDED_VERSION = "seededVersion"
-    private const val CONTENT_VERSION = 1
+    private const val CONTENT_VERSION = 2
 
     fun ensureSeeded(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -26,47 +29,49 @@ object FirebaseContentRepository {
 
         val db = FirebaseFirestore.getInstance()
         val batch = db.batch()
-        val nodes = CurriculumRepository.section1("java")
+        listOf("java", "python").forEach { language ->
+            val nodes = CurriculumRepository.section1(language)
 
-        nodes.forEachIndexed { index, node ->
-            val nodeRef = db.collection("curriculum")
-                .document("java")
-                .collection("nodes")
-                .document(node.id)
-            batch.set(nodeRef, node.toFirebaseMap(index), SetOptions.merge())
+            nodes.forEachIndexed { index, node ->
+                val nodeRef = db.collection("curriculum")
+                    .document(language)
+                    .collection("nodes")
+                    .document(node.id)
+                batch.set(nodeRef, node.toFirebaseMap(index, language), SetOptions.merge())
 
-            when (node.type.name) {
-                "LESSON" -> {
-                    JavaLessonsRepository.getSteps(node.id).forEachIndexed { stepIndex, step ->
-                        val stepRef = db.collection("curriculum")
-                            .document("java")
-                            .collection("lessonSteps")
-                            .document(node.id)
-                            .collection("steps")
-                            .document(step.id)
-                        batch.set(stepRef, step.toFirebaseMap(stepIndex), SetOptions.merge())
+                when (node.type.name) {
+                    "LESSON" -> {
+                        lessonSteps(language, node.id).forEachIndexed { stepIndex, step ->
+                            val stepRef = db.collection("curriculum")
+                                .document(language)
+                                .collection("lessonSteps")
+                                .document(node.id)
+                                .collection("steps")
+                                .document(step.id)
+                            batch.set(stepRef, step.toFirebaseMap(stepIndex), SetOptions.merge())
+                        }
                     }
-                }
-                "PRACTICE", "QUIZ" -> {
-                    JavaPracticeRepository.getQuestions(node.id).forEachIndexed { questionIndex, question ->
-                        val questionRef = db.collection("curriculum")
-                            .document("java")
-                            .collection("questionSets")
-                            .document(node.id)
-                            .collection("questions")
-                            .document(question.id)
-                        batch.set(questionRef, question.toFirebaseMap(questionIndex), SetOptions.merge())
+                    "PRACTICE", "QUIZ" -> {
+                        practiceQuestions(language, node.id).forEachIndexed { questionIndex, question ->
+                            val questionRef = db.collection("curriculum")
+                                .document(language)
+                                .collection("questionSets")
+                                .document(node.id)
+                                .collection("questions")
+                                .document(question.id)
+                            batch.set(questionRef, question.toFirebaseMap(questionIndex), SetOptions.merge())
+                        }
                     }
                 }
             }
-        }
 
-        codeTasks().forEach { (nodeId, task) ->
-            val ref = db.collection("curriculum")
-                .document("java")
-                .collection("codeTasks")
-                .document(nodeId)
-            batch.set(ref, task, SetOptions.merge())
+            codeTasks(language).forEach { (nodeId, task) ->
+                val ref = db.collection("curriculum")
+                    .document(language)
+                    .collection("codeTasks")
+                    .document(nodeId)
+                batch.set(ref, task, SetOptions.merge())
+            }
         }
 
         listOf("java_u1_l1", "java_u1_p1", "java_u1_q1", "java_u1_c1").forEach { sampleNodeId ->
@@ -118,11 +123,12 @@ object FirebaseContentRepository {
 
     fun getLessonSteps(
         nodeId: String,
+        language: String = "java",
         onResult: (List<LessonStep>) -> Unit
     ) {
         FirebaseFirestore.getInstance()
             .collection("curriculum")
-            .document("java")
+            .document(language.lowercase())
             .collection("lessonSteps")
             .document(nodeId)
             .collection("steps")
@@ -144,11 +150,12 @@ object FirebaseContentRepository {
     }
 
     fun getPathNodes(
+        language: String = "java",
         onResult: (List<PathNodeItem>) -> Unit
     ) {
         FirebaseFirestore.getInstance()
             .collection("curriculum")
-            .document("java")
+            .document(language.lowercase())
             .collection("nodes")
             .orderBy("order")
             .get()
@@ -172,11 +179,12 @@ object FirebaseContentRepository {
 
     fun getQuestions(
         nodeId: String,
+        language: String = "java",
         onResult: (List<PracticeQuestion>) -> Unit
     ) {
         FirebaseFirestore.getInstance()
             .collection("curriculum")
-            .document("java")
+            .document(language.lowercase())
             .collection("questionSets")
             .document(nodeId)
             .collection("questions")
@@ -207,11 +215,12 @@ object FirebaseContentRepository {
 
     fun getCodeTask(
         nodeId: String,
+        language: String = "java",
         onResult: (Map<String, String>) -> Unit
     ) {
         FirebaseFirestore.getInstance()
             .collection("curriculum")
-            .document("java")
+            .document(language.lowercase())
             .collection("codeTasks")
             .document(nodeId)
             .get()
@@ -230,13 +239,13 @@ object FirebaseContentRepository {
             .addOnFailureListener { onResult(emptyMap()) }
     }
 
-    private fun PathNodeItem.toFirebaseMap(order: Int): Map<String, Any> = mapOf(
+    private fun PathNodeItem.toFirebaseMap(order: Int, language: String): Map<String, Any> = mapOf(
         "id" to id,
         "type" to type.name,
         "title" to title,
         "offsetDp" to offsetDp,
         "order" to order,
-        "language" to "java"
+        "language" to language
     )
 
     private fun LessonStep.toFirebaseMap(order: Int): Map<String, Any?> = mapOf(
@@ -261,7 +270,30 @@ object FirebaseContentRepository {
         "order" to order
     )
 
-    private fun codeTasks(): Map<String, Map<String, String>> = mapOf(
+    private fun lessonSteps(language: String, nodeId: String): List<LessonStep> {
+        return when (language) {
+            "python" -> PythonLessonsRepository.getSteps(nodeId)
+            else -> JavaLessonsRepository.getSteps(nodeId)
+        }
+    }
+
+    private fun practiceQuestions(language: String, nodeId: String): List<PracticeQuestion> {
+        return when (language) {
+            "python" -> PythonPracticeRepository.getQuestions(nodeId)
+            else -> JavaPracticeRepository.getQuestions(nodeId)
+        }
+    }
+
+    private fun codeTasks(language: String): Map<String, Map<String, String>> {
+        if (language == "python") {
+            return PythonCodeExerciseRepository.getExercises().mapValues { (_, exercise) ->
+                mapOf(
+                    "task" to exercise.title,
+                    "template" to exercise.template
+                )
+            }
+        }
+        return mapOf(
         "java_u1_c1" to mapOf(
             "task" to "Print Hello GoCode!",
             "template" to """
@@ -294,7 +326,8 @@ object FirebaseContentRepository {
         "java_u8_c1" to mapOf("task" to "Complete the Student introduce method so the object prints its own name and age.", "template" to "class Student {\n    String name;\n    int age;\n\n    void introduce() {\n        // TODO\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Student student = new Student();\n        student.name = \"Maya\";\n        student.age = 14;\n        student.introduce();\n    }\n}"),
         "java_u9_c1" to mapOf("task" to "Use try / catch to parse text into an int. Print the number or Invalid number.", "template" to "public class Main {\n    public static void main(String[] args) {\n        String text = \"42\";\n        // TODO\n    }\n}"),
         "java_u10_c1" to mapOf("task" to "Write a method that loops through the names array and prints only names longer than 3 characters.", "template" to "public class Main {\n    static void printLongNames(String[] names) {\n        // TODO\n    }\n\n    public static void main(String[] args) {\n        String[] names = {\"Leo\", \"Maya\", \"Noam\", \"Dan\"};\n        printLongNames(names);\n    }\n}")
-    )
+        )
+    }
 
     private fun com.google.firebase.firestore.DocumentSnapshot.stringList(field: String): List<String> {
         return (get(field) as? List<*>).orEmpty().mapNotNull { it as? String }

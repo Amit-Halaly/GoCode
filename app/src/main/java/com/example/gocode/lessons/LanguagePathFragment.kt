@@ -49,7 +49,7 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
         updateSectionHeader(1)
         rvPathNodes.itemAnimator = null
 
-        if (language.lowercase() != "java") {
+        if (language.lowercase() == "c") {
             showComingSoon(rvPathNodes)
             return
         }
@@ -115,7 +115,7 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
 
     override fun onResume() {
         super.onResume()
-        if (language.lowercase() != "java") return
+        if (language.lowercase() == "c") return
         val template = CurriculumRepository.section1(language)
         pathAdapter?.submitItems(loadNodes(template))
         refreshNodesFromFirebase(template)
@@ -144,7 +144,7 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
     }
 
     private fun refreshPathFromFirebase() {
-        FirebaseContentRepository.getPathNodes { remoteTemplate ->
+        FirebaseContentRepository.getPathNodes(language) { remoteTemplate ->
             if (!isAdded || remoteTemplate.isEmpty()) return@getPathNodes
             pathAdapter?.submitItems(loadNodes(remoteTemplate))
             refreshNodesFromFirebase(remoteTemplate)
@@ -203,11 +203,11 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
         return when (sectionNumber) {
             2 -> SectionInfo(2, "If / Else Statements", R.color.section_two)
             3 -> SectionInfo(3, "Loops", R.color.section_three)
-            4 -> SectionInfo(4, "Arrays", R.color.section_four)
-            5 -> SectionInfo(5, "Methods", R.color.section_five)
-            6 -> SectionInfo(6, "Scanner Input", R.color.section_six)
+            4 -> SectionInfo(4, if (language.lowercase() == "python") "Lists" else "Arrays", R.color.section_four)
+            5 -> SectionInfo(5, if (language.lowercase() == "python") "Functions" else "Methods", R.color.section_five)
+            6 -> SectionInfo(6, if (language.lowercase() == "python") "Input" else "Scanner Input", R.color.section_six)
             7 -> SectionInfo(7, "String Tools", R.color.section_seven)
-            8 -> SectionInfo(8, "Classes & Objects", R.color.section_eight)
+            8 -> SectionInfo(8, if (language.lowercase() == "python") "Dictionaries" else "Classes & Objects", R.color.section_eight)
             9 -> SectionInfo(9, "Debugging Basics", R.color.section_nine)
             10 -> SectionInfo(10, "Final Review", R.color.section_ten)
             else -> SectionInfo(1, "Getting Started", R.color.section_one)

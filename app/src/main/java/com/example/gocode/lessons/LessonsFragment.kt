@@ -39,10 +39,10 @@ class LessonsFragment : Fragment(R.layout.fragment_lessons) {
             .replace(R.id.lessonsContainer, fragment)
             .commit()
 
-        val fallbackColor = if (lang == "java") {
-            R.color.section_one
-        } else {
+        val fallbackColor = if (lang == "c") {
             R.color.section_nine
+        } else {
+            R.color.section_one
         }
         setLanguageButtonColor(ContextCompat.getColor(requireContext(), fallbackColor))
     }

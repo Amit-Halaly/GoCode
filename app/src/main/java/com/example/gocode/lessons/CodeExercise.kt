@@ -4,6 +4,7 @@ import com.example.gocode.network.models.runModels.RunTestCase
 
 data class CodeExercise(
     val nodeId: String,
+    val language: String = "java",
     val title: String,
     val subtitle: String,
     val template: String,
