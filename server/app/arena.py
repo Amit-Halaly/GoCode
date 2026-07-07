@@ -104,9 +104,9 @@ class ArenaMatch:
 
 class ArenaManager:
     def __init__(self) -> None:
-        self.waiting: ArenaPlayer | None = None
+        self.waiting: list[ArenaPlayer] = []
         self.waiting_invites: dict[str, ArenaPlayer] = {}
-        self.waiting_timeout_task: asyncio.Task | None = None
+        self.waiting_timeout_tasks: dict[str, asyncio.Task] = {}
         self.matches: dict[str, ArenaMatch] = {}
         self.player_matches: dict[str, str] = {}
         self.lock = asyncio.Lock()
@@ -152,16 +152,17 @@ class ArenaManager:
             return
 
         async with self.lock:
-            if self.waiting is None or self.waiting.id == player.id:
-                self.waiting = player
-                self._cancel_waiting_timeout()
-                self.waiting_timeout_task = asyncio.create_task(self._match_with_bot_after_timeout(player.id))
+            self.waiting = [waiting for waiting in self.waiting if waiting.id != player.id]
+            opponent = self._best_waiting_opponent(player)
+            if opponent is None:
+                self.waiting.append(player)
+                self._cancel_waiting_timeout(player.id)
+                self.waiting_timeout_tasks[player.id] = asyncio.create_task(self._match_with_bot_after_timeout(player.id))
                 await player.websocket.send_json({"type": "matchmaking_started", "timeoutMs": 30_000})
                 return
 
-            opponent = self.waiting
-            self.waiting = None
-            self._cancel_waiting_timeout()
+            self.waiting = [waiting for waiting in self.waiting if waiting.id != opponent.id]
+            self._cancel_waiting_timeout(opponent.id)
 
         await self.start_match(opponent, player)
 
@@ -181,14 +182,17 @@ class ArenaManager:
     async def _match_with_bot_after_timeout(self, waiting_player_id: str) -> None:
         await asyncio.sleep(30)
         async with self.lock:
-            if self.waiting is None or self.waiting.id != waiting_player_id:
+            player = next((waiting for waiting in self.waiting if waiting.id == waiting_player_id), None)
+            if player is None:
                 return
-            player = self.waiting
-            self.waiting = None
+            self.waiting = [waiting for waiting in self.waiting if waiting.id != waiting_player_id]
+            self.waiting_timeout_tasks.pop(waiting_player_id, None)
 
         await self.start_match(player, self._create_bot_for(player))
 
     async def start_match(self, first: ArenaPlayer, second: ArenaPlayer) -> None:
+        self._cancel_waiting_timeout(first.id)
+        self._cancel_waiting_timeout(second.id)
         questions = self._select_questions(first.languages, second.languages)
         match = ArenaMatch(
             id=str(uuid.uuid4()),
@@ -343,9 +347,10 @@ class ArenaManager:
 
     async def remove_player(self, player_id: str) -> None:
         async with self.lock:
-            if self.waiting and self.waiting.id == player_id:
-                self.waiting = None
-                self._cancel_waiting_timeout()
+            waiting_count = len(self.waiting)
+            self.waiting = [player for player in self.waiting if player.id != player_id]
+            if len(self.waiting) != waiting_count:
+                self._cancel_waiting_timeout(player_id)
             invite_code = next(
                 (code for code, player in self.waiting_invites.items() if player.id == player_id),
                 None,
@@ -384,10 +389,30 @@ class ArenaManager:
 
     def _select_questions(self, first_languages: list[str], second_languages: list[str]) -> list[dict[str, Any]]:
         shared = {lang.lower() for lang in first_languages} & {lang.lower() for lang in second_languages}
-        pool = [q for q in ARENA_QUESTIONS if q["language"].lower() in shared]
-        if len(pool) < 5:
+        question_languages = shared or ({lang.lower() for lang in first_languages} | {lang.lower() for lang in second_languages})
+        pool = [q for q in ARENA_QUESTIONS if q["language"].lower() in question_languages]
+        if not pool:
             pool = ARENA_QUESTIONS
+        random.shuffle(pool)
         return pool[:5]
+
+    def _best_waiting_opponent(self, player: ArenaPlayer) -> ArenaPlayer | None:
+        compatible = [
+            waiting for waiting in self.waiting
+            if self._language_overlap(waiting.languages, player.languages) > 0
+        ]
+        if not compatible:
+            return None
+        return max(
+            compatible,
+            key=lambda waiting: (
+                self._language_overlap(waiting.languages, player.languages),
+                -abs(waiting.rating - player.rating),
+            ),
+        )
+
+    def _language_overlap(self, first_languages: list[str], second_languages: list[str]) -> int:
+        return len({lang.lower() for lang in first_languages} & {lang.lower() for lang in second_languages})
 
     def _normalize_languages(self, value: Any) -> list[str]:
         if not isinstance(value, list):
@@ -428,10 +453,15 @@ class ArenaManager:
             return None
         return next((player for player in match.players if player.id == player_id), None)
 
-    def _cancel_waiting_timeout(self) -> None:
-        if self.waiting_timeout_task is not None:
-            self.waiting_timeout_task.cancel()
-            self.waiting_timeout_task = None
+    def _cancel_waiting_timeout(self, player_id: str | None = None) -> None:
+        if player_id is None:
+            tasks = list(self.waiting_timeout_tasks.values())
+            self.waiting_timeout_tasks.clear()
+        else:
+            task = self.waiting_timeout_tasks.pop(player_id, None)
+            tasks = [task] if task is not None else []
+        for task in tasks:
+            task.cancel()
 
     def _cancel_match_tasks(self, match: ArenaMatch) -> None:
         current_task = asyncio.current_task()

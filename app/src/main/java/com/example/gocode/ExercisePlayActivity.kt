@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import com.example.gocode.gamification.GamificationRepository
+import com.example.gocode.lessons.CCodeExerciseRepository
 import com.example.gocode.lessons.CodeExercise
 import com.example.gocode.lessons.JavaCodeExerciseRepository
 import com.example.gocode.lessons.LanguagePathFragment
@@ -117,6 +118,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
         nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_c1"
         currentExercise = when {
+            nodeId.startsWith("c_") -> CCodeExerciseRepository.getExercise(nodeId)
             nodeId.startsWith("py_") -> PythonCodeExerciseRepository.getExercise(nodeId)
             else -> JavaCodeExerciseRepository.getExercise(nodeId)
         }
@@ -569,11 +571,12 @@ class ExercisePlayActivity : AppCompatActivity() {
         ).findAll(code).count()
         val bufferedReaderReads = Regex("""\.\s*readLine\s*\(""").findAll(code).count()
         val streamReads = Regex("""(?:System\s*\.\s*in|[\w.]+)\s*\.\s*read\s*\(""").findAll(code).count()
+        val scanfReads = Regex("""\bscanf\s*\(""").findAll(code).count()
         val passwordReads = Regex("""\.\s*readPassword\s*\(""").findAll(code).count()
         val dataInputReads = Regex(
             """\.\s*read(?:Int|Long|Double|Float|Short|Byte|Boolean|Char|UTF|Fully)\s*\("""
         ).findAll(code).count()
-        return pythonInputReads + scannerReads + bufferedReaderReads + streamReads + passwordReads + dataInputReads
+        return pythonInputReads + scannerReads + bufferedReaderReads + streamReads + scanfReads + passwordReads + dataInputReads
     }
 
     private fun showUnlockAnswerDialog() {

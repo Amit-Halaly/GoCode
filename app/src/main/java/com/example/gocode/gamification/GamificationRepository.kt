@@ -340,6 +340,9 @@ object GamificationRepository {
             if ("java_u10_q1" in rewardedNodeIds) {
                 add(AchievementReward("java_path_complete", "Java Path Complete", "You completed the Java fundamentals path."))
             }
+            if ("c_u10_q1" in rewardedNodeIds) {
+                add(AchievementReward("c_path_complete", "C Path Complete", "You completed the C fundamentals path."))
+            }
         }
 
         return candidates.distinctBy { it.id }

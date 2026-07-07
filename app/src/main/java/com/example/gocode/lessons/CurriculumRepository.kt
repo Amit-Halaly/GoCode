@@ -440,42 +440,19 @@ object CurriculumRepository {
         )
     )
 
-    private fun cSection1(): List<PathNodeItem> = listOf(
-        PathNodeItem(
-            id = "c_u1_l1",
-            type = PathNodeType.LESSON,
-            title = "#include + printf",
-            offsetDp = 0
-        ),
-        PathNodeItem(
-            id = "c_u1_p1",
-            type = PathNodeType.PRACTICE,
-            title = "Practice: printf",
-            offsetDp = 40
-        ),
-        PathNodeItem(
-            id = "c_u1_l2",
-            type = PathNodeType.LESSON,
-            title = "Variables",
-            offsetDp = 10
-        ),
-        PathNodeItem(
-            id = "c_u1_q1",
-            type = PathNodeType.QUIZ,
-            title = "Quiz: basics",
-            offsetDp = 70
-        ),
-        PathNodeItem(
-            id = "c_u1_l2",
-            type = PathNodeType.LESSON,
-            title = "Variables",
-            offsetDp = 10
-        ),
-        PathNodeItem(
-            id = "c_u1_c1",
-            type = PathNodeType.CODE,
-            title = "Code: Hello World",
-            offsetDp = 30
+    private fun cSection1(): List<PathNodeItem> = path(
+        prefix = "c",
+        sections = listOf(
+            SectionNodes("#include + printf", "Practice: printf", "Variables + types", "Practice: variables", "Quiz: basics", "Code: Hello C"),
+            SectionNodes("Comparisons + if", "Practice: if", "else + logic", "Practice: decisions", "Quiz: decisions", "Code: Access check"),
+            SectionNodes("while loops", "Practice: while", "for loops", "Practice: loops", "Quiz: loops", "Code: Count loop"),
+            SectionNodes("Arrays", "Practice: arrays", "Array indexes", "Practice: indexes", "Quiz: arrays", "Code: Scores list"),
+            SectionNodes("Functions", "Practice: functions", "Parameters + return", "Practice: return", "Quiz: functions", "Code: Helper function"),
+            SectionNodes("scanf input", "Practice: input", "Input decisions", "Practice: scanf", "Quiz: input", "Code: Ask age"),
+            SectionNodes("Strings as char arrays", "Practice: strings", "String checks", "Practice: text", "Quiz: strings", "Code: Name checker"),
+            SectionNodes("Pointers", "Practice: pointers", "Pointers + arrays", "Practice: addresses", "Quiz: pointers", "Code: Swap values"),
+            SectionNodes("Reading errors", "Practice: errors", "Debugging C", "Practice: debugging", "Quiz: debugging", "Code: Safe divide"),
+            SectionNodes("Final review", "Practice: review", "Build confidence", "Practice: mixed", "Final quiz", "Code: Final check")
         )
     )
 }
