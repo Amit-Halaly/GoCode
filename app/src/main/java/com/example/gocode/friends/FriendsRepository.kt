@@ -43,10 +43,23 @@ data class FriendSearchResult(
     val primaryLanguage: String,
 )
 
+data class ArenaInvite(
+    val id: String,
+    val fromUid: String,
+    val toUid: String,
+    val fromUsername: String,
+    val inviteCode: String,
+    val fromRating: Int,
+    val fromAvatarId: String?,
+    val fromLanguages: List<String>,
+    val status: String,
+)
+
 object FriendsRepository {
     private const val USERS = "users"
     private const val FRIEND_REQUESTS = "friendRequests"
     private const val FRIENDS = "friends"
+    private const val ARENA_INVITES = "arenaInvites"
     private const val STATUS_PENDING = "pending"
     private const val STATUS_ACCEPTED = "accepted"
     private const val STATUS_DECLINED = "declined"
@@ -341,6 +354,85 @@ object FriendsRepository {
         }
     }
 
+    fun sendArenaInvite(
+        targetUid: String,
+        inviteCode: String,
+        onComplete: (Boolean, String) -> Unit,
+    ) {
+        val currentUid = auth.currentUser?.uid ?: run {
+            onComplete(false, "Sign in required")
+            return
+        }
+        if (targetUid == currentUid) {
+            onComplete(false, "Choose a friend to invite")
+            return
+        }
+
+        val currentRef = db.collection(USERS).document(currentUid)
+        currentRef.get()
+            .addOnSuccessListener { current ->
+                val primaryLanguage = current.getString("primaryLanguage") ?: "Java"
+                val knownLanguages = current.get("knownLanguages") as? List<*>
+                val languages = (knownLanguages?.filterIsInstance<String>().orEmpty() + primaryLanguage)
+                    .map { it.trim() }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .ifEmpty { listOf("Java") }
+                val inviteRef = db.collection(ARENA_INVITES).document()
+                inviteRef.set(
+                    mapOf(
+                        "fromUid" to currentUid,
+                        "toUid" to targetUid,
+                        "fromUsername" to current.displayName(),
+                        "inviteCode" to inviteCode,
+                        "fromRating" to (current.getLong("rating") ?: 1000L),
+                        "fromAvatarId" to (current.getString("avatarId") ?: ""),
+                        "fromLanguages" to languages,
+                        "status" to STATUS_PENDING,
+                        "createdAt" to FieldValue.serverTimestamp(),
+                        "updatedAt" to FieldValue.serverTimestamp(),
+                    )
+                )
+                    .addOnSuccessListener { onComplete(true, "Arena invite sent") }
+                    .addOnFailureListener { onComplete(false, it.message ?: "Could not send invite") }
+            }
+            .addOnFailureListener { onComplete(false, it.message ?: "Could not send invite") }
+    }
+
+    fun listenIncomingArenaInvites(
+        onChanged: (List<ArenaInvite>) -> Unit,
+        onError: (Exception) -> Unit,
+    ): ListenerRegistration? {
+        val uid = auth.currentUser?.uid ?: return null
+        return db.collection(ARENA_INVITES)
+            .whereEqualTo("toUid", uid)
+            .whereEqualTo("status", STATUS_PENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    onError(error)
+                    return@addSnapshotListener
+                }
+                onChanged(snapshot?.documents.orEmpty().map { it.toArenaInvite() })
+            }
+    }
+
+    fun updateArenaInviteStatus(
+        inviteId: String,
+        accepted: Boolean,
+        onComplete: (Boolean, String) -> Unit,
+    ) {
+        val status = if (accepted) STATUS_ACCEPTED else STATUS_DECLINED
+        db.collection(ARENA_INVITES).document(inviteId)
+            .update(
+                mapOf(
+                    "status" to status,
+                    "updatedAt" to FieldValue.serverTimestamp(),
+                )
+            )
+            .addOnSuccessListener { onComplete(true, if (accepted) "Joining Arena" else "Invite declined") }
+            .addOnFailureListener { onComplete(false, it.message ?: "Could not update invite") }
+    }
+
     private fun loadProfiles(
         friendIds: List<String>,
         onChanged: (List<FriendProfile>) -> Unit,
@@ -411,6 +503,23 @@ object FriendsRepository {
             toUid = getString("toUid").orEmpty(),
             fromUsername = getString("fromUsername").orEmpty(),
             toUsername = getString("toUsername").orEmpty(),
+            status = getString("status") ?: STATUS_PENDING,
+        )
+    }
+
+    private fun DocumentSnapshot.toArenaInvite(): ArenaInvite {
+        return ArenaInvite(
+            id = id,
+            fromUid = getString("fromUid").orEmpty(),
+            toUid = getString("toUid").orEmpty(),
+            fromUsername = getString("fromUsername") ?: "Friend",
+            inviteCode = getString("inviteCode").orEmpty(),
+            fromRating = (getLong("fromRating") ?: 1000L).toInt(),
+            fromAvatarId = getString("fromAvatarId")?.takeIf { it.isNotBlank() },
+            fromLanguages = (get("fromLanguages") as? List<*>)
+                ?.filterIsInstance<String>()
+                ?.filter { it.isNotBlank() }
+                .orEmpty(),
             status = getString("status") ?: STATUS_PENDING,
         )
     }
