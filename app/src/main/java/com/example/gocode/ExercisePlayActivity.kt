@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import com.example.gocode.gamification.GamificationRepository
+import com.example.gocode.lessons.CCodeExerciseRepository
 import com.example.gocode.lessons.CodeExercise
 import com.example.gocode.lessons.JavaCodeExerciseRepository
 import com.example.gocode.lessons.LanguagePathFragment
@@ -117,6 +118,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
         nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_c1"
         currentExercise = when {
+            nodeId.startsWith("c_") -> CCodeExerciseRepository.getExercise(nodeId)
             nodeId.startsWith("py_") -> PythonCodeExerciseRepository.getExercise(nodeId)
             else -> JavaCodeExerciseRepository.getExercise(nodeId)
         }
@@ -427,6 +429,8 @@ class ExercisePlayActivity : AppCompatActivity() {
                     GamificationRepository.awardNodeCompleted(this@ExercisePlayActivity, nodeId)
                 }
                 playResultAnimation(pass = true) { finish() }
+            } else if (isCServerMismatch(res)) {
+                hideLeoHard()
             } else {
                 showFailThenLeo()
             }
@@ -446,6 +450,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         val passed = res.passed == true && !hasError
         outputTitle.text = if (passed) "Great work" else "Needs work"
         outputText.text = when {
+            isCServerMismatch(res) -> "The app sent this as C, but the execution server handled it as Java. Deploy the latest server build with C support, then run again."
             hasError -> err.ifBlank { "Runtime error" }
             passed -> "Your solution passed the checks."
             out.isNotEmpty() -> "Your output:\n$out"
@@ -569,11 +574,12 @@ class ExercisePlayActivity : AppCompatActivity() {
         ).findAll(code).count()
         val bufferedReaderReads = Regex("""\.\s*readLine\s*\(""").findAll(code).count()
         val streamReads = Regex("""(?:System\s*\.\s*in|[\w.]+)\s*\.\s*read\s*\(""").findAll(code).count()
+        val scanfReads = Regex("""\bscanf\s*\(""").findAll(code).count()
         val passwordReads = Regex("""\.\s*readPassword\s*\(""").findAll(code).count()
         val dataInputReads = Regex(
             """\.\s*read(?:Int|Long|Double|Float|Short|Byte|Boolean|Char|UTF|Fully)\s*\("""
         ).findAll(code).count()
-        return pythonInputReads + scannerReads + bufferedReaderReads + streamReads + passwordReads + dataInputReads
+        return pythonInputReads + scannerReads + bufferedReaderReads + streamReads + scanfReads + passwordReads + dataInputReads
     }
 
     private fun showUnlockAnswerDialog() {
@@ -706,6 +712,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private fun requestHint() {
         val res = lastRun ?: return
+        if (isCServerMismatch(res)) return
         val failed = (res.passed == false) || (res.exitCode != 0) ||
                 res.error.trim().isNotEmpty() || res.output.trim().isEmpty()
         if (!failed || hintRequestInFlight || hintLoadedForThisRun) return
@@ -800,6 +807,10 @@ class ExercisePlayActivity : AppCompatActivity() {
             }
             applyLineDiagnostic(findLineRegion((first.line - 1).coerceAtLeast(0)))
         }.onFailure { clearDiagnostics() }
+    }
+
+    private fun isCServerMismatch(res: RunResponse): Boolean {
+        return currentExercise.language == "c" && res.error.contains("Main.java")
     }
 
     private fun applyLineDiagnostic(region: Pair<Int, Int>?) {

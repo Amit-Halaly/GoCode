@@ -4,6 +4,9 @@ import android.content.Context
 import androidx.core.content.edit
 import com.example.gocode.gamification.AchievementCatalog
 import com.example.gocode.gamification.GamificationRepository
+import com.example.gocode.lessons.CCodeExerciseRepository
+import com.example.gocode.lessons.CLessonsRepository
+import com.example.gocode.lessons.CPracticeRepository
 import com.example.gocode.lessons.CurriculumRepository
 import com.example.gocode.lessons.LessonStep
 import com.example.gocode.lessons.PathNodeItem
@@ -21,7 +24,7 @@ import com.google.firebase.firestore.SetOptions
 object FirebaseContentRepository {
     private const val PREFS_NAME = "firebase_content"
     private const val KEY_SEEDED_VERSION = "seededVersion"
-    private const val CONTENT_VERSION = 2
+    private const val CONTENT_VERSION = 3
 
     fun ensureSeeded(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -29,7 +32,7 @@ object FirebaseContentRepository {
 
         val db = FirebaseFirestore.getInstance()
         val batch = db.batch()
-        listOf("java", "python").forEach { language ->
+        listOf("java", "python", "c").forEach { language ->
             val nodes = CurriculumRepository.section1(language)
 
             nodes.forEachIndexed { index, node ->
@@ -272,6 +275,7 @@ object FirebaseContentRepository {
 
     private fun lessonSteps(language: String, nodeId: String): List<LessonStep> {
         return when (language) {
+            "c" -> CLessonsRepository.getSteps(nodeId)
             "python" -> PythonLessonsRepository.getSteps(nodeId)
             else -> JavaLessonsRepository.getSteps(nodeId)
         }
@@ -279,12 +283,21 @@ object FirebaseContentRepository {
 
     private fun practiceQuestions(language: String, nodeId: String): List<PracticeQuestion> {
         return when (language) {
+            "c" -> CPracticeRepository.getQuestions(nodeId)
             "python" -> PythonPracticeRepository.getQuestions(nodeId)
             else -> JavaPracticeRepository.getQuestions(nodeId)
         }
     }
 
     private fun codeTasks(language: String): Map<String, Map<String, String>> {
+        if (language == "c") {
+            return CCodeExerciseRepository.getExercises().mapValues { (_, exercise) ->
+                mapOf(
+                    "task" to exercise.title,
+                    "template" to exercise.template
+                )
+            }
+        }
         if (language == "python") {
             return PythonCodeExerciseRepository.getExercises().mapValues { (_, exercise) ->
                 mapOf(

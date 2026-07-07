@@ -181,6 +181,15 @@ class PathNodesAdapter(
                 "py_u8_l1" -> "SECTION 8 - PYTHON" to "Dictionaries"
                 "py_u9_l1" -> "SECTION 9 - PYTHON" to "Debugging Basics"
                 "py_u10_l1" -> "SECTION 10 - PYTHON" to "Final Review"
+                "c_u2_l1" -> "SECTION 2 - C" to "If / Else Statements"
+                "c_u3_l1" -> "SECTION 3 - C" to "Loops"
+                "c_u4_l1" -> "SECTION 4 - C" to "Arrays"
+                "c_u5_l1" -> "SECTION 5 - C" to "Functions"
+                "c_u6_l1" -> "SECTION 6 - C" to "scanf Input"
+                "c_u7_l1" -> "SECTION 7 - C" to "C Strings"
+                "c_u8_l1" -> "SECTION 8 - C" to "Pointers"
+                "c_u9_l1" -> "SECTION 9 - C" to "Debugging Basics"
+                "c_u10_l1" -> "SECTION 10 - C" to "Final Review"
                 else -> null
             }
 

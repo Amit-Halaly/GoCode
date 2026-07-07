@@ -1,6 +1,7 @@
 package com.example.gocode
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.app.Dialog
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
@@ -18,12 +19,16 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.gocode.friends.ArenaInvite
+import com.example.gocode.friends.FriendProfile
+import com.example.gocode.friends.FriendsRepository
 import com.example.gocode.network.ArenaEvent
 import com.example.gocode.network.ArenaPlayerProfile
 import com.example.gocode.network.ArenaRealtimeClient
@@ -36,6 +41,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.journeyapps.barcodescanner.BarcodeEncoder
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
@@ -121,6 +127,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     private var playerId = UUID.randomUUID().toString()
     private var playerRating = 1000
     private var playerLanguages = listOf("Java")
+    private var selectedArenaLanguages = listOf("Java")
     private var playerAvatarId: String? = null
     private var playerAvatarResId = 0
     private var activeOpponent: ArenaOpponent? = null
@@ -139,6 +146,11 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     private var realtimeMatchActive = false
     private var matchInProgress = false
     private var matchResolved = false
+    private var incomingInviteListener: ListenerRegistration? = null
+    private val visibleInviteIds = mutableSetOf<String>()
+    private var activeBattleLanguages = listOf("Java")
+    private var battleLanguagesIntroShown = false
+    private var lastQuestionLanguageShown: String? = null
 
     private var matchmakingJob: Job? = null
     private var idleAnimationJob: Job? = null
@@ -166,12 +178,16 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
 
         bindViews(view)
         setMainBottomNavigationVisible(false)
+        FriendsRepository.syncCurrentUserSearchFields()
+        FriendsRepository.syncCurrentUserPresence()
+        listenForArenaInvites()
         renderIdle()
         loadPlayerProfile()
 
         startButton.setOnClickListener { startMatchmaking() }
         inviteFriendButton.setOnClickListener { showFriendInvite() }
         scanInviteButton.setOnClickListener { scanFriendInvite() }
+        languageText.setOnClickListener { showArenaLanguagePicker() }
         playAgainButton.setOnClickListener { startMatchmaking() }
         arenaBackButton.setOnClickListener { requestExitArena() }
         battleTabButton.setOnClickListener { showArenaTab(ArenaTab.BATTLE) }
@@ -198,6 +214,8 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         opponentJob?.cancel()
         timer?.cancel()
         arenaClient.close()
+        incomingInviteListener?.remove()
+        FriendsRepository.syncCurrentUserPresence()
         setMainBottomNavigationVisible(true)
     }
 
@@ -302,6 +320,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
                     .filter { it.isNotBlank() }
                     .distinct()
                     .ifEmpty { listOf("Java") }
+                selectedArenaLanguages = defaultArenaLanguagesFor(playerLanguages)
                 renderProfile()
                 renderLeaderboards()
             }
@@ -315,6 +334,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         matchInProgress = false
         matchResolved = false
         realtimeMatchActive = false
+        FriendsRepository.syncCurrentUserPresence()
         showArenaTab(ArenaTab.BATTLE)
         matchmakingPanel.visibility = View.GONE
         matchPanel.visibility = View.GONE
@@ -325,7 +345,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         statusLabel.text = "Ready for a ranked code duel"
         stageTitle.text = "Ranked Output Duel"
         stageSubtitle.text = "Fast answers. Clean logic. Real rank."
-        arenaTicker.text = "LIVE QUEUE  ${playerLanguages.joinToString("  ")}"
+        arenaTicker.text = "LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}"
         startIdleAnimation()
     }
 
@@ -333,12 +353,52 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     private fun renderProfile() {
         ratingText.text = "$playerRating"
         rankText.text = rankName(playerRating)
-        languageText.text = playerLanguages.joinToString(separator = " / ")
+        languageText.text = "Arena languages: ${selectedArenaLanguages.joinToString(separator = " / ")}"
         playerCardName.text = playerName
         playerCardRank.text = "${rankName(playerRating)} - $playerRating"
         val avatar = playerAvatarResId.takeIf { it != 0 } ?: R.drawable.avatar_robot
         playerAvatarImage.setImageResource(avatar)
         playerSearchAvatar.setImageResource(avatar)
+    }
+
+    private fun showArenaLanguagePicker() {
+        val labels = availableArenaLanguages.toTypedArray()
+        val checked = labels.map { language ->
+            selectedArenaLanguages.any { it.equals(language, ignoreCase = true) }
+        }.toBooleanArray()
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Arena question languages")
+            .setMultiChoiceItems(labels, checked) { _, index, isChecked ->
+                checked[index] = isChecked
+            }
+            .setPositiveButton("Apply") { _, _ ->
+                val selected = labels.filterIndexed { index, _ -> checked[index] }
+                if (selected.isEmpty()) {
+                    Toast.makeText(requireContext(), "Choose at least one language", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                selectedArenaLanguages = selected
+                renderProfile()
+                if (isIdleBattleState()) {
+                    arenaTicker.flashText("LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}")
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun defaultArenaLanguagesFor(languages: List<String>): List<String> {
+        return availableArenaLanguages
+            .filter { available -> languages.any { it.equals(available, ignoreCase = true) } }
+            .ifEmpty { listOf("Java") }
+    }
+
+    private fun sharedLanguagesFor(first: List<String>, second: List<String>): List<String> {
+        return availableArenaLanguages.filter { language ->
+            first.any { it.equals(language, ignoreCase = true) } &&
+                second.any { it.equals(language, ignoreCase = true) }
+        }
     }
 
     private fun showArenaTab(tab: ArenaTab) {
@@ -422,6 +482,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         matchInProgress = false
         matchResolved = false
         realtimeMatchActive = false
+        FriendsRepository.syncCurrentUserPresence("matchmaking")
 
         startButton.visibility = View.GONE
         inviteFriendButton.visibility = View.GONE
@@ -483,7 +544,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         } else {
             "Matching language, rank and availability"
         }
-        arenaTicker.flashText("LIVE QUEUE  ${playerLanguages.joinToString("  ")}")
+        arenaTicker.flashText("LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}")
     }
 
     private fun handleMatchFound(event: ArenaEvent.MatchFound) {
@@ -496,9 +557,19 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         opponentScore = 0
         correctStreak = 0
         opponentCorrectStreak = 0
+        activeBattleLanguages = sharedLanguagesFor(selectedArenaLanguages, opponent.languages)
+            .ifEmpty {
+                availableArenaLanguages.filter { language ->
+                    selectedArenaLanguages.any { it.equals(language, ignoreCase = true) } ||
+                        opponent.languages.any { it.equals(language, ignoreCase = true) }
+                }
+            }
+        battleLanguagesIntroShown = false
+        lastQuestionLanguageShown = null
         matchInProgress = true
         matchResolved = false
         realtimeMatchActive = true
+        FriendsRepository.syncCurrentUserPresence("in_match")
 
         opponentNameText.text = opponent.name
         opponentMetaText.text = "${opponent.languages.joinToString(" / ")} - ${rankName(opponent.rating)}"
@@ -511,7 +582,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         searchingText.text = "Match found"
         stageTitle.text = "Match Found"
         stageSubtitle.text = "${playerName} vs ${opponent.name}"
-        arenaTicker.flashText("LOCKED  ${opponent.languages.joinToString("  ")}  ${rankName(opponent.rating)}")
+        arenaTicker.flashText("LOCKED  ${activeBattleLanguages.joinToString("  ")}  ${rankName(opponent.rating)}")
         stopSearchAnimation()
         opponentSearchAvatar.popIn()
         searchVsBadge.pulse()
@@ -588,6 +659,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     private fun handleArenaError(message: String) {
         timer?.cancel()
         stopSearchAnimation()
+        FriendsRepository.syncCurrentUserPresence()
         searchingProgress.visibility = View.GONE
         searchingText.text = "Arena unavailable"
         statusLabel.text = "Connection problem"
@@ -600,9 +672,263 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     }
 
     private fun showFriendInvite() {
+        val dialog = Dialog(requireContext())
+        var friendsRegistration: ListenerRegistration? = null
+        val friendsContainer = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        val emptyText = TextView(requireContext()).apply {
+            text = "Looking for online friends..."
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.text_color))
+            textSize = 13f
+            gravity = android.view.Gravity.CENTER
+            setPadding(dp(12), dp(18), dp(12), dp(18))
+        }
+
+        val content = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(18), dp(18), dp(18))
+            setBackgroundResource(R.drawable.bg_arena_result_panel)
+
+            addView(TextView(requireContext()).apply {
+                text = "Online Friends"
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                textSize = 24f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = android.view.Gravity.CENTER
+            })
+
+            addView(TextView(requireContext()).apply {
+                text = "Tap a friend to open their profile or invite them to a duel."
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_color))
+                textSize = 13f
+                gravity = android.view.Gravity.CENTER
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(6) })
+
+            addView(friendsContainer, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(14) })
+
+            addView(emptyText, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ))
+
+            addView(MaterialButton(requireContext()).apply {
+                text = "QR Invite"
+                isAllCaps = false
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.black))
+                backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.accent_green))
+                cornerRadius = dp(8)
+                setOnClickListener {
+                    dialog.dismiss()
+                    showFriendInviteQr()
+                }
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(48)
+            ).apply { topMargin = dp(12) })
+
+            addView(MaterialButton(requireContext()).apply {
+                text = "Close"
+                isAllCaps = false
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.gc_card))
+                cornerRadius = dp(8)
+                setOnClickListener { dialog.dismiss() }
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(44)
+            ).apply { topMargin = dp(8) })
+        }
+
+        fun renderFriends(friends: List<FriendProfile>) {
+            val onlineFriends = friends
+                .filter { it.onlineStatus == "online" && it.arenaState != "in_match" }
+                .sortedWith(compareBy<FriendProfile> { it.arenaState != "idle" }.thenBy { it.username.lowercase() })
+            friendsContainer.removeAllViews()
+            emptyText.visibility = if (onlineFriends.isEmpty()) View.VISIBLE else View.GONE
+            emptyText.text = if (onlineFriends.isEmpty()) "No online friends available right now" else ""
+            onlineFriends.forEach { friend ->
+                friendsContainer.addView(onlineFriendRow(friend) {
+                    showArenaFriendActions(friend, dialog)
+                }, LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(10) })
+            }
+        }
+
+        friendsRegistration = FriendsRepository.listenFriends(
+            onChanged = { friends -> activity?.runOnUiThread { renderFriends(friends) } },
+            onError = { error ->
+                activity?.runOnUiThread {
+                    emptyText.text = error.message ?: "Friends unavailable"
+                    emptyText.visibility = View.VISIBLE
+                }
+            },
+        )
+
+        dialog.setContentView(content)
+        dialog.setOnDismissListener { friendsRegistration?.remove() }
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.92f).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
+
+    private fun onlineFriendRow(friend: FriendProfile, onClick: () -> Unit): View {
+        return LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(11), dp(12), dp(11))
+            setBackgroundResource(R.drawable.bg_arena_leaderboard_row)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { onClick() }
+
+            addView(ImageView(requireContext()).apply {
+                setImageResource(avatarDrawableForId(friend.avatarId, R.drawable.avatar_robot))
+                setBackgroundResource(R.drawable.bg_avatar_circle)
+                setPadding(dp(6), dp(6), dp(6), dp(6))
+            }, LinearLayout.LayoutParams(dp(50), dp(50)))
+
+            addView(LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(11), 0, dp(8), 0)
+                addView(TextView(requireContext()).apply {
+                    text = friend.username
+                    maxLines = 1
+                    setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                    textSize = 15f
+                    typeface = Typeface.DEFAULT_BOLD
+                })
+                addView(TextView(requireContext()).apply {
+                    text = "${friend.primaryLanguage} - ${rankName(friend.rating)} ${friend.rating}"
+                    maxLines = 1
+                    setTextColor(ContextCompat.getColor(requireContext(), R.color.text_color))
+                    textSize = 12f
+                })
+            }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+
+            addView(TextView(requireContext()).apply {
+                text = if (friend.arenaState == "matchmaking") "Queue" else "Online"
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_green))
+                textSize = 12f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = android.view.Gravity.CENTER
+                setBackgroundResource(R.drawable.bg_arena_badge)
+                setPadding(dp(9), dp(5), dp(9), dp(5))
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ))
+        }
+    }
+
+    private fun showArenaFriendActions(friend: FriendProfile, parentDialog: Dialog) {
+        val details = listOf(
+            if (friend.arenaState == "matchmaking") "Looking for an Arena match" else "Online now",
+            "${friend.primaryLanguage} - Rating ${friend.rating}",
+            "Level ${friend.level} - XP ${friend.xp}",
+            "Arena wins ${friend.arenaWins}",
+            "Challenges solved ${friend.challengesSolved}",
+        ).joinToString("\n")
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(friend.username)
+            .setMessage(details)
+            .setNegativeButton("Open profile") { _, _ -> showArenaFriendProfile(friend) }
+            .setPositiveButton("Invite to game") { _, _ ->
+                parentDialog.dismiss()
+                startFriendInvite(friend)
+            }
+            .setNeutralButton("Cancel", null)
+            .show()
+    }
+
+    private fun showArenaFriendProfile(friend: FriendProfile) {
+        val details = listOf(
+            "${friend.primaryLanguage} - ${rankName(friend.rating)} ${friend.rating}",
+            "Level ${friend.level} - XP ${friend.xp}",
+            "Arena wins ${friend.arenaWins}",
+            "Challenges solved ${friend.challengesSolved}",
+            "Friend code ${friend.friendCode}",
+        ).joinToString("\n")
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(friend.username)
+            .setMessage(details)
+            .setPositiveButton("Invite") { _, _ -> startFriendInvite(friend) }
+            .setNegativeButton("Close", null)
+            .show()
+    }
+
+    private fun startFriendInvite(friend: FriendProfile) {
         val inviteCode = generateInviteCode()
+        FriendsRepository.sendArenaInvite(friend.uid, inviteCode) { success, message ->
+            activity?.runOnUiThread {
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                if (success) {
+                    startMatchmaking(inviteCode = inviteCode)
+                    showFriendInviteQr(inviteCode, "Waiting for ${friend.username}", startQueue = false)
+                }
+            }
+        }
+    }
+
+    private fun listenForArenaInvites() {
+        incomingInviteListener?.remove()
+        incomingInviteListener = FriendsRepository.listenIncomingArenaInvites(
+            onChanged = { invites ->
+                activity?.runOnUiThread {
+                    invites
+                        .filter { it.inviteCode.isNotBlank() && it.id !in visibleInviteIds && !matchInProgress }
+                        .forEach { showIncomingArenaInvite(it) }
+                }
+            },
+            onError = { error ->
+                activity?.runOnUiThread {
+                    Toast.makeText(requireContext(), error.message ?: "Arena invites unavailable", Toast.LENGTH_SHORT).show()
+                }
+            },
+        )
+    }
+
+    private fun showIncomingArenaInvite(invite: ArenaInvite) {
+        visibleInviteIds += invite.id
+        val languages = invite.fromLanguages.ifEmpty { listOf("Arena") }.joinToString(" / ")
+        AlertDialog.Builder(requireContext())
+            .setTitle("${invite.fromUsername} invited you")
+            .setMessage("$languages\nRating ${invite.fromRating}\nJoin this Arena duel?")
+            .setPositiveButton("Join") { _, _ ->
+                FriendsRepository.updateArenaInviteStatus(invite.id, accepted = true) { _, _ -> }
+                startMatchmaking(inviteCode = invite.inviteCode)
+            }
+            .setNegativeButton("Decline") { _, _ ->
+                FriendsRepository.updateArenaInviteStatus(invite.id, accepted = false) { success, message ->
+                    activity?.runOnUiThread {
+                        if (!success) Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setOnDismissListener { visibleInviteIds -= invite.id }
+            .show()
+    }
+
+    private fun showFriendInviteQr(
+        inviteCode: String = generateInviteCode(),
+        title: String = "Friend Match",
+        startQueue: Boolean = true,
+    ) {
         val qrPayload = invitePayload(inviteCode)
-        startMatchmaking(inviteCode = inviteCode)
+        if (startQueue) startMatchmaking(inviteCode = inviteCode)
 
         val dialog = Dialog(requireContext())
         val qrBitmap = createInviteQr(qrPayload)
@@ -613,7 +939,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
             setBackgroundResource(R.drawable.bg_arena_result_panel)
 
             addView(TextView(requireContext()).apply {
-                text = "Friend Match"
+                text = title
                 setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
                 textSize = 24f
                 typeface = Typeface.DEFAULT_BOLD
@@ -689,6 +1015,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
 
     private fun restoreArenaActions() {
         stopSearchAnimation()
+        FriendsRepository.syncCurrentUserPresence()
         matchmakingPanel.visibility = View.GONE
         matchPanel.visibility = View.GONE
         resultPanel.visibility = View.GONE
@@ -707,7 +1034,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
             userId = playerId,
             name = playerName,
             rating = playerRating,
-            languages = playerLanguages,
+            languages = selectedArenaLanguages,
             avatarId = playerAvatarId,
         )
     }
@@ -738,23 +1065,28 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
 
     private fun findOpponent(): ArenaOpponent {
         val possible = arenaOpponents.filter { opponent ->
-            opponent.languages.any { lang -> playerLanguages.any { it.equals(lang, ignoreCase = true) } }
+            sharedLanguagesFor(selectedArenaLanguages, opponent.languages).isNotEmpty()
         }.ifEmpty { arenaOpponents }
 
-        return possible.minByOrNull { kotlin.math.abs(it.rating - playerRating) }
+        return possible.maxWithOrNull(
+            compareBy<ArenaOpponent> { sharedLanguagesFor(selectedArenaLanguages, it.languages).size }
+                .thenBy { -kotlin.math.abs(it.rating - playerRating) }
+        )
             ?: arenaOpponents.random()
     }
 
     private fun startRound(opponent: ArenaOpponent) {
-        val sharedLanguages = playerLanguages.filter { playerLang ->
-            opponent.languages.any { it.equals(playerLang, ignoreCase = true) }
-        }.ifEmpty { playerLanguages }
+        val sharedLanguages = sharedLanguagesFor(selectedArenaLanguages, opponent.languages)
+            .ifEmpty { selectedArenaLanguages }
 
         activeQuestions = arenaQuestions
             .filter { question -> sharedLanguages.any { it.equals(question.language, ignoreCase = true) } }
             .ifEmpty { arenaQuestions }
             .shuffled()
             .take(QUESTION_COUNT)
+        activeBattleLanguages = sharedLanguages
+        battleLanguagesIntroShown = false
+        lastQuestionLanguageShown = null
 
         questionIndex = 0
         playerScore = 0
@@ -764,6 +1096,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         matchInProgress = true
         matchResolved = false
         realtimeMatchActive = false
+        FriendsRepository.syncCurrentUserPresence("in_match")
 
         matchmakingPanel.visibility = View.GONE
         matchPanel.visibility = View.VISIBLE
@@ -839,19 +1172,49 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
             questionStartMs = System.currentTimeMillis()
             animateQuestionEntry()
             startQuestionTimer()
+            lastQuestionLanguageShown = question.language
             if (!realtimeMatchActive) scheduleOpponentAnswer(question)
         }
 
-        if (questionIndex == 0) {
-            showQuestionIntro(question, startQuestion)
+        val showLanguageThenStart = {
+            val languageChanged = !lastQuestionLanguageShown.equals(question.language, ignoreCase = true)
+            if (activeBattleLanguages.size > 1 && languageChanged) {
+                showQuestionIntro(
+                    title = "${question.language.uppercase()} ROUND",
+                    subtitle = question.course,
+                    onDone = startQuestion
+                )
+            } else {
+                startQuestion()
+            }
+        }
+
+        if (!battleLanguagesIntroShown) {
+            battleLanguagesIntroShown = true
+            showBattleLanguagesIntro(showLanguageThenStart)
         } else {
-            startQuestion()
+            showLanguageThenStart()
         }
     }
 
-    private fun showQuestionIntro(question: ArenaQuestion, onDone: () -> Unit) {
-        questionIntroTitle.text = "WHAT IS THE OUTPUT?"
-        questionIntroSubtitle.text = "${question.language} - ${question.course}"
+    private fun showBattleLanguagesIntro(onDone: () -> Unit) {
+        val languages = activeBattleLanguages.ifEmpty { selectedArenaLanguages }
+        showQuestionIntro(
+            title = "BATTLE LANGUAGES",
+            subtitle = languages.joinToString("  /  "),
+            onDone = onDone,
+            holdMs = 680L,
+        )
+    }
+
+    private fun showQuestionIntro(
+        title: String,
+        subtitle: String,
+        onDone: () -> Unit,
+        holdMs: Long = 420L,
+    ) {
+        questionIntroTitle.text = title
+        questionIntroSubtitle.text = subtitle
         questionIntroOverlay.visibility = View.VISIBLE
         questionIntroOverlay.alpha = 0f
         questionIntroTitle.scaleX = 0.72f
@@ -883,7 +1246,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
                                             onDone()
                                         }
                                         .start()
-                                }, 420L)
+                                }, holdMs)
                             }
                             .start()
                     }
@@ -1043,6 +1406,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         matchResolved = true
         matchInProgress = false
         realtimeMatchActive = false
+        FriendsRepository.syncCurrentUserPresence()
         timer?.cancel()
         opponentJob?.cancel()
         arenaClient.close()
@@ -1387,7 +1751,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         idleAnimationJob?.cancel()
         idleAnimationJob = viewLifecycleOwner.lifecycleScope.launch {
             val tickerStates = listOf(
-                "LIVE QUEUE  ${playerLanguages.joinToString("  ")}",
+                "LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}",
                 "OUTPUT DUELS  Speed bonus active",
                 "RANKED ARENA  ${rankName(playerRating)}  $playerRating",
                 "CODE IQ CHECK  Ready"
@@ -1644,6 +2008,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         private const val WRONG_ANSWER_PENALTY = -35
         private const val TIMEOUT_PENALTY = -50
         private const val RATING_K_FACTOR = 28
+        private val availableArenaLanguages = listOf("Java", "Python", "C")
 
         private val arenaOpponents = listOf(
             ArenaOpponent("NullPointer", 1260, listOf("Java", "C"), 74, R.drawable.avatar_alien),
