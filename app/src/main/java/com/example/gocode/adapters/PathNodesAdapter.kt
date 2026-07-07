@@ -172,6 +172,15 @@ class PathNodesAdapter(
                 "java_u8_l1" -> "SECTION 8 • JAVA" to "Classes & Objects"
                 "java_u9_l1" -> "SECTION 9 • JAVA" to "Debugging Basics"
                 "java_u10_l1" -> "SECTION 10 • JAVA" to "Final Review"
+                "py_u2_l1" -> "SECTION 2 - PYTHON" to "If / Else Statements"
+                "py_u3_l1" -> "SECTION 3 - PYTHON" to "Loops"
+                "py_u4_l1" -> "SECTION 4 - PYTHON" to "Lists"
+                "py_u5_l1" -> "SECTION 5 - PYTHON" to "Functions"
+                "py_u6_l1" -> "SECTION 6 - PYTHON" to "Input"
+                "py_u7_l1" -> "SECTION 7 - PYTHON" to "String Tools"
+                "py_u8_l1" -> "SECTION 8 - PYTHON" to "Dictionaries"
+                "py_u9_l1" -> "SECTION 9 - PYTHON" to "Debugging Basics"
+                "py_u10_l1" -> "SECTION 10 - PYTHON" to "Final Review"
                 else -> null
             }
 
