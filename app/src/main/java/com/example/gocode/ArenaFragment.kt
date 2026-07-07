@@ -1753,6 +1753,48 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
                 correctIndex = 1
             ),
             ArenaQuestion(
+                language = "Java",
+                course = "If / Else",
+                prompt = "What is printed?\nint lives = 0;\nif (lives > 0) {\n    System.out.println(\"Play\");\n} else {\n    System.out.println(\"Game over\");\n}",
+                options = listOf("Play", "Game over", "0", "Compilation error"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Loops",
+                prompt = "What is the output?\nint total = 0;\nfor (int i = 1; i <= 3; i++) {\n    total += i;\n}\nSystem.out.println(total);",
+                options = listOf("3", "5", "6", "7"),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Arrays",
+                prompt = "What is printed?\nint[] scores = {10, 20, 30};\nSystem.out.println(scores.length);",
+                options = listOf("2", "3", "30", "Compilation error"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Methods",
+                prompt = "What is printed?\nstatic String greet(String name) {\n    return \"Hi \" + name;\n}\nSystem.out.println(greet(\"Leo\"));",
+                options = listOf("Hi Leo", "greet", "Leo Hi", "Compilation error"),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "String Tools",
+                prompt = "What is printed?\nString word = \"Java\";\nSystem.out.println(word.length());",
+                options = listOf("3", "4", "Java", "true"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Java",
+                course = "Classes & Objects",
+                prompt = "Which keyword creates an object?\nStudent student = ___ Student();",
+                options = listOf("class", "new", "void", "return"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
                 language = "Python",
                 course = "Lists",
                 prompt = "What is the output?\nnums = [1, 2, 3]\nprint(nums[1])",
@@ -1772,6 +1814,125 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
                 prompt = "What is printed?\nprint(True and False)",
                 options = listOf("True", "False", "0", "Error"),
                 correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Variables",
+                prompt = "What is printed?\nscore = 10\nscore = score + 5\nprint(score)",
+                options = listOf("10", "15", "score5", "Error"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Strings",
+                prompt = "What is printed?\nname = \"Leo\"\nprint(\"Hi \" + name)",
+                options = listOf("Hi Leo", "Hi name", "Leo Hi", "Error"),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "If / Else",
+                prompt = "What is printed?\nage = 12\nif age >= 13:\n    print(\"Teen\")\nelse:\n    print(\"Kid\")",
+                options = listOf("Teen", "Kid", "12", "Error"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Loops",
+                prompt = "How many times does this loop run?\nfor i in range(4):\n    print(i)",
+                options = listOf("3", "4", "5", "Infinite"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Loops",
+                prompt = "What is printed last?\nfor i in range(1, 4):\n    print(i)",
+                options = listOf("1", "3", "4", "5"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Lists",
+                prompt = "What is printed?\nitems = [\"Java\", \"Python\", \"C\"]\nprint(len(items))",
+                options = listOf("2", "3", "Python", "Error"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Lists",
+                prompt = "What is printed?\nnums = [2, 4, 6]\nprint(nums[0])",
+                options = listOf("0", "2", "4", "6"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Functions",
+                prompt = "What is printed?\ndef double(n):\n    return n * 2\nprint(double(5))",
+                options = listOf("5", "7", "10", "Error"),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Functions",
+                prompt = "Which keyword sends a value back from a function?\ndef get_score():\n    ___ 100",
+                options = listOf("return", "print", "def", "if"),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Strings",
+                prompt = "What is printed?\nword = \"code\"\nprint(word.upper())",
+                options = listOf("code", "CODE", "Code", "Error"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "String Tools",
+                prompt = "What is printed?\ntext = \"  GoCode  \"\nprint(text.strip())",
+                options = listOf("GoCode", "  GoCode", "GoCode  ", "Error"),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Booleans",
+                prompt = "What is printed?\nready = True\nprint(not ready)",
+                options = listOf("True", "False", "None", "Error"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Operators",
+                prompt = "What is printed?\nprint(5 % 2)",
+                options = listOf("1", "2", "2.5", "0"),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Input",
+                prompt = "What does input() return by default?",
+                options = listOf("A string", "An int", "A boolean", "A list"),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Dictionaries",
+                prompt = "What is printed?\nstudent = {\"name\": \"Maya\", \"age\": 14}\nprint(student[\"name\"])",
+                options = listOf("name", "Maya", "14", "Error"),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Debugging Basics",
+                prompt = "Which block can handle a risky conversion?\ntry:\n    age = int(text)\nexcept ValueError:\n    print(\"Invalid\")",
+                options = listOf("try / except", "for / range", "def / return", "list / len"),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = "Python",
+                course = "Classes & Objects",
+                prompt = "Which keyword defines a class in Python?\n___ Student:\n    pass",
+                options = listOf("class", "def", "new", "return"),
+                correctIndex = 0
             ),
             ArenaQuestion(
                 language = "C",
