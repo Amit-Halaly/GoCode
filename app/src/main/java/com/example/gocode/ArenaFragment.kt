@@ -127,6 +127,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     private var playerId = UUID.randomUUID().toString()
     private var playerRating = 1000
     private var playerLanguages = listOf("Java")
+    private var selectedArenaLanguages = listOf("Java")
     private var playerAvatarId: String? = null
     private var playerAvatarResId = 0
     private var activeOpponent: ArenaOpponent? = null
@@ -147,6 +148,9 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     private var matchResolved = false
     private var incomingInviteListener: ListenerRegistration? = null
     private val visibleInviteIds = mutableSetOf<String>()
+    private var activeBattleLanguages = listOf("Java")
+    private var battleLanguagesIntroShown = false
+    private var lastQuestionLanguageShown: String? = null
 
     private var matchmakingJob: Job? = null
     private var idleAnimationJob: Job? = null
@@ -183,6 +187,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         startButton.setOnClickListener { startMatchmaking() }
         inviteFriendButton.setOnClickListener { showFriendInvite() }
         scanInviteButton.setOnClickListener { scanFriendInvite() }
+        languageText.setOnClickListener { showArenaLanguagePicker() }
         playAgainButton.setOnClickListener { startMatchmaking() }
         arenaBackButton.setOnClickListener { requestExitArena() }
         battleTabButton.setOnClickListener { showArenaTab(ArenaTab.BATTLE) }
@@ -315,6 +320,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
                     .filter { it.isNotBlank() }
                     .distinct()
                     .ifEmpty { listOf("Java") }
+                selectedArenaLanguages = defaultArenaLanguagesFor(playerLanguages)
                 renderProfile()
                 renderLeaderboards()
             }
@@ -339,7 +345,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         statusLabel.text = "Ready for a ranked code duel"
         stageTitle.text = "Ranked Output Duel"
         stageSubtitle.text = "Fast answers. Clean logic. Real rank."
-        arenaTicker.text = "LIVE QUEUE  ${playerLanguages.joinToString("  ")}"
+        arenaTicker.text = "LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}"
         startIdleAnimation()
     }
 
@@ -347,12 +353,52 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     private fun renderProfile() {
         ratingText.text = "$playerRating"
         rankText.text = rankName(playerRating)
-        languageText.text = playerLanguages.joinToString(separator = " / ")
+        languageText.text = "Arena languages: ${selectedArenaLanguages.joinToString(separator = " / ")}"
         playerCardName.text = playerName
         playerCardRank.text = "${rankName(playerRating)} - $playerRating"
         val avatar = playerAvatarResId.takeIf { it != 0 } ?: R.drawable.avatar_robot
         playerAvatarImage.setImageResource(avatar)
         playerSearchAvatar.setImageResource(avatar)
+    }
+
+    private fun showArenaLanguagePicker() {
+        val labels = availableArenaLanguages.toTypedArray()
+        val checked = labels.map { language ->
+            selectedArenaLanguages.any { it.equals(language, ignoreCase = true) }
+        }.toBooleanArray()
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Arena question languages")
+            .setMultiChoiceItems(labels, checked) { _, index, isChecked ->
+                checked[index] = isChecked
+            }
+            .setPositiveButton("Apply") { _, _ ->
+                val selected = labels.filterIndexed { index, _ -> checked[index] }
+                if (selected.isEmpty()) {
+                    Toast.makeText(requireContext(), "Choose at least one language", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                selectedArenaLanguages = selected
+                renderProfile()
+                if (isIdleBattleState()) {
+                    arenaTicker.flashText("LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}")
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun defaultArenaLanguagesFor(languages: List<String>): List<String> {
+        return availableArenaLanguages
+            .filter { available -> languages.any { it.equals(available, ignoreCase = true) } }
+            .ifEmpty { listOf("Java") }
+    }
+
+    private fun sharedLanguagesFor(first: List<String>, second: List<String>): List<String> {
+        return availableArenaLanguages.filter { language ->
+            first.any { it.equals(language, ignoreCase = true) } &&
+                second.any { it.equals(language, ignoreCase = true) }
+        }
     }
 
     private fun showArenaTab(tab: ArenaTab) {
@@ -498,7 +544,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         } else {
             "Matching language, rank and availability"
         }
-        arenaTicker.flashText("LIVE QUEUE  ${playerLanguages.joinToString("  ")}")
+        arenaTicker.flashText("LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}")
     }
 
     private fun handleMatchFound(event: ArenaEvent.MatchFound) {
@@ -511,6 +557,15 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         opponentScore = 0
         correctStreak = 0
         opponentCorrectStreak = 0
+        activeBattleLanguages = sharedLanguagesFor(selectedArenaLanguages, opponent.languages)
+            .ifEmpty {
+                availableArenaLanguages.filter { language ->
+                    selectedArenaLanguages.any { it.equals(language, ignoreCase = true) } ||
+                        opponent.languages.any { it.equals(language, ignoreCase = true) }
+                }
+            }
+        battleLanguagesIntroShown = false
+        lastQuestionLanguageShown = null
         matchInProgress = true
         matchResolved = false
         realtimeMatchActive = true
@@ -527,7 +582,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         searchingText.text = "Match found"
         stageTitle.text = "Match Found"
         stageSubtitle.text = "${playerName} vs ${opponent.name}"
-        arenaTicker.flashText("LOCKED  ${opponent.languages.joinToString("  ")}  ${rankName(opponent.rating)}")
+        arenaTicker.flashText("LOCKED  ${activeBattleLanguages.joinToString("  ")}  ${rankName(opponent.rating)}")
         stopSearchAnimation()
         opponentSearchAvatar.popIn()
         searchVsBadge.pulse()
@@ -979,7 +1034,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
             userId = playerId,
             name = playerName,
             rating = playerRating,
-            languages = playerLanguages,
+            languages = selectedArenaLanguages,
             avatarId = playerAvatarId,
         )
     }
@@ -1010,23 +1065,28 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
 
     private fun findOpponent(): ArenaOpponent {
         val possible = arenaOpponents.filter { opponent ->
-            opponent.languages.any { lang -> playerLanguages.any { it.equals(lang, ignoreCase = true) } }
+            sharedLanguagesFor(selectedArenaLanguages, opponent.languages).isNotEmpty()
         }.ifEmpty { arenaOpponents }
 
-        return possible.minByOrNull { kotlin.math.abs(it.rating - playerRating) }
+        return possible.maxWithOrNull(
+            compareBy<ArenaOpponent> { sharedLanguagesFor(selectedArenaLanguages, it.languages).size }
+                .thenBy { -kotlin.math.abs(it.rating - playerRating) }
+        )
             ?: arenaOpponents.random()
     }
 
     private fun startRound(opponent: ArenaOpponent) {
-        val sharedLanguages = playerLanguages.filter { playerLang ->
-            opponent.languages.any { it.equals(playerLang, ignoreCase = true) }
-        }.ifEmpty { playerLanguages }
+        val sharedLanguages = sharedLanguagesFor(selectedArenaLanguages, opponent.languages)
+            .ifEmpty { selectedArenaLanguages }
 
         activeQuestions = arenaQuestions
             .filter { question -> sharedLanguages.any { it.equals(question.language, ignoreCase = true) } }
             .ifEmpty { arenaQuestions }
             .shuffled()
             .take(QUESTION_COUNT)
+        activeBattleLanguages = sharedLanguages
+        battleLanguagesIntroShown = false
+        lastQuestionLanguageShown = null
 
         questionIndex = 0
         playerScore = 0
@@ -1112,19 +1172,49 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
             questionStartMs = System.currentTimeMillis()
             animateQuestionEntry()
             startQuestionTimer()
+            lastQuestionLanguageShown = question.language
             if (!realtimeMatchActive) scheduleOpponentAnswer(question)
         }
 
-        if (questionIndex == 0) {
-            showQuestionIntro(question, startQuestion)
+        val showLanguageThenStart = {
+            val languageChanged = !lastQuestionLanguageShown.equals(question.language, ignoreCase = true)
+            if (activeBattleLanguages.size > 1 && languageChanged) {
+                showQuestionIntro(
+                    title = "${question.language.uppercase()} ROUND",
+                    subtitle = question.course,
+                    onDone = startQuestion
+                )
+            } else {
+                startQuestion()
+            }
+        }
+
+        if (!battleLanguagesIntroShown) {
+            battleLanguagesIntroShown = true
+            showBattleLanguagesIntro(showLanguageThenStart)
         } else {
-            startQuestion()
+            showLanguageThenStart()
         }
     }
 
-    private fun showQuestionIntro(question: ArenaQuestion, onDone: () -> Unit) {
-        questionIntroTitle.text = "WHAT IS THE OUTPUT?"
-        questionIntroSubtitle.text = "${question.language} - ${question.course}"
+    private fun showBattleLanguagesIntro(onDone: () -> Unit) {
+        val languages = activeBattleLanguages.ifEmpty { selectedArenaLanguages }
+        showQuestionIntro(
+            title = "BATTLE LANGUAGES",
+            subtitle = languages.joinToString("  /  "),
+            onDone = onDone,
+            holdMs = 680L,
+        )
+    }
+
+    private fun showQuestionIntro(
+        title: String,
+        subtitle: String,
+        onDone: () -> Unit,
+        holdMs: Long = 420L,
+    ) {
+        questionIntroTitle.text = title
+        questionIntroSubtitle.text = subtitle
         questionIntroOverlay.visibility = View.VISIBLE
         questionIntroOverlay.alpha = 0f
         questionIntroTitle.scaleX = 0.72f
@@ -1156,7 +1246,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
                                             onDone()
                                         }
                                         .start()
-                                }, 420L)
+                                }, holdMs)
                             }
                             .start()
                     }
@@ -1661,7 +1751,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         idleAnimationJob?.cancel()
         idleAnimationJob = viewLifecycleOwner.lifecycleScope.launch {
             val tickerStates = listOf(
-                "LIVE QUEUE  ${playerLanguages.joinToString("  ")}",
+                "LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}",
                 "OUTPUT DUELS  Speed bonus active",
                 "RANKED ARENA  ${rankName(playerRating)}  $playerRating",
                 "CODE IQ CHECK  Ready"
@@ -1918,6 +2008,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         private const val WRONG_ANSWER_PENALTY = -35
         private const val TIMEOUT_PENALTY = -50
         private const val RATING_K_FACTOR = 28
+        private val availableArenaLanguages = listOf("Java", "Python", "C")
 
         private val arenaOpponents = listOf(
             ArenaOpponent("NullPointer", 1260, listOf("Java", "C"), 74, R.drawable.avatar_alien),
