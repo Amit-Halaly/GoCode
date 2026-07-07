@@ -18,7 +18,7 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"ok": True}
+    return {"ok": True, "languages": ["java", "python", "c"]}
 
 
 @app.get("/arena/status")

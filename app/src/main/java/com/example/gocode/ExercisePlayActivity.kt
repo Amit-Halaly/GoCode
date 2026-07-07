@@ -429,6 +429,8 @@ class ExercisePlayActivity : AppCompatActivity() {
                     GamificationRepository.awardNodeCompleted(this@ExercisePlayActivity, nodeId)
                 }
                 playResultAnimation(pass = true) { finish() }
+            } else if (isCServerMismatch(res)) {
+                hideLeoHard()
             } else {
                 showFailThenLeo()
             }
@@ -448,6 +450,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         val passed = res.passed == true && !hasError
         outputTitle.text = if (passed) "Great work" else "Needs work"
         outputText.text = when {
+            isCServerMismatch(res) -> "The app sent this as C, but the execution server handled it as Java. Deploy the latest server build with C support, then run again."
             hasError -> err.ifBlank { "Runtime error" }
             passed -> "Your solution passed the checks."
             out.isNotEmpty() -> "Your output:\n$out"
@@ -709,6 +712,7 @@ class ExercisePlayActivity : AppCompatActivity() {
 
     private fun requestHint() {
         val res = lastRun ?: return
+        if (isCServerMismatch(res)) return
         val failed = (res.passed == false) || (res.exitCode != 0) ||
                 res.error.trim().isNotEmpty() || res.output.trim().isEmpty()
         if (!failed || hintRequestInFlight || hintLoadedForThisRun) return
@@ -803,6 +807,10 @@ class ExercisePlayActivity : AppCompatActivity() {
             }
             applyLineDiagnostic(findLineRegion((first.line - 1).coerceAtLeast(0)))
         }.onFailure { clearDiagnostics() }
+    }
+
+    private fun isCServerMismatch(res: RunResponse): Boolean {
+        return currentExercise.language == "c" && res.error.contains("Main.java")
     }
 
     private fun applyLineDiagnostic(region: Pair<Int, Int>?) {
