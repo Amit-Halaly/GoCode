@@ -3462,6 +3462,1385 @@ char text[] = "go";
 printf("%zu", sizeof(text));""",
                 options = listOf("""2""", """3""", """4""", """Compilation error"""),
                 correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int x = 6;
+System.out.println(x - 2);""",
+                options = listOf("""2""", """4""", """6""", """8"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+System.out.println(3 * 3 + 1);""",
+                options = listOf("""10""", """12""", """9""", """7"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+String a = "Go";
+String b = "Code";
+System.out.println(a + b);""",
+                options = listOf("""Go Code""", """GoCode""", """CodeGo""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int x = 2;
+x = x + x;
+System.out.println(x);""",
+                options = listOf("""2""", """3""", """4""", """22"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+System.out.println(12 / 4);""",
+                options = listOf("""3""", """4""", """3.0""", """48"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+System.out.println(12 % 5);""",
+                options = listOf("""1""", """2""", """3""", """5"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+boolean ok = false;
+System.out.println(ok);""",
+                options = listOf("""true""", """false""", """0""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int[] a = {4, 5};
+System.out.println(a[0]);""",
+                options = listOf("""0""", """4""", """5""", """2"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+String s = "cat";
+System.out.println(s + s);""",
+                options = listOf("""catcat""", """cat s""", """s s""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int n = 9;
+System.out.println(n >= 10);""",
+                options = listOf("""true""", """false""", """9""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 2;
+System.out.println(x++);
+System.out.println(x);""",
+                options = listOf("""2 then 2""", """2 then 3""", """3 then 3""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 2;
+System.out.println(++x);
+System.out.println(x);""",
+                options = listOf("""2 then 2""", """2 then 3""", """3 then 3""", """Compilation error"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int sum = 0;
+for (int i = 2; i <= 6; i += 2) {
+    sum += i;
+}
+System.out.println(sum);""",
+                options = listOf("""6""", """8""", """10""", """12"""),
+                correctIndex = 3
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+for (int i = 3; i > 0; i--) {
+    System.out.print(i);
+}""",
+                options = listOf("""012""", """321""", """123""", """30"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 4;
+if (x % 2 == 0) System.out.println("even");
+else System.out.println("odd");""",
+                options = listOf("""even""", """odd""", """true""", """4"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+String s = "level";
+System.out.println(s.contains("eve"));""",
+                options = listOf("""true""", """false""", """eve""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+String s = "level";
+System.out.println(s.indexOf("e"));""",
+                options = listOf("""0""", """1""", """2""", """-1"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+String s = "level";
+System.out.println(s.lastIndexOf("e"));""",
+                options = listOf("""1""", """2""", """3""", """4"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int[] nums = {5, 6, 7, 8};
+System.out.println(nums.length - 1);""",
+                options = listOf("""2""", """3""", """4""", """8"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int[] nums = {5, 6, 7};
+System.out.println(nums[nums.length - 1]);""",
+                options = listOf("""5""", """6""", """7""", """2"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 1;
+while (x <= 4) {
+    x *= 2;
+}
+System.out.println(x);""",
+                options = listOf("""4""", """5""", """8""", """16"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int count = 0;
+for (int i = 0; i < 5; i++) {
+    if (i % 2 == 0) count++;
+}
+System.out.println(count);""",
+                options = listOf("""2""", """3""", """4""", """5"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int a = 3;
+int b = 4;
+System.out.println(a > b ? a : b);""",
+                options = listOf("""3""", """4""", """true""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+System.out.println("Hi".toLowerCase());""",
+                options = listOf("""Hi""", """HI""", """hi""", """Compilation error"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+System.out.println("hi".toUpperCase());""",
+                options = listOf("""hi""", """HI""", """Hi""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+String s = "abc";
+System.out.println(s.equals("ABC"));""",
+                options = listOf("""true""", """false""", """abc""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+String s = "abc";
+System.out.println(s.equalsIgnoreCase("ABC"));""",
+                options = listOf("""true""", """false""", """abc""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 6;
+System.out.println(x > 3 && x < 5);""",
+                options = listOf("""true""", """false""", """6""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 6;
+System.out.println(x > 3 || x < 5);""",
+                options = listOf("""true""", """false""", """6""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int n = 1;
+switch (n) {
+    case 1: System.out.print("A"); break;
+    default: System.out.print("B");
+}""",
+                options = listOf("""A""", """B""", """AB""", """Nothing"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 1;
+int y = 2;
+System.out.println(x + y + "x" + y);""",
+                options = listOf("""3x2""", """12x2""", """3xy""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+System.out.println("x" + 1 + 2 + 3);""",
+                options = listOf("""x6""", """x123""", """6x""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 0;
+System.out.println(x++ == 0 && x == 1);""",
+                options = listOf("""true""", """false""", """1""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 0;
+System.out.println(x++ == 1 || x == 1);""",
+                options = listOf("""true""", """false""", """1""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 5;
+System.out.println(x / 2 * 2);""",
+                options = listOf("""4""", """5""", """2""", """5.0"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 5;
+System.out.println(x * 2 / 4);""",
+                options = listOf("""2""", """2.5""", """3""", """10"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = -5;
+System.out.println(x % 2);""",
+                options = listOf("""1""", """-1""", """0""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 1;
+x = x + (x = 5);
+System.out.println(x);""",
+                options = listOf("""2""", """5""", """6""", """10"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int[] a = {1, 2, 3};
+int[] b = a;
+b[0] = 9;
+System.out.println(a[0]);""",
+                options = listOf("""1""", """2""", """9""", """Compilation error"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+String s = "abc";
+System.out.println(s == "abc");""",
+                options = listOf("""true""", """false""", """abc""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+String s = new String("abc");
+System.out.println(s == "abc");""",
+                options = listOf("""true""", """false""", """abc""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+String s = new String("abc");
+System.out.println(s.equals("abc"));""",
+                options = listOf("""true""", """false""", """abc""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 1;
+System.out.println(x++ + x++ + x);""",
+                options = listOf("""3""", """4""", """5""", """6"""),
+                correctIndex = 3
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 1;
+System.out.println(++x + ++x);""",
+                options = listOf("""3""", """4""", """5""", """6"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 7;
+System.out.println(x & 3);""",
+                options = listOf("""1""", """2""", """3""", """7"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 7;
+System.out.println(x | 8);""",
+                options = listOf("""7""", """8""", """15""", """0"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 7;
+System.out.println(x ^ 3);""",
+                options = listOf("""3""", """4""", """7""", """0"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+System.out.println((int) 3.9);""",
+                options = listOf("""3""", """4""", """3.9""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+double d = 5 / 2;
+System.out.println(d);""",
+                options = listOf("""2""", """2.0""", """2.5""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Java""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+double d = 5 / 2.0;
+System.out.println(d);""",
+                options = listOf("""2""", """2.0""", """2.5""", """Compilation error"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+x = 6
+print(x - 2)""",
+                options = listOf("""2""", """4""", """6""", """8"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+print(3 * 3 + 1)""",
+                options = listOf("""10""", """12""", """9""", """7"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+a = 'Go'
+b = 'Code'
+print(a + b)""",
+                options = listOf("""Go Code""", """GoCode""", """CodeGo""", """Error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+x = 2
+x = x + x
+print(x)""",
+                options = listOf("""2""", """3""", """4""", """22"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+print(12 / 4)""",
+                options = listOf("""3""", """3.0""", """4""", """48"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+print(12 // 5)""",
+                options = listOf("""1""", """2""", """2.4""", """5"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+ok = False
+print(ok)""",
+                options = listOf("""True""", """False""", """0""", """Error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+a = [4, 5]
+print(a[0])""",
+                options = listOf("""0""", """4""", """5""", """2"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+s = 'cat'
+print(s + s)""",
+                options = listOf("""catcat""", """cat s""", """s s""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+n = 9
+print(n >= 10)""",
+                options = listOf("""True""", """False""", """9""", """Error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+x = 2
+x += 1
+print(x)""",
+                options = listOf("""2""", """3""", """4""", """Error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+sum_value = 0
+for i in range(2, 7, 2):
+    sum_value += i
+print(sum_value)""",
+                options = listOf("""6""", """8""", """10""", """12"""),
+                correctIndex = 3
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+for i in range(3, 0, -1):
+    print(i, end='')""",
+                options = listOf("""012""", """321""", """123""", """30"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+x = 4
+print('even' if x % 2 == 0 else 'odd')""",
+                options = listOf("""even""", """odd""", """True""", """4"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+s = 'level'
+print('eve' in s)""",
+                options = listOf("""True""", """False""", """eve""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+s = 'level'
+print(s.find('e'))""",
+                options = listOf("""0""", """1""", """2""", """-1"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+s = 'level'
+print(s.rfind('e'))""",
+                options = listOf("""1""", """2""", """3""", """4"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+nums = [5, 6, 7, 8]
+print(len(nums) - 1)""",
+                options = listOf("""2""", """3""", """4""", """8"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+nums = [5, 6, 7]
+print(nums[len(nums) - 1])""",
+                options = listOf("""5""", """6""", """7""", """2"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+x = 1
+while x <= 4:
+    x *= 2
+print(x)""",
+                options = listOf("""4""", """5""", """8""", """16"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+count = 0
+for i in range(5):
+    if i % 2 == 0:
+        count += 1
+print(count)""",
+                options = listOf("""2""", """3""", """4""", """5"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+a = 3
+b = 4
+print(a if a > b else b)""",
+                options = listOf("""3""", """4""", """True""", """Error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+print('Hi'.lower())""",
+                options = listOf("""Hi""", """HI""", """hi""", """Error"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+print('hi'.upper())""",
+                options = listOf("""hi""", """HI""", """Hi""", """Error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+s = 'abc'
+print(s == 'ABC')""",
+                options = listOf("""True""", """False""", """abc""", """Error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+s = 'abc'
+print(s.lower() == 'ABC'.lower())""",
+                options = listOf("""True""", """False""", """abc""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+x = 6
+print(x > 3 and x < 5)""",
+                options = listOf("""True""", """False""", """6""", """Error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+x = 6
+print(x > 3 or x < 5)""",
+                options = listOf("""True""", """False""", """6""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+n = 1
+if n == 1:
+    print('A')
+else:
+    print('B')""",
+                options = listOf("""A""", """B""", """AB""", """Nothing"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+print(list(range(2, 8, 2)))""",
+                options = listOf("""[2, 4, 6]""", """[2, 4, 6, 8]""", """[0, 2, 4, 6]""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+x = 1
+y = 2
+print(str(x + y) + 'x' + str(y))""",
+                options = listOf("""3x2""", """12x2""", """3xy""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+print('x' + str(1 + 2 + 3))""",
+                options = listOf("""x6""", """x123""", """6x""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+x = 0
+print(x == 0 and x + 1 == 1)""",
+                options = listOf("""True""", """False""", """1""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+x = 0
+print(x == 1 or x + 1 == 1)""",
+                options = listOf("""True""", """False""", """1""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+x = 5
+print(x // 2 * 2)""",
+                options = listOf("""4""", """5""", """2""", """5.0"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+x = 5
+print(x * 2 // 4)""",
+                options = listOf("""2""", """2.5""", """3""", """10"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+x = -5
+print(x % 2)""",
+                options = listOf("""1""", """-1""", """0""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+x = [1, 2, 3]
+y = x
+y[0] = 9
+print(x[0])""",
+                options = listOf("""1""", """2""", """9""", """Error"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+x = [1, 2, 3]
+y = x[:]
+y[0] = 9
+print(x[0])""",
+                options = listOf("""1""", """2""", """9""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+print('abc' is 'abc')""",
+                options = listOf("""True""", """False""", """abc""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+print('abc'.replace('a', 'z'))""",
+                options = listOf("""abc""", """zbc""", """azbc""", """Error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+print('abc'.find('x'))""",
+                options = listOf("""0""", """-1""", """Error""", """x"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+nums = [1, 2, 3]
+print(nums.pop())""",
+                options = listOf("""1""", """2""", """3""", """[1, 2]"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+nums = [1, 2, 3]
+nums.pop()
+print(nums)""",
+                options = listOf("""[1, 2]""", """[1, 2, 3]""", """3""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+print(7 & 3)""",
+                options = listOf("""1""", """2""", """3""", """7"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+print(7 | 8)""",
+                options = listOf("""7""", """8""", """15""", """0"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+print(7 ^ 3)""",
+                options = listOf("""3""", """4""", """7""", """0"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+print(int(3.9))""",
+                options = listOf("""3""", """4""", """3.9""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+print(5 / 2 == 2.5)""",
+                options = listOf("""True""", """False""", """2.5""", """Error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """Python""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+print(5 // 2 == 2.5)""",
+                options = listOf("""True""", """False""", """2.5""", """Error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int x = 6;
+printf("%d", x - 2);""",
+                options = listOf("""2""", """4""", """6""", """8"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+printf("%d", 3 * 3 + 1);""",
+                options = listOf("""10""", """12""", """9""", """7"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int x = 2;
+x = x + x;
+printf("%d", x);""",
+                options = listOf("""2""", """3""", """4""", """22"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+printf("%d", 12 / 4);""",
+                options = listOf("""3""", """4""", """3.0""", """48"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+printf("%d", 12 % 5);""",
+                options = listOf("""1""", """2""", """3""", """5"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int ok = 0;
+printf("%d", ok);""",
+                options = listOf("""1""", """0""", """false""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int a[] = {4, 5};
+printf("%d", a[0]);""",
+                options = listOf("""0""", """4""", """5""", """2"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+char s[] = "cat";
+printf("%s", s);""",
+                options = listOf("""cat""", """s""", """c""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int n = 9;
+printf("%d", n >= 10);""",
+                options = listOf("""1""", """0""", """9""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Easy Output""",
+                prompt = """Which operator gives the address of a variable?""",
+                options = listOf("""*""", """&""", """%""", """->"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 2;
+x += 1;
+printf("%d", x);""",
+                options = listOf("""2""", """3""", """4""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int sum = 0;
+for (int i = 2; i <= 6; i += 2) {
+    sum += i;
+}
+printf("%d", sum);""",
+                options = listOf("""6""", """8""", """10""", """12"""),
+                correctIndex = 3
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+for (int i = 3; i > 0; i--) {
+    printf("%d", i);
+}""",
+                options = listOf("""012""", """321""", """123""", """30"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 4;
+printf("%s", x % 2 == 0 ? "even" : "odd");""",
+                options = listOf("""even""", """odd""", """1""", """4"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+printf("%d", strchr("level", 'e') != NULL);""",
+                options = listOf("""1""", """0""", """e""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+printf("%ld", strchr("level", 'v') - "level");""",
+                options = listOf("""0""", """1""", """2""", """-1"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+printf("%ld", strrchr("level", 'e') - "level");""",
+                options = listOf("""1""", """2""", """3""", """4"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int nums[] = {5, 6, 7, 8};
+printf("%zu", sizeof(nums) / sizeof(nums[0]) - 1);""",
+                options = listOf("""2""", """3""", """4""", """8"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int nums[] = {5, 6, 7};
+printf("%d", nums[2]);""",
+                options = listOf("""5""", """6""", """7""", """2"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 1;
+while (x <= 4) {
+    x *= 2;
+}
+printf("%d", x);""",
+                options = listOf("""4""", """5""", """8""", """16"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int count = 0;
+for (int i = 0; i < 5; i++) {
+    if (i % 2 == 0) count++;
+}
+printf("%d", count);""",
+                options = listOf("""2""", """3""", """4""", """5"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int a = 3;
+int b = 4;
+printf("%d", a > b ? a : b);""",
+                options = listOf("""3""", """4""", """1""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+printf("%d", strcmp("abc", "ABC") == 0);""",
+                options = listOf("""1""", """0""", """abc""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 6;
+printf("%d", x > 3 && x < 5);""",
+                options = listOf("""1""", """0""", """6""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 6;
+printf("%d", x > 3 || x < 5);""",
+                options = listOf("""1""", """0""", """6""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int n = 1;
+switch (n) {
+    case 1: printf("A"); break;
+    default: printf("B");
+}""",
+                options = listOf("""A""", """B""", """AB""", """Nothing"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 5;
+printf("%d", ++x);""",
+                options = listOf("""5""", """6""", """4""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 5;
+printf("%d", x++);""",
+                options = listOf("""5""", """6""", """4""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 5;
+x++;
+printf("%d", x);""",
+                options = listOf("""5""", """6""", """4""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 5;
+--x;
+printf("%d", x);""",
+                options = listOf("""5""", """6""", """4""", """Compilation error"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 5;
+printf("%d", x / 2 * 2);""",
+                options = listOf("""4""", """5""", """2""", """5.0"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 5;
+printf("%d", x * 2 / 4);""",
+                options = listOf("""2""", """2.5""", """3""", """10"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = -5;
+printf("%d", x % 2);""",
+                options = listOf("""1""", """-1""", """0""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int a[] = {1, 2, 3};
+int *p = a;
+printf("%d", *(p + 2));""",
+                options = listOf("""1""", """2""", """3""", """Compilation error"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int a[] = {1, 2, 3};
+int *p = a + 1;
+printf("%d", *p);""",
+                options = listOf("""1""", """2""", """3""", """Address"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+char s[] = "abc";
+printf("%c", *(s + 2));""",
+                options = listOf("""a""", """b""", """c""", """Compilation error"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+char s[] = "abc";
+printf("%zu", strlen(s));""",
+                options = listOf("""3""", """4""", """2""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+char s[] = "abc";
+printf("%zu", sizeof(s));""",
+                options = listOf("""3""", """4""", """2""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+printf("%d", 7 & 3);""",
+                options = listOf("""1""", """2""", """3""", """7"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+printf("%d", 7 | 8);""",
+                options = listOf("""7""", """8""", """15""", """0"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+printf("%d", 7 ^ 3);""",
+                options = listOf("""3""", """4""", """7""", """0"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+printf("%d", (int)3.9);""",
+                options = listOf("""3""", """4""", """3.9""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+double d = 5 / 2;
+printf("%.1f", d);""",
+                options = listOf("""2""", """2.0""", """2.5""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+double d = 5 / 2.0;
+printf("%.1f", d);""",
+                options = listOf("""2""", """2.0""", """2.5""", """Compilation error"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 0;
+printf("%d", x == 0 && x + 1 == 1);""",
+                options = listOf("""1""", """0""", """2""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 0;
+printf("%d", x == 1 || x + 1 == 1);""",
+                options = listOf("""1""", """0""", """2""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int a = 1;
+int b = 2;
+printf("%d", a += b += 3);""",
+                options = listOf("""4""", """5""", """6""", """Compilation error"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int a = 1;
+int b = 2;
+printf("%d %d", a, b += 3);""",
+                options = listOf("""1 2""", """1 5""", """4 5""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 16;
+printf("%d", x >> 2);""",
+                options = listOf("""2""", """4""", """8""", """64"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 3;
+printf("%d", x << 2);""",
+                options = listOf("""6""", """9""", """12""", """1"""),
+                correctIndex = 2
             )
         )
     }
