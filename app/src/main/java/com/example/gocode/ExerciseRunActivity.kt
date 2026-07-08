@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import com.example.gocode.AchievementBottomSheet
+import com.example.gocode.editor.GoCodeLanguage
 import com.example.gocode.firebase.FirebaseContentRepository
 import com.example.gocode.gamification.GamificationRepository
 import com.example.gocode.gamification.GamificationResult
@@ -24,7 +25,6 @@ import com.example.gocode.network.models.runModels.RunRequest
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
-import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.SymbolInputView
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
@@ -142,7 +142,7 @@ class ExerciseRunActivity : AppCompatActivity() {
     }
 
     private fun setupEditor() {
-        editor.setEditorLanguage(JavaLanguage())
+        editor.setEditorLanguage(GoCodeLanguage("java"))
         editor.setTextSize(14f)
         editor.isLineNumberEnabled = true
         editor.isHighlightCurrentLine = true

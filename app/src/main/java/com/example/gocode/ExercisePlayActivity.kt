@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
+import com.example.gocode.editor.GoCodeLanguage
 import com.example.gocode.gamification.GamificationRepository
 import com.example.gocode.lessons.CCodeExerciseRepository
 import com.example.gocode.lessons.CodeExercise
@@ -38,7 +39,6 @@ import com.google.android.material.button.MaterialButton
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
-import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.SymbolInputView
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
@@ -269,7 +269,7 @@ class ExercisePlayActivity : AppCompatActivity() {
     }
 
     private fun setupEditor() {
-        editor.setEditorLanguage(JavaLanguage())
+        editor.setEditorLanguage(GoCodeLanguage(currentExercise.language))
         editor.setTextSize(12f)
         editor.isLineNumberEnabled = true
         editor.isHighlightCurrentLine = true
