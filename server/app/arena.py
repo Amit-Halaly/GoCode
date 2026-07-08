@@ -2527,7 +2527,7 @@ class ArenaManager:
                 self.waiting.append(player)
                 self._cancel_waiting_timeout(player.id)
                 self.waiting_timeout_tasks[player.id] = asyncio.create_task(self._match_with_bot_after_timeout(player.id))
-                await player.websocket.send_json({"type": "matchmaking_started", "timeoutMs": 30_000})
+                await player.websocket.send_json({"type": "matchmaking_started", "timeoutMs": 3_000})
                 return
 
             self.waiting = [waiting for waiting in self.waiting if waiting.id != opponent.id]
@@ -2549,7 +2549,7 @@ class ArenaManager:
         await self.start_match(opponent, player)
 
     async def _match_with_bot_after_timeout(self, waiting_player_id: str) -> None:
-        await asyncio.sleep(30)
+        await asyncio.sleep(3)
         async with self.lock:
             player = next((waiting for waiting in self.waiting if waiting.id == waiting_player_id), None)
             if player is None:
