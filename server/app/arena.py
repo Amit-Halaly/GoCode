@@ -2461,6 +2461,29 @@ ARENA_QUESTIONS = [
 
 
 @dataclass
+class ArenaPlayer:
+    id: str
+    name: str
+    rating: int
+    languages: list[str]
+    avatar_id: str | None
+    websocket: Optional[WebSocket]
+    invite_code: str | None = None
+    is_bot: bool = False
+    skill: int = 82
+
+    def public(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "rating": self.rating,
+            "languages": self.languages,
+            "avatarId": self.avatar_id,
+            "isBot": self.is_bot,
+        }
+
+
+@dataclass
 class ArenaMatch:
     id: str
     players: list[ArenaPlayer]
