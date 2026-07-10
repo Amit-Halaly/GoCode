@@ -8,8 +8,10 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +20,7 @@ import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -362,30 +365,242 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     }
 
     private fun showArenaLanguagePicker() {
-        val labels = availableArenaLanguages.toTypedArray()
-        val checked = labels.map { language ->
-            selectedArenaLanguages.any { it.equals(language, ignoreCase = true) }
-        }.toBooleanArray()
+        val dialog = Dialog(requireContext())
+        val selected = selectedArenaLanguages
+            .map { canonicalArenaLanguage(it) }
+            .filter { availableArenaLanguages.any { available -> arenaLanguageMatches(it, available) } }
+            .ifEmpty { listOf("Java") }
+            .toMutableSet()
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Arena question languages")
-            .setMultiChoiceItems(labels, checked) { _, index, isChecked ->
-                checked[index] = isChecked
-            }
-            .setPositiveButton("Apply") { _, _ ->
-                val selected = labels.filterIndexed { index, _ -> checked[index] }
-                if (selected.isEmpty()) {
-                    Toast.makeText(requireContext(), "Choose at least one language", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
+        lateinit var summaryText: TextView
+        lateinit var choicesContainer: LinearLayout
+
+        fun refreshSummary() {
+            summaryText.text = selected.joinToString("  /  ")
+        }
+
+        fun renderChoices() {
+            choicesContainer.removeAllViews()
+            availableArenaLanguages.chunked(2).forEach { rowLanguages ->
+                val row = LinearLayout(requireContext()).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER
                 }
-                selectedArenaLanguages = selected
-                renderProfile()
-                if (isIdleBattleState()) {
-                    arenaTicker.flashText("LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}")
+                rowLanguages.forEach { language ->
+                    row.addView(
+                        arenaLanguageChoiceCard(
+                            language = language,
+                            selected = selected.any { arenaLanguageMatches(it, language) }
+                        ) {
+                            val canonical = canonicalArenaLanguage(language)
+                            if (selected.any { arenaLanguageMatches(it, canonical) }) {
+                                if (selected.size == 1) {
+                                    Toast.makeText(requireContext(), "Choose at least one language", Toast.LENGTH_SHORT).show()
+                                    return@arenaLanguageChoiceCard
+                                }
+                                selected.removeAll { arenaLanguageMatches(it, canonical) }
+                            } else {
+                                selected.add(canonical)
+                            }
+                            refreshSummary()
+                            renderChoices()
+                        },
+                        LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                            setMargins(dp(5), dp(5), dp(5), dp(5))
+                        }
+                    )
                 }
+                if (rowLanguages.size == 1) {
+                    row.addView(View(requireContext()), LinearLayout.LayoutParams(0, 1, 1f))
+                }
+                choicesContainer.addView(row, LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ))
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        val content = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(18), dp(20), dp(18))
+            setBackgroundResource(R.drawable.bg_arena_exit_dialog)
+
+            addView(TextView(requireContext()).apply {
+                text = "Arena Languages"
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                textSize = 22f
+                typeface = Typeface.DEFAULT_BOLD
+            })
+
+            addView(TextView(requireContext()).apply {
+                text = "Pick the question pools for your next ranked duel."
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.gc_text_secondary))
+                textSize = 13f
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(4) })
+
+            summaryText = TextView(requireContext()).apply {
+                setTextColor(Color.BLACK)
+                textSize = 12f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                setPadding(dp(12), dp(8), dp(12), dp(8))
+                background = roundedRect(Color.parseColor("#37F2B6"), Color.TRANSPARENT, dp(8))
+            }
+            addView(summaryText, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(14) })
+
+            choicesContainer = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.VERTICAL
+            }
+            addView(ScrollView(requireContext()).apply {
+                isFillViewport = false
+                addView(choicesContainer)
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(315)
+            ).apply { topMargin = dp(12) })
+
+            addView(LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                addView(MaterialButton(requireContext()).apply {
+                    text = "Cancel"
+                    textSize = 13f
+                    setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                    backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.gc_card))
+                    cornerRadius = dp(8)
+                    setOnClickListener { dialog.dismiss() }
+                }, LinearLayout.LayoutParams(0, dp(46), 1f).apply { marginEnd = dp(6) })
+                addView(MaterialButton(requireContext()).apply {
+                    text = "Apply"
+                    textSize = 13f
+                    typeface = Typeface.DEFAULT_BOLD
+                    setTextColor(Color.BLACK)
+                    backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.accent_green))
+                    cornerRadius = dp(8)
+                    setOnClickListener {
+                        selectedArenaLanguages = availableArenaLanguages
+                            .filter { available -> selected.any { arenaLanguageMatches(it, available) } }
+                            .ifEmpty { listOf("Java") }
+                        renderProfile()
+                        if (isIdleBattleState()) {
+                            arenaTicker.flashText("LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}")
+                        }
+                        dialog.dismiss()
+                    }
+                }, LinearLayout.LayoutParams(0, dp(46), 1f).apply { marginStart = dp(6) })
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(14) })
+        }
+
+        dialog.setContentView(content)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setDimAmount(0.72f)
+        dialog.setCanceledOnTouchOutside(true)
+        refreshSummary()
+        renderChoices()
+        dialog.show()
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.92f).roundToInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
+
+    private fun arenaLanguageChoiceCard(
+        language: String,
+        selected: Boolean,
+        onClick: () -> Unit
+    ): View {
+        val accent = arenaLanguageAccent(language)
+        return LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            isClickable = true
+            isFocusable = true
+            minimumHeight = dp(120)
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = arenaLanguageCardBackground(selected, accent)
+            setOnClickListener { onClick() }
+
+            addView(LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                addView(TextView(requireContext()).apply {
+                    text = arenaLanguageShortName(language)
+                    setTextColor(if (selected) Color.BLACK else accent)
+                    textSize = 12f
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    setPadding(dp(8), dp(5), dp(8), dp(5))
+                    background = roundedRect(if (selected) accent else Color.TRANSPARENT, accent, dp(8))
+                })
+                addView(TextView(requireContext()).apply {
+                    text = if (selected) "ON" else "OFF"
+                    setTextColor(if (selected) accent else ContextCompat.getColor(requireContext(), R.color.gc_text_secondary))
+                    textSize = 11f
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.END
+                }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            })
+
+            addView(TextView(requireContext()).apply {
+                text = language
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                textSize = 18f
+                typeface = Typeface.DEFAULT_BOLD
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(12) })
+
+            addView(TextView(requireContext()).apply {
+                text = "${arenaQuestionCountFor(language)} output questions"
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.gc_text_secondary))
+                textSize = 12f
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(3) })
+        }
+    }
+
+    private fun arenaQuestionCountFor(language: String): Int {
+        return arenaQuestions.count { arenaLanguageMatches(it.language, language) }
+    }
+
+    private fun arenaLanguageCardBackground(selected: Boolean, accent: Int): GradientDrawable {
+        return GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            if (selected) {
+                intArrayOf(adjustAlpha(accent, 0.38f), Color.parseColor("#101C31"))
+            } else {
+                intArrayOf(Color.parseColor("#132235"), Color.parseColor("#0A1728"))
+            }
+        ).apply {
+            cornerRadius = dp(8).toFloat()
+            setStroke(dp(1), if (selected) accent else Color.parseColor("#2B425B"))
+        }
+    }
+
+    private fun roundedRect(fillColor: Int, strokeColor: Int, radius: Int): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radius.toFloat()
+            setColor(fillColor)
+            if (strokeColor != Color.TRANSPARENT) {
+                setStroke(dp(1), strokeColor)
+            }
+        }
+    }
+
+    private fun adjustAlpha(color: Int, factor: Float): Int {
+        return Color.argb((Color.alpha(color) * factor).roundToInt(), Color.red(color), Color.green(color), Color.blue(color))
     }
 
     private fun defaultArenaLanguagesFor(languages: List<String>): List<String> {
@@ -2031,6 +2246,29 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
                 "csharp", "c#", "cs" -> "C#"
                 else -> language.trim()
             }
+        }
+
+        private fun arenaLanguageShortName(language: String): String {
+            return when (canonicalArenaLanguage(language)) {
+                "Python" -> "PY"
+                "Java" -> "JAVA"
+                "C++" -> "C++"
+                "C#" -> "C#"
+                else -> "C"
+            }
+        }
+
+        private fun arenaLanguageAccent(language: String): Int {
+            return Color.parseColor(
+                when (canonicalArenaLanguage(language)) {
+                    "Python" -> "#37F2B6"
+                    "Java" -> "#FBBF24"
+                    "C" -> "#60A5FA"
+                    "C++" -> "#A78BFA"
+                    "C#" -> "#F472B6"
+                    else -> "#37F2B6"
+                }
+            )
         }
 
         private val arenaQuestions = listOf(
