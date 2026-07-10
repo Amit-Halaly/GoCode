@@ -2459,6 +2459,249 @@ ARENA_QUESTIONS = [
     }
 ]
 
+ARENA_QUESTIONS.extend([
+    {
+        "id": "cpp-001",
+        "language": "C++",
+        "course": "Easy Output",
+        "prompt": "What is printed?\nint x = 4;\ncout << x++;",
+        "options": ["4", "5", "3", "Compilation error"],
+        "correctIndex": 0,
+    },
+    {
+        "id": "cpp-002",
+        "language": "C++",
+        "course": "Easy Output",
+        "prompt": "What is printed?\ncout << 2 + 3 << \"4\";",
+        "options": ["54", "234", "9", "Compilation error"],
+        "correctIndex": 0,
+    },
+    {
+        "id": "cpp-003",
+        "language": "C++",
+        "course": "Easy Output",
+        "prompt": "What is printed?\nint a = 7 / 2;\ncout << a;",
+        "options": ["3.5", "4", "3", "2"],
+        "correctIndex": 2,
+    },
+    {
+        "id": "cpp-004",
+        "language": "C++",
+        "course": "Easy Output",
+        "prompt": "What is printed?\ncout << 7 % 3;",
+        "options": ["1", "2", "3", "0"],
+        "correctIndex": 0,
+    },
+    {
+        "id": "cpp-005",
+        "language": "C++",
+        "course": "Easy Output",
+        "prompt": "What is printed?\nbool ready = true;\ncout << !ready;",
+        "options": ["true", "false", "0", "1"],
+        "correctIndex": 2,
+    },
+    {
+        "id": "cpp-006",
+        "language": "C++",
+        "course": "Easy Output",
+        "prompt": "What is printed?\nint nums[] = {10, 20, 30};\ncout << nums[1];",
+        "options": ["10", "20", "30", "1"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cpp-007",
+        "language": "C++",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nstring word = \"Code\";\ncout << word.length();",
+        "options": ["3", "4", "Code", "true"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cpp-008",
+        "language": "C++",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nfor (int i = 0; i < 3; i++) {\n    cout << i;\n}",
+        "options": ["012", "123", "0123", "3"],
+        "correctIndex": 0,
+    },
+    {
+        "id": "cpp-009",
+        "language": "C++",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nint total = 0;\nfor (int i = 1; i <= 3; i++) {\n    total += i;\n}\ncout << total;",
+        "options": ["3", "5", "6", "7"],
+        "correctIndex": 2,
+    },
+    {
+        "id": "cpp-010",
+        "language": "C++",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nvector<int> nums = {2, 4, 6};\ncout << nums.size() + nums[0];",
+        "options": ["3", "5", "6", "8"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cpp-011",
+        "language": "C++",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nint x = 5;\nif (x > 5) cout << \"A\";\nelse cout << \"B\";",
+        "options": ["A", "B", "5", "Nothing"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cpp-012",
+        "language": "C++",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nint x = 3;\ncout << ++x;",
+        "options": ["3", "4", "2", "Compilation error"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cpp-013",
+        "language": "C++",
+        "course": "Hard Output",
+        "prompt": "What is printed?\nint x = 5;\ncout << x++;",
+        "options": ["5", "6", "4", "Compilation error"],
+        "correctIndex": 0,
+    },
+    {
+        "id": "cpp-014",
+        "language": "C++",
+        "course": "Hard Output",
+        "prompt": "What is printed?\nint x = 16;\ncout << (x >> 2);",
+        "options": ["2", "4", "8", "64"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cpp-015",
+        "language": "C++",
+        "course": "Hard Output",
+        "prompt": "What is printed?\nint a = 1;\nint b = 2;\ncout << (a += b += 3);",
+        "options": ["4", "5", "6", "Compilation error"],
+        "correctIndex": 2,
+    },
+    {
+        "id": "cs-001",
+        "language": "C#",
+        "course": "Easy Output",
+        "prompt": "What is printed?\nint x = 4;\nConsole.WriteLine(x++);",
+        "options": ["4", "5", "3", "Compilation error"],
+        "correctIndex": 0,
+    },
+    {
+        "id": "cs-002",
+        "language": "C#",
+        "course": "Easy Output",
+        "prompt": "What is printed?\nstring s = \"Go\";\nConsole.WriteLine(s + 2 + 3);",
+        "options": ["Go5", "Go23", "5Go", "Compilation error"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cs-003",
+        "language": "C#",
+        "course": "Easy Output",
+        "prompt": "What is printed?\nConsole.WriteLine(2 + 3 + \"4\");",
+        "options": ["54", "234", "9", "Compilation error"],
+        "correctIndex": 0,
+    },
+    {
+        "id": "cs-004",
+        "language": "C#",
+        "course": "Easy Output",
+        "prompt": "What is printed?\nConsole.WriteLine(\"4\" + 2 + 3);",
+        "options": ["9", "423", "45", "Compilation error"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cs-005",
+        "language": "C#",
+        "course": "Easy Output",
+        "prompt": "What is printed?\nint a = 7 / 2;\nConsole.WriteLine(a);",
+        "options": ["3.5", "4", "3", "2"],
+        "correctIndex": 2,
+    },
+    {
+        "id": "cs-006",
+        "language": "C#",
+        "course": "Easy Output",
+        "prompt": "What is printed?\nConsole.WriteLine(7 % 3);",
+        "options": ["1", "2", "3", "0"],
+        "correctIndex": 0,
+    },
+    {
+        "id": "cs-007",
+        "language": "C#",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nbool ready = true;\nConsole.WriteLine(!ready);",
+        "options": ["True", "False", "0", "Compilation error"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cs-008",
+        "language": "C#",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nint[] nums = {10, 20, 30};\nConsole.WriteLine(nums[1]);",
+        "options": ["10", "20", "30", "1"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cs-009",
+        "language": "C#",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nstring word = \"Code\";\nConsole.WriteLine(word.Length);",
+        "options": ["3", "4", "Code", "true"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cs-010",
+        "language": "C#",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nfor (int i = 0; i < 3; i++) {\n    Console.Write(i);\n}",
+        "options": ["012", "123", "0123", "3"],
+        "correctIndex": 0,
+    },
+    {
+        "id": "cs-011",
+        "language": "C#",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nint total = 0;\nfor (int i = 1; i <= 3; i++) {\n    total += i;\n}\nConsole.WriteLine(total);",
+        "options": ["3", "5", "6", "7"],
+        "correctIndex": 2,
+    },
+    {
+        "id": "cs-012",
+        "language": "C#",
+        "course": "Medium Output",
+        "prompt": "What is printed?\nint x = 3;\nConsole.WriteLine(++x);",
+        "options": ["3", "4", "2", "Compilation error"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cs-013",
+        "language": "C#",
+        "course": "Hard Output",
+        "prompt": "What is printed?\nint x = 5;\nif (x > 5) Console.WriteLine(\"A\");\nelse Console.WriteLine(\"B\");",
+        "options": ["A", "B", "5", "Nothing"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cs-014",
+        "language": "C#",
+        "course": "Hard Output",
+        "prompt": "What is printed?\nint? x = null;\nConsole.WriteLine(x ?? 7);",
+        "options": ["0", "7", "null", "Compilation error"],
+        "correctIndex": 1,
+    },
+    {
+        "id": "cs-015",
+        "language": "C#",
+        "course": "Hard Output",
+        "prompt": "What is printed?\nstring s = \"abc\";\nConsole.WriteLine(s[1]);",
+        "options": ["a", "b", "c", "1"],
+        "correctIndex": 1,
+    },
+])
+
 
 @dataclass
 class ArenaPlayer:
@@ -2782,8 +3025,10 @@ class ArenaManager:
         return int(delta)
 
     def _select_questions(self, first_languages: list[str], second_languages: list[str]) -> list[dict[str, Any]]:
-        shared = {lang.lower() for lang in first_languages} & {lang.lower() for lang in second_languages}
-        question_languages = shared or ({lang.lower() for lang in first_languages} | {lang.lower() for lang in second_languages})
+        first = {self._canonical_language(lang).lower() for lang in first_languages}
+        second = {self._canonical_language(lang).lower() for lang in second_languages}
+        shared = first & second
+        question_languages = shared or (first | second)
         pool = [q for q in ARENA_QUESTIONS if q["language"].lower() in question_languages]
         if not pool:
             pool = ARENA_QUESTIONS
@@ -2806,13 +3051,34 @@ class ArenaManager:
         )
 
     def _language_overlap(self, first_languages: list[str], second_languages: list[str]) -> int:
-        return len({lang.lower() for lang in first_languages} & {lang.lower() for lang in second_languages})
+        first = {self._canonical_language(lang).lower() for lang in first_languages}
+        second = {self._canonical_language(lang).lower() for lang in second_languages}
+        return len(first & second)
 
     def _normalize_languages(self, value: Any) -> list[str]:
         if not isinstance(value, list):
             return ["Java"]
-        languages = [str(item).strip() for item in value if str(item).strip()]
+        languages = []
+        for item in value:
+            language = self._canonical_language(str(item).strip())
+            if language and language not in languages:
+                languages.append(language)
         return languages or ["Java"]
+
+    def _canonical_language(self, language: str) -> str:
+        aliases = {
+            "java": "Java",
+            "python": "Python",
+            "c": "C",
+            "clang": "C",
+            "cpp": "C++",
+            "c++": "C++",
+            "cplusplus": "C++",
+            "csharp": "C#",
+            "c#": "C#",
+            "cs": "C#",
+        }
+        return aliases.get(language.strip().lower(), language.strip())
 
     def _normalize_invite_code(self, value: Any) -> str | None:
         if value is None:

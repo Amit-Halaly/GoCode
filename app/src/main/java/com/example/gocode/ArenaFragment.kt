@@ -390,14 +390,14 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
 
     private fun defaultArenaLanguagesFor(languages: List<String>): List<String> {
         return availableArenaLanguages
-            .filter { available -> languages.any { it.equals(available, ignoreCase = true) } }
+            .filter { available -> languages.any { arenaLanguageMatches(it, available) } }
             .ifEmpty { listOf("Java") }
     }
 
     private fun sharedLanguagesFor(first: List<String>, second: List<String>): List<String> {
         return availableArenaLanguages.filter { language ->
-            first.any { it.equals(language, ignoreCase = true) } &&
-                second.any { it.equals(language, ignoreCase = true) }
+            first.any { arenaLanguageMatches(it, language) } &&
+                second.any { arenaLanguageMatches(it, language) }
         }
     }
 
@@ -2008,15 +2008,30 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         private const val WRONG_ANSWER_PENALTY = -35
         private const val TIMEOUT_PENALTY = -50
         private const val RATING_K_FACTOR = 28
-        private val availableArenaLanguages = listOf("Java", "Python", "C")
+        private val availableArenaLanguages = listOf("Java", "Python", "C", "C++", "C#")
 
         private val arenaOpponents = listOf(
-            ArenaOpponent("NullPointer", 1260, listOf("Java", "C"), 74, R.drawable.avatar_alien),
-            ArenaOpponent("StackQueen", 1420, listOf("Java", "Python"), 78, R.drawable.avatar_witch),
-            ArenaOpponent("ByteRunner", 1180, listOf("C", "Python"), 66, R.drawable.avatar_robot),
+            ArenaOpponent("NullPointer", 1260, listOf("Java", "C", "C++"), 74, R.drawable.avatar_alien),
+            ArenaOpponent("StackQueen", 1420, listOf("Java", "Python", "C#"), 78, R.drawable.avatar_witch),
+            ArenaOpponent("ByteRunner", 1180, listOf("C", "Python", "C++"), 66, R.drawable.avatar_robot),
             ArenaOpponent("LoopMage", 1095, listOf("Java"), 62, R.drawable.avatar_owl),
-            ArenaOpponent("AlgoNinja", 1610, listOf("Python", "Java", "C"), 84, R.drawable.avatar_ninja)
+            ArenaOpponent("AlgoNinja", 1610, listOf("Python", "Java", "C", "C++", "C#"), 84, R.drawable.avatar_ninja)
         )
+
+        private fun arenaLanguageMatches(candidate: String, target: String): Boolean {
+            return canonicalArenaLanguage(candidate).equals(canonicalArenaLanguage(target), ignoreCase = true)
+        }
+
+        private fun canonicalArenaLanguage(language: String): String {
+            return when (language.trim().lowercase()) {
+                "java" -> "Java"
+                "python" -> "Python"
+                "c", "clang" -> "C"
+                "cpp", "c++", "cplusplus" -> "C++"
+                "csharp", "c#", "cs" -> "C#"
+                else -> language.trim()
+            }
+        }
 
         private val arenaQuestions = listOf(
             ArenaQuestion(
@@ -4841,6 +4856,288 @@ int x = 3;
 printf("%d", x << 2);""",
                 options = listOf("""6""", """9""", """12""", """1"""),
                 correctIndex = 2
+            )
+        ) + cppArenaQuestions() + csharpArenaQuestions()
+
+        private fun cppArenaQuestions() = listOf(
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int x = 4;
+cout << x++;""",
+                options = listOf("""4""", """5""", """3""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+cout << 2 + 3 << "4";""",
+                options = listOf("""54""", """234""", """9""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int a = 7 / 2;
+cout << a;""",
+                options = listOf("""3.5""", """4""", """3""", """2"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+cout << 7 % 3;""",
+                options = listOf("""1""", """2""", """3""", """0"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+bool ready = true;
+cout << !ready;""",
+                options = listOf("""true""", """false""", """0""", """1"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int nums[] = {10, 20, 30};
+cout << nums[1];""",
+                options = listOf("""10""", """20""", """30""", """1"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+string word = "Code";
+cout << word.length();""",
+                options = listOf("""3""", """4""", """Code""", """true"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+for (int i = 0; i < 3; i++) {
+    cout << i;
+}""",
+                options = listOf("""012""", """123""", """0123""", """3"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int total = 0;
+for (int i = 1; i <= 3; i++) {
+    total += i;
+}
+cout << total;""",
+                options = listOf("""3""", """5""", """6""", """7"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+vector<int> nums = {2, 4, 6};
+cout << nums.size() + nums[0];""",
+                options = listOf("""3""", """5""", """6""", """8"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 5;
+if (x > 5) cout << "A";
+else cout << "B";""",
+                options = listOf("""A""", """B""", """5""", """Nothing"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 3;
+cout << ++x;""",
+                options = listOf("""3""", """4""", """2""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 5;
+cout << x++;""",
+                options = listOf("""5""", """6""", """4""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 16;
+cout << (x >> 2);""",
+                options = listOf("""2""", """4""", """8""", """64"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int a = 1;
+int b = 2;
+cout << (a += b += 3);""",
+                options = listOf("""4""", """5""", """6""", """Compilation error"""),
+                correctIndex = 2
+            )
+        )
+
+        private fun csharpArenaQuestions() = listOf(
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int x = 4;
+Console.WriteLine(x++);""",
+                options = listOf("""4""", """5""", """3""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+string s = "Go";
+Console.WriteLine(s + 2 + 3);""",
+                options = listOf("""Go5""", """Go23""", """5Go""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+Console.WriteLine(2 + 3 + "4");""",
+                options = listOf("""54""", """234""", """9""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+Console.WriteLine("4" + 2 + 3);""",
+                options = listOf("""9""", """423""", """45""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int a = 7 / 2;
+Console.WriteLine(a);""",
+                options = listOf("""3.5""", """4""", """3""", """2"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+Console.WriteLine(7 % 3);""",
+                options = listOf("""1""", """2""", """3""", """0"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+bool ready = true;
+Console.WriteLine(!ready);""",
+                options = listOf("""True""", """False""", """0""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int[] nums = {10, 20, 30};
+Console.WriteLine(nums[1]);""",
+                options = listOf("""10""", """20""", """30""", """1"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+string word = "Code";
+Console.WriteLine(word.Length);""",
+                options = listOf("""3""", """4""", """Code""", """true"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+for (int i = 0; i < 3; i++) {
+    Console.Write(i);
+}""",
+                options = listOf("""012""", """123""", """0123""", """3"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int total = 0;
+for (int i = 1; i <= 3; i++) {
+    total += i;
+}
+Console.WriteLine(total);""",
+                options = listOf("""3""", """5""", """6""", """7"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 3;
+Console.WriteLine(++x);""",
+                options = listOf("""3""", """4""", """2""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 5;
+if (x > 5) Console.WriteLine("A");
+else Console.WriteLine("B");""",
+                options = listOf("""A""", """B""", """5""", """Nothing"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int? x = null;
+Console.WriteLine(x ?? 7);""",
+                options = listOf("""0""", """7""", """null""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+string s = "abc";
+Console.WriteLine(s[1]);""",
+                options = listOf("""a""", """b""", """c""", """1"""),
+                correctIndex = 1
             )
         )
     }
