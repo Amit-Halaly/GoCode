@@ -20,12 +20,13 @@ class GoCodeLanguage(language: String) : Language {
 
     private val normalized = language.lowercase()
     private val delegate: Language = if (normalized == "java") JavaLanguage() else EmptyLanguage()
+    private val syntaxAnalyzer = SimpleSyntaxAnalyzeManager.create(normalized)
     private val fallbackQuickQuoteHandler = QuickQuoteHandler { _, _, _, _ ->
         QuickQuoteHandler.HandleResult.NOT_CONSUMED
     }
     private val snippets = snippetsFor(normalized)
 
-    override fun getAnalyzeManager(): AnalyzeManager = delegate.analyzeManager
+    override fun getAnalyzeManager(): AnalyzeManager = syntaxAnalyzer ?: delegate.analyzeManager
 
     override fun getInterruptionLevel(): Int = delegate.interruptionLevel
 
@@ -71,6 +72,7 @@ class GoCodeLanguage(language: String) : Language {
     override fun getQuickQuoteHandler(): QuickQuoteHandler = delegate.quickQuoteHandler ?: fallbackQuickQuoteHandler
 
     override fun destroy() {
+        syntaxAnalyzer?.destroy()
         delegate.destroy()
     }
 
