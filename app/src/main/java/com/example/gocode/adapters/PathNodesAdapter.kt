@@ -72,6 +72,7 @@ class PathNodesAdapter(
         private val nodeWrapper: View = itemView.findViewById(R.id.nodeWrapper)
         private val cardSectionHeader: MaterialCardView = itemView.findViewById(R.id.cardSectionHeader)
         private val tvSectionTop: TextView = itemView.findViewById(R.id.tvSectionTop)
+        private val tvLanguageShortcut: TextView = itemView.findViewById(R.id.tvLanguageShortcut)
         private val tvSectionTitle: TextView = itemView.findViewById(R.id.tvSectionTitle)
         private val cardNode: MaterialCardView = itemView.findViewById(R.id.cardNode)
         private val progressRing: CircularProgressIndicator =
@@ -154,58 +155,78 @@ class PathNodesAdapter(
                 item.id.contains("_u6_") -> R.color.section_six
                 item.id.contains("_u5_") -> R.color.section_five
                 item.id.contains("_u4_") -> R.color.section_four
-                item.id.contains("_u2_") -> R.color.section_two
                 item.id.contains("_u3_") -> R.color.section_three
+                item.id.contains("_u2_") -> R.color.section_two
                 else -> R.color.section_one
             }
             return ContextCompat.getColor(itemView.context, colorRes)
         }
 
         private fun bindSectionHeader(item: PathNodeItem, sectionColor: Int) {
-            val header = when (item.id) {
-                "java_u2_l1" -> "SECTION 2 • JAVA" to "If / Else Statements"
-                "java_u3_l1" -> "SECTION 3 • JAVA" to "Loops"
-                "java_u4_l1" -> "SECTION 4 • JAVA" to "Arrays"
-                "java_u5_l1" -> "SECTION 5 • JAVA" to "Methods"
-                "java_u6_l1" -> "SECTION 6 • JAVA" to "Scanner Input"
-                "java_u7_l1" -> "SECTION 7 • JAVA" to "String Tools"
-                "java_u8_l1" -> "SECTION 8 • JAVA" to "Classes & Objects"
-                "java_u9_l1" -> "SECTION 9 • JAVA" to "Debugging Basics"
-                "java_u10_l1" -> "SECTION 10 • JAVA" to "Final Review"
-                "py_u2_l1" -> "SECTION 2 - PYTHON" to "If / Else Statements"
-                "py_u3_l1" -> "SECTION 3 - PYTHON" to "Loops"
-                "py_u4_l1" -> "SECTION 4 - PYTHON" to "Lists"
-                "py_u5_l1" -> "SECTION 5 - PYTHON" to "Functions"
-                "py_u6_l1" -> "SECTION 6 - PYTHON" to "Input"
-                "py_u7_l1" -> "SECTION 7 - PYTHON" to "String Tools"
-                "py_u8_l1" -> "SECTION 8 - PYTHON" to "Dictionaries"
-                "py_u9_l1" -> "SECTION 9 - PYTHON" to "Debugging Basics"
-                "py_u10_l1" -> "SECTION 10 - PYTHON" to "Final Review"
-                "c_u2_l1" -> "SECTION 2 - C" to "If / Else Statements"
-                "c_u3_l1" -> "SECTION 3 - C" to "Loops"
-                "c_u4_l1" -> "SECTION 4 - C" to "Arrays"
-                "c_u5_l1" -> "SECTION 5 - C" to "Functions"
-                "c_u6_l1" -> "SECTION 6 - C" to "scanf Input"
-                "c_u7_l1" -> "SECTION 7 - C" to "C Strings"
-                "c_u8_l1" -> "SECTION 8 - C" to "Pointers"
-                "c_u9_l1" -> "SECTION 9 - C" to "Debugging Basics"
-                "c_u10_l1" -> "SECTION 10 - C" to "Final Review"
-                else -> null
-            }
-
-            if (header == null) {
+            val section = sectionNumber(item.id)
+            if (section == null || !item.id.endsWith("_l1")) {
                 cardSectionHeader.visibility = View.GONE
                 return
             }
 
+            val language = languageForNode(item.id)
             cardSectionHeader.visibility = View.VISIBLE
             cardSectionHeader.setCardBackgroundColor(sectionColor)
-            tvSectionTop.text = header.first
-            tvSectionTitle.text = header.second
+            tvSectionTop.text = "SECTION $section"
+            tvLanguageShortcut.text = language.shortcut
+            tvSectionTitle.text = sectionTitle(section, language.key)
+        }
+
+        private fun sectionNumber(nodeId: String): Int? {
+            return Regex("""_u(\d+)_""").find(nodeId)
+                ?.groupValues
+                ?.getOrNull(1)
+                ?.toIntOrNull()
+        }
+
+        private fun languageForNode(nodeId: String): LanguageMeta {
+            return when {
+                nodeId.startsWith("py_") -> LanguageMeta("python", "PY")
+                nodeId.startsWith("c_") -> LanguageMeta("c", "C")
+                nodeId.startsWith("cpp_") -> LanguageMeta("cpp", "C++")
+                nodeId.startsWith("cs_") -> LanguageMeta("csharp", "C#")
+                else -> LanguageMeta("java", "JAVA")
+            }
+        }
+
+        private fun sectionTitle(section: Int, language: String): String {
+            return when (section) {
+                1 -> "Getting Started"
+                2 -> "If / Else Statements"
+                3 -> "Loops"
+                4 -> if (language == "python") "Lists" else if (language == "cpp") "Vectors" else "Arrays"
+                5 -> if (language == "java" || language == "csharp") "Methods" else "Functions"
+                6 -> when (language) {
+                    "python" -> "Input"
+                    "c" -> "scanf Input"
+                    "cpp" -> "cin Input"
+                    "csharp" -> "Console Input"
+                    else -> "Scanner Input"
+                }
+                7 -> if (language == "c") "C Strings" else "String Tools"
+                8 -> when (language) {
+                    "python" -> "Dictionaries"
+                    "c" -> "Pointers"
+                    else -> "Classes & Objects"
+                }
+                9 -> "Debugging Basics"
+                10 -> "Final Review"
+                else -> "Section $section"
+            }
         }
 
         private fun dp(view: View, value: Int): Int {
             return (value * view.resources.displayMetrics.density).toInt()
         }
+
+        private data class LanguageMeta(
+            val key: String,
+            val shortcut: String
+        )
     }
 }
