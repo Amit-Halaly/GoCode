@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException, WebSocket
 from app.models import LintRequest, RunRequest, LintResponse, RunResponse, HintRequest, HintResponse
 from app.services.c_runner import lint_c, run_c
 from app.services.cpp_runner import lint_cpp, run_cpp
+from app.services.csharp_runner import lint_csharp, run_csharp
 from app.services.java_runner import lint_java, run_java
 from app.services.python_runner import lint_python, run_python
 from app.arena import arena_manager
@@ -19,7 +20,7 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"ok": True, "languages": ["java", "python", "c", "cpp"]}
+    return {"ok": True, "languages": ["java", "python", "c", "cpp", "csharp"]}
 
 
 @app.get("/arena/status")
@@ -41,6 +42,8 @@ def lint(req: LintRequest):
         return lint_c(req.code)
     if language in {"cpp", "c++", "cplusplus"}:
         return lint_cpp(req.code)
+    if language in {"csharp", "c#", "cs"}:
+        return lint_csharp(req.code)
     return lint_java(req.code)
 
 
@@ -65,6 +68,14 @@ def run(req: RunRequest):
         )
     if language in {"cpp", "c++", "cplusplus"}:
         return run_cpp(
+            req.code,
+            req.input or "",
+            expected_output=req.expectedOutput,
+            compare_mode=req.compareMode,
+            test_cases=[tc.model_dump() for tc in req.testCases] if req.testCases else None,
+        )
+    if language in {"csharp", "c#", "cs"}:
+        return run_csharp(
             req.code,
             req.input or "",
             expected_output=req.expectedOutput,

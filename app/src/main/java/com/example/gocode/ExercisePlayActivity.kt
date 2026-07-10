@@ -25,6 +25,7 @@ import com.example.gocode.gamification.GamificationRepository
 import com.example.gocode.lessons.CCodeExerciseRepository
 import com.example.gocode.lessons.CodeExercise
 import com.example.gocode.lessons.CppCodeExerciseRepository
+import com.example.gocode.lessons.CSharpCodeExerciseRepository
 import com.example.gocode.lessons.JavaCodeExerciseRepository
 import com.example.gocode.lessons.LanguagePathFragment
 import com.example.gocode.lessons.LessonProgressStore
@@ -120,6 +121,7 @@ class ExercisePlayActivity : AppCompatActivity() {
         nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_c1"
         currentExercise = when {
             nodeId.startsWith("cpp_") -> CppCodeExerciseRepository.getExercise(nodeId)
+            nodeId.startsWith("cs_") -> CSharpCodeExerciseRepository.getExercise(nodeId)
             nodeId.startsWith("c_") -> CCodeExerciseRepository.getExercise(nodeId)
             nodeId.startsWith("py_") -> PythonCodeExerciseRepository.getExercise(nodeId)
             else -> JavaCodeExerciseRepository.getExercise(nodeId)
@@ -578,11 +580,12 @@ class ExercisePlayActivity : AppCompatActivity() {
         val streamReads = Regex("""(?:System\s*\.\s*in|[\w.]+)\s*\.\s*read\s*\(""").findAll(code).count()
         val scanfReads = Regex("""\bscanf\s*\(""").findAll(code).count()
         val cinReads = Regex("""\bcin\s*>>""").findAll(code).count()
+        val consoleReadLineReads = Regex("""Console\s*\.\s*ReadLine\s*\(""").findAll(code).count()
         val passwordReads = Regex("""\.\s*readPassword\s*\(""").findAll(code).count()
         val dataInputReads = Regex(
             """\.\s*read(?:Int|Long|Double|Float|Short|Byte|Boolean|Char|UTF|Fully)\s*\("""
         ).findAll(code).count()
-        return pythonInputReads + scannerReads + bufferedReaderReads + streamReads + scanfReads + cinReads + passwordReads + dataInputReads
+        return pythonInputReads + scannerReads + bufferedReaderReads + streamReads + scanfReads + cinReads + consoleReadLineReads + passwordReads + dataInputReads
     }
 
     private fun showUnlockAnswerDialog() {

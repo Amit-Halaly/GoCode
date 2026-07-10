@@ -60,6 +60,7 @@ class LessonFlowActivity : AppCompatActivity() {
         nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_l1"
         steps = when {
             nodeId.startsWith("cpp_") -> CppLessonsRepository.getSteps(nodeId)
+            nodeId.startsWith("cs_") -> CSharpLessonsRepository.getSteps(nodeId)
             nodeId.startsWith("c_") -> CLessonsRepository.getSteps(nodeId)
             nodeId.startsWith("py_") -> PythonLessonsRepository.getSteps(nodeId)
             else -> JavaLessonsRepository.getSteps(nodeId)
@@ -102,6 +103,7 @@ class LessonFlowActivity : AppCompatActivity() {
     private fun languageForNode(): String {
         return when {
             nodeId.startsWith("cpp_") -> "cpp"
+            nodeId.startsWith("cs_") -> "csharp"
             nodeId.startsWith("c_") -> "c"
             nodeId.startsWith("py_") -> "python"
             else -> "java"

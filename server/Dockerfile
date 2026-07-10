@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     libc6-dev \
+    mono-devel \
     openjdk-17-jdk-headless \
     && rm -rf /var/lib/apt/lists/*
 

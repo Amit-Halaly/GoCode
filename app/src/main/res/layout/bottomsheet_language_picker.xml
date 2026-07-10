@@ -88,6 +88,7 @@
         android:id="@+id/cardCpp"
         android:layout_width="match_parent"
         android:layout_height="60dp"
+        android:layout_marginBottom="10dp"
         app:cardBackgroundColor="@color/gc_card_background"
         app:cardCornerRadius="18dp"
         app:cardElevation="6dp">
@@ -98,6 +99,25 @@
             android:layout_gravity="center_vertical"
             android:paddingStart="16dp"
             android:text="C++"
+            android:textColor="@color/gc_text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardCSharp"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        app:cardBackgroundColor="@color/gc_card_background"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="6dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:text="C#"
             android:textColor="@color/gc_text_primary"
             android:textSize="16sp"
             android:textStyle="bold" />
