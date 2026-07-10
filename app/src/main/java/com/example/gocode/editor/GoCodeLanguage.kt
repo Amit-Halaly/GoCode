@@ -92,6 +92,7 @@ class GoCodeLanguage(language: String) : Language {
             return when (language) {
                 "python" -> pythonSnippets()
                 "c", "clang" -> cSnippets()
+                "cpp", "c++", "cplusplus" -> cppSnippets()
                 else -> javaSnippets()
             }
         }
@@ -177,6 +178,28 @@ class GoCodeLanguage(language: String) : Language {
             s("do", "do while", "Run once, then check", "do {\n    \n} while (condition);"),
             s("size|sizeof", "sizeof array length", "Count array items", "sizeof(numbers) / sizeof(numbers[0])"),
             s("malloc", "malloc", "Allocate memory", "int *numbers = malloc(count * sizeof(int));")
+        )
+
+        private fun cppSnippets() = listOf(
+            s("inc|include", "include iostream", "Add cout and cin", "#include <iostream>"),
+            s("incs|string", "include string", "Add string support", "#include <string>"),
+            s("incv|vector", "include vector", "Add vector support", "#include <vector>"),
+            s("main", "main function", "C++ program entry point", "int main() {\n    \n    return 0;\n}"),
+            s("wh|while", "while loop", "Repeat while a condition is true", "while (condition) {\n    \n}"),
+            s("for|fori", "for loop", "Count with an index", "for (int i = 0; i < count; i++) {\n    \n}"),
+            s("fore|foreach", "range for", "Loop over a container", "for (int value : values) {\n    \n}"),
+            s("if", "if block", "Run code when a condition is true", "if (condition) {\n    \n}"),
+            s("ife|ifelse", "if / else", "Choose between two paths", "if (condition) {\n    \n} else {\n    \n}"),
+            s("cout|print", "cout", "Print output", "cout << value << endl;"),
+            s("cin|input", "cin", "Read input", "cin >> value;"),
+            s("fun|func", "function", "Create a function", "void functionName() {\n    \n}"),
+            s("ret|return", "return", "Return from a function", "return value;"),
+            s("vec|vector", "int vector", "Create a vector", "vector<int> numbers = {1, 2, 3};"),
+            s("push", "push_back", "Add to a vector", "values.push_back(value);"),
+            s("str|string", "string variable", "Create text", "string text = \"\";"),
+            s("cls|class", "class", "Define a class", "class Student {\npublic:\n    string name;\n};"),
+            s("try", "try / catch", "Handle risky code", "try {\n    \n} catch (exception& e) {\n    cout << \"Invalid\" << endl;\n}"),
+            s("using", "using namespace std", "Use standard names directly", "using namespace std;")
         )
     }
 }

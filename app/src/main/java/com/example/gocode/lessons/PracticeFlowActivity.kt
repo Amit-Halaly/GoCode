@@ -84,6 +84,7 @@ class PracticeFlowActivity : AppCompatActivity() {
 
         nodeId = intent.getStringExtra(LanguagePathFragment.EXTRA_NODE_ID) ?: "java_u1_p1"
         questions = when {
+            nodeId.startsWith("cpp_") -> CppPracticeRepository.getQuestions(nodeId)
             nodeId.startsWith("c_") -> CPracticeRepository.getQuestions(nodeId)
             nodeId.startsWith("py_") -> PythonPracticeRepository.getQuestions(nodeId)
             else -> JavaPracticeRepository.getQuestions(nodeId)
@@ -496,6 +497,8 @@ class PracticeFlowActivity : AppCompatActivity() {
                 "You are close, but Leo recommends repeating this section before moving on. Focus on print(), indentation, variables, and the core Python pattern."
             } else if (languageForNode() == "c") {
                 "You are close, but Leo recommends repeating this section before moving on. Focus on main(), printf, semicolons, and the core C pattern."
+            } else if (languageForNode() == "cpp") {
+                "You are close, but Leo recommends repeating this section before moving on. Focus on main(), cout, semicolons, and the core C++ pattern."
             } else {
                 "You are close, but Leo recommends repeating this section before moving on. Focus on main(), println, and choosing the right variable type."
             }
@@ -506,42 +509,12 @@ class PracticeFlowActivity : AppCompatActivity() {
     }
 
     private fun isSummaryQuiz(): Boolean {
-        return nodeId in setOf(
-            "java_u1_q1",
-            "java_u2_q1",
-            "java_u3_q1",
-            "java_u4_q1",
-            "java_u5_q1",
-            "java_u6_q1",
-            "java_u7_q1",
-            "java_u8_q1",
-            "java_u9_q1",
-            "java_u10_q1",
-            "py_u1_q1",
-            "py_u2_q1",
-            "py_u3_q1",
-            "py_u4_q1",
-            "py_u5_q1",
-            "py_u6_q1",
-            "py_u7_q1",
-            "py_u8_q1",
-            "py_u9_q1",
-            "py_u10_q1",
-            "c_u1_q1",
-            "c_u2_q1",
-            "c_u3_q1",
-            "c_u4_q1",
-            "c_u5_q1",
-            "c_u6_q1",
-            "c_u7_q1",
-            "c_u8_q1",
-            "c_u9_q1",
-            "c_u10_q1"
-        )
+        return Regex("""^(java|py|c|cpp)_u(10|[1-9])_q1$""").matches(nodeId)
     }
 
     private fun languageForNode(): String {
         return when {
+            nodeId.startsWith("cpp_") -> "cpp"
             nodeId.startsWith("c_") -> "c"
             nodeId.startsWith("py_") -> "python"
             else -> "java"

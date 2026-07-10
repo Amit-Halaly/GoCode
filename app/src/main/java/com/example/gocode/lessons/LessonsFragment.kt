@@ -41,6 +41,8 @@ class LessonsFragment : Fragment(R.layout.fragment_lessons) {
 
         val fallbackColor = if (lang == "c") {
             R.color.section_nine
+        } else if (lang == "cpp") {
+            R.color.section_eight
         } else {
             R.color.section_one
         }
@@ -59,6 +61,7 @@ class LessonsFragment : Fragment(R.layout.fragment_lessons) {
             "python" -> "Python"
             "java" -> "Java"
             "c" -> "C"
+            "cpp" -> "C++"
             else -> "Java"
         }
     }
