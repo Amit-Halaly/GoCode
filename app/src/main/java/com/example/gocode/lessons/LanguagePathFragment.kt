@@ -152,7 +152,7 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
         val section = sectionInfo(sectionNumber)
         val sectionColor = ContextCompat.getColor(requireContext(), section.colorRes)
 
-        tvUnitTop.text = "SECTION ${section.number} • ${language.uppercase()}"
+        tvUnitTop.text = "SECTION ${section.number} • ${languageShortcut(language)}"
         tvUnitTitle.text = section.title
         cardUnitHeader.setCardBackgroundColor(sectionColor)
         onSectionColorChanged?.invoke(sectionColor)
@@ -189,8 +189,8 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
             node.id.contains("_u6_") -> 6
             node.id.contains("_u5_") -> 5
             node.id.contains("_u4_") -> 4
-            node.id.contains("_u2_") -> 2
             node.id.contains("_u3_") -> 3
+            node.id.contains("_u2_") -> 2
             else -> 1
         }
     }
@@ -211,6 +211,17 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
             9 -> SectionInfo(9, "Debugging Basics", R.color.section_nine)
             10 -> SectionInfo(10, "Final Review", R.color.section_ten)
             else -> SectionInfo(1, "Getting Started", R.color.section_one)
+        }
+    }
+
+    private fun languageShortcut(language: String): String {
+        return when (language.lowercase()) {
+            "python" -> "PY"
+            "java" -> "JAVA"
+            "c" -> "C"
+            "cpp", "c++", "cplusplus" -> "C++"
+            "csharp", "c#", "cs" -> "C#"
+            else -> language.uppercase()
         }
     }
 
