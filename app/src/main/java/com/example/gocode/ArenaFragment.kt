@@ -8,8 +8,10 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +20,7 @@ import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -362,42 +365,242 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
     }
 
     private fun showArenaLanguagePicker() {
-        val labels = availableArenaLanguages.toTypedArray()
-        val checked = labels.map { language ->
-            selectedArenaLanguages.any { it.equals(language, ignoreCase = true) }
-        }.toBooleanArray()
+        val dialog = Dialog(requireContext())
+        val selected = selectedArenaLanguages
+            .map { canonicalArenaLanguage(it) }
+            .filter { availableArenaLanguages.any { available -> arenaLanguageMatches(it, available) } }
+            .ifEmpty { listOf("Java") }
+            .toMutableSet()
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Arena question languages")
-            .setMultiChoiceItems(labels, checked) { _, index, isChecked ->
-                checked[index] = isChecked
-            }
-            .setPositiveButton("Apply") { _, _ ->
-                val selected = labels.filterIndexed { index, _ -> checked[index] }
-                if (selected.isEmpty()) {
-                    Toast.makeText(requireContext(), "Choose at least one language", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
+        lateinit var summaryText: TextView
+        lateinit var choicesContainer: LinearLayout
+
+        fun refreshSummary() {
+            summaryText.text = selected.joinToString("  /  ")
+        }
+
+        fun renderChoices() {
+            choicesContainer.removeAllViews()
+            availableArenaLanguages.chunked(2).forEach { rowLanguages ->
+                val row = LinearLayout(requireContext()).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER
                 }
-                selectedArenaLanguages = selected
-                renderProfile()
-                if (isIdleBattleState()) {
-                    arenaTicker.flashText("LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}")
+                rowLanguages.forEach { language ->
+                    row.addView(
+                        arenaLanguageChoiceCard(
+                            language = language,
+                            selected = selected.any { arenaLanguageMatches(it, language) }
+                        ) {
+                            val canonical = canonicalArenaLanguage(language)
+                            if (selected.any { arenaLanguageMatches(it, canonical) }) {
+                                if (selected.size == 1) {
+                                    Toast.makeText(requireContext(), "Choose at least one language", Toast.LENGTH_SHORT).show()
+                                    return@arenaLanguageChoiceCard
+                                }
+                                selected.removeAll { arenaLanguageMatches(it, canonical) }
+                            } else {
+                                selected.add(canonical)
+                            }
+                            refreshSummary()
+                            renderChoices()
+                        },
+                        LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                            setMargins(dp(5), dp(5), dp(5), dp(5))
+                        }
+                    )
                 }
+                if (rowLanguages.size == 1) {
+                    row.addView(View(requireContext()), LinearLayout.LayoutParams(0, 1, 1f))
+                }
+                choicesContainer.addView(row, LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ))
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        val content = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(18), dp(20), dp(18))
+            setBackgroundResource(R.drawable.bg_arena_exit_dialog)
+
+            addView(TextView(requireContext()).apply {
+                text = "Arena Languages"
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                textSize = 22f
+                typeface = Typeface.DEFAULT_BOLD
+            })
+
+            addView(TextView(requireContext()).apply {
+                text = "Pick the question pools for your next ranked duel."
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.gc_text_secondary))
+                textSize = 13f
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(4) })
+
+            summaryText = TextView(requireContext()).apply {
+                setTextColor(Color.BLACK)
+                textSize = 12f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                setPadding(dp(12), dp(8), dp(12), dp(8))
+                background = roundedRect(Color.parseColor("#37F2B6"), Color.TRANSPARENT, dp(8))
+            }
+            addView(summaryText, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(14) })
+
+            choicesContainer = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.VERTICAL
+            }
+            addView(ScrollView(requireContext()).apply {
+                isFillViewport = false
+                addView(choicesContainer)
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(315)
+            ).apply { topMargin = dp(12) })
+
+            addView(LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                addView(MaterialButton(requireContext()).apply {
+                    text = "Cancel"
+                    textSize = 13f
+                    setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                    backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.gc_card))
+                    cornerRadius = dp(8)
+                    setOnClickListener { dialog.dismiss() }
+                }, LinearLayout.LayoutParams(0, dp(46), 1f).apply { marginEnd = dp(6) })
+                addView(MaterialButton(requireContext()).apply {
+                    text = "Apply"
+                    textSize = 13f
+                    typeface = Typeface.DEFAULT_BOLD
+                    setTextColor(Color.BLACK)
+                    backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.accent_green))
+                    cornerRadius = dp(8)
+                    setOnClickListener {
+                        selectedArenaLanguages = availableArenaLanguages
+                            .filter { available -> selected.any { arenaLanguageMatches(it, available) } }
+                            .ifEmpty { listOf("Java") }
+                        renderProfile()
+                        if (isIdleBattleState()) {
+                            arenaTicker.flashText("LIVE QUEUE  ${selectedArenaLanguages.joinToString("  ")}")
+                        }
+                        dialog.dismiss()
+                    }
+                }, LinearLayout.LayoutParams(0, dp(46), 1f).apply { marginStart = dp(6) })
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(14) })
+        }
+
+        dialog.setContentView(content)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setDimAmount(0.72f)
+        dialog.setCanceledOnTouchOutside(true)
+        refreshSummary()
+        renderChoices()
+        dialog.show()
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.92f).roundToInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
+
+    private fun arenaLanguageChoiceCard(
+        language: String,
+        selected: Boolean,
+        onClick: () -> Unit
+    ): View {
+        val accent = arenaLanguageAccent(language)
+        return LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            isClickable = true
+            isFocusable = true
+            minimumHeight = dp(120)
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = arenaLanguageCardBackground(selected, accent)
+            setOnClickListener { onClick() }
+
+            addView(LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                addView(TextView(requireContext()).apply {
+                    text = arenaLanguageShortName(language)
+                    setTextColor(if (selected) Color.BLACK else accent)
+                    textSize = 12f
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    setPadding(dp(8), dp(5), dp(8), dp(5))
+                    background = roundedRect(if (selected) accent else Color.TRANSPARENT, accent, dp(8))
+                })
+                addView(TextView(requireContext()).apply {
+                    text = if (selected) "ON" else "OFF"
+                    setTextColor(if (selected) accent else ContextCompat.getColor(requireContext(), R.color.gc_text_secondary))
+                    textSize = 11f
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.END
+                }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            })
+
+            addView(TextView(requireContext()).apply {
+                text = language
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+                textSize = 18f
+                typeface = Typeface.DEFAULT_BOLD
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(12) })
+
+        }
+    }
+
+    private fun arenaLanguageCardBackground(selected: Boolean, accent: Int): GradientDrawable {
+        return GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            if (selected) {
+                intArrayOf(adjustAlpha(accent, 0.38f), Color.parseColor("#101C31"))
+            } else {
+                intArrayOf(Color.parseColor("#132235"), Color.parseColor("#0A1728"))
+            }
+        ).apply {
+            cornerRadius = dp(8).toFloat()
+            setStroke(dp(1), if (selected) accent else Color.parseColor("#2B425B"))
+        }
+    }
+
+    private fun roundedRect(fillColor: Int, strokeColor: Int, radius: Int): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radius.toFloat()
+            setColor(fillColor)
+            if (strokeColor != Color.TRANSPARENT) {
+                setStroke(dp(1), strokeColor)
+            }
+        }
+    }
+
+    private fun adjustAlpha(color: Int, factor: Float): Int {
+        return Color.argb((Color.alpha(color) * factor).roundToInt(), Color.red(color), Color.green(color), Color.blue(color))
     }
 
     private fun defaultArenaLanguagesFor(languages: List<String>): List<String> {
         return availableArenaLanguages
-            .filter { available -> languages.any { it.equals(available, ignoreCase = true) } }
+            .filter { available -> languages.any { arenaLanguageMatches(it, available) } }
             .ifEmpty { listOf("Java") }
     }
 
     private fun sharedLanguagesFor(first: List<String>, second: List<String>): List<String> {
         return availableArenaLanguages.filter { language ->
-            first.any { it.equals(language, ignoreCase = true) } &&
-                second.any { it.equals(language, ignoreCase = true) }
+            first.any { arenaLanguageMatches(it, language) } &&
+                second.any { arenaLanguageMatches(it, language) }
         }
     }
 
@@ -2008,15 +2211,53 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
         private const val WRONG_ANSWER_PENALTY = -35
         private const val TIMEOUT_PENALTY = -50
         private const val RATING_K_FACTOR = 28
-        private val availableArenaLanguages = listOf("Java", "Python", "C")
+        private val availableArenaLanguages = listOf("Java", "Python", "C", "C++", "C#")
 
         private val arenaOpponents = listOf(
-            ArenaOpponent("NullPointer", 1260, listOf("Java", "C"), 74, R.drawable.avatar_alien),
-            ArenaOpponent("StackQueen", 1420, listOf("Java", "Python"), 78, R.drawable.avatar_witch),
-            ArenaOpponent("ByteRunner", 1180, listOf("C", "Python"), 66, R.drawable.avatar_robot),
+            ArenaOpponent("NullPointer", 1260, listOf("Java", "C", "C++"), 74, R.drawable.avatar_alien),
+            ArenaOpponent("StackQueen", 1420, listOf("Java", "Python", "C#"), 78, R.drawable.avatar_witch),
+            ArenaOpponent("ByteRunner", 1180, listOf("C", "Python", "C++"), 66, R.drawable.avatar_robot),
             ArenaOpponent("LoopMage", 1095, listOf("Java"), 62, R.drawable.avatar_owl),
-            ArenaOpponent("AlgoNinja", 1610, listOf("Python", "Java", "C"), 84, R.drawable.avatar_ninja)
+            ArenaOpponent("AlgoNinja", 1610, listOf("Python", "Java", "C", "C++", "C#"), 84, R.drawable.avatar_ninja)
         )
+
+        private fun arenaLanguageMatches(candidate: String, target: String): Boolean {
+            return canonicalArenaLanguage(candidate).equals(canonicalArenaLanguage(target), ignoreCase = true)
+        }
+
+        private fun canonicalArenaLanguage(language: String): String {
+            return when (language.trim().lowercase()) {
+                "java" -> "Java"
+                "python" -> "Python"
+                "c", "clang" -> "C"
+                "cpp", "c++", "cplusplus" -> "C++"
+                "csharp", "c#", "cs" -> "C#"
+                else -> language.trim()
+            }
+        }
+
+        private fun arenaLanguageShortName(language: String): String {
+            return when (canonicalArenaLanguage(language)) {
+                "Python" -> "PY"
+                "Java" -> "JAVA"
+                "C++" -> "C++"
+                "C#" -> "C#"
+                else -> "C"
+            }
+        }
+
+        private fun arenaLanguageAccent(language: String): Int {
+            return Color.parseColor(
+                when (canonicalArenaLanguage(language)) {
+                    "Python" -> "#37F2B6"
+                    "Java" -> "#FBBF24"
+                    "C" -> "#60A5FA"
+                    "C++" -> "#A78BFA"
+                    "C#" -> "#F472B6"
+                    else -> "#37F2B6"
+                }
+            )
+        }
 
         private val arenaQuestions = listOf(
             ArenaQuestion(
@@ -4841,6 +5082,288 @@ int x = 3;
 printf("%d", x << 2);""",
                 options = listOf("""6""", """9""", """12""", """1"""),
                 correctIndex = 2
+            )
+        ) + cppArenaQuestions() + csharpArenaQuestions()
+
+        private fun cppArenaQuestions() = listOf(
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int x = 4;
+cout << x++;""",
+                options = listOf("""4""", """5""", """3""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+cout << 2 + 3 << "4";""",
+                options = listOf("""54""", """234""", """9""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int a = 7 / 2;
+cout << a;""",
+                options = listOf("""3.5""", """4""", """3""", """2"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+cout << 7 % 3;""",
+                options = listOf("""1""", """2""", """3""", """0"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+bool ready = true;
+cout << !ready;""",
+                options = listOf("""true""", """false""", """0""", """1"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int nums[] = {10, 20, 30};
+cout << nums[1];""",
+                options = listOf("""10""", """20""", """30""", """1"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+string word = "Code";
+cout << word.length();""",
+                options = listOf("""3""", """4""", """Code""", """true"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+for (int i = 0; i < 3; i++) {
+    cout << i;
+}""",
+                options = listOf("""012""", """123""", """0123""", """3"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int total = 0;
+for (int i = 1; i <= 3; i++) {
+    total += i;
+}
+cout << total;""",
+                options = listOf("""3""", """5""", """6""", """7"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+vector<int> nums = {2, 4, 6};
+cout << nums.size() + nums[0];""",
+                options = listOf("""3""", """5""", """6""", """8"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 5;
+if (x > 5) cout << "A";
+else cout << "B";""",
+                options = listOf("""A""", """B""", """5""", """Nothing"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 3;
+cout << ++x;""",
+                options = listOf("""3""", """4""", """2""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 5;
+cout << x++;""",
+                options = listOf("""5""", """6""", """4""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 16;
+cout << (x >> 2);""",
+                options = listOf("""2""", """4""", """8""", """64"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C++""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int a = 1;
+int b = 2;
+cout << (a += b += 3);""",
+                options = listOf("""4""", """5""", """6""", """Compilation error"""),
+                correctIndex = 2
+            )
+        )
+
+        private fun csharpArenaQuestions() = listOf(
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int x = 4;
+Console.WriteLine(x++);""",
+                options = listOf("""4""", """5""", """3""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+string s = "Go";
+Console.WriteLine(s + 2 + 3);""",
+                options = listOf("""Go5""", """Go23""", """5Go""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+Console.WriteLine(2 + 3 + "4");""",
+                options = listOf("""54""", """234""", """9""", """Compilation error"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+Console.WriteLine("4" + 2 + 3);""",
+                options = listOf("""9""", """423""", """45""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+int a = 7 / 2;
+Console.WriteLine(a);""",
+                options = listOf("""3.5""", """4""", """3""", """2"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Easy Output""",
+                prompt = """What is printed?
+Console.WriteLine(7 % 3);""",
+                options = listOf("""1""", """2""", """3""", """0"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+bool ready = true;
+Console.WriteLine(!ready);""",
+                options = listOf("""True""", """False""", """0""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int[] nums = {10, 20, 30};
+Console.WriteLine(nums[1]);""",
+                options = listOf("""10""", """20""", """30""", """1"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+string word = "Code";
+Console.WriteLine(word.Length);""",
+                options = listOf("""3""", """4""", """Code""", """true"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+for (int i = 0; i < 3; i++) {
+    Console.Write(i);
+}""",
+                options = listOf("""012""", """123""", """0123""", """3"""),
+                correctIndex = 0
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int total = 0;
+for (int i = 1; i <= 3; i++) {
+    total += i;
+}
+Console.WriteLine(total);""",
+                options = listOf("""3""", """5""", """6""", """7"""),
+                correctIndex = 2
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Medium Output""",
+                prompt = """What is printed?
+int x = 3;
+Console.WriteLine(++x);""",
+                options = listOf("""3""", """4""", """2""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int x = 5;
+if (x > 5) Console.WriteLine("A");
+else Console.WriteLine("B");""",
+                options = listOf("""A""", """B""", """5""", """Nothing"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+int? x = null;
+Console.WriteLine(x ?? 7);""",
+                options = listOf("""0""", """7""", """null""", """Compilation error"""),
+                correctIndex = 1
+            ),
+            ArenaQuestion(
+                language = """C#""",
+                course = """Hard Output""",
+                prompt = """What is printed?
+string s = "abc";
+Console.WriteLine(s[1]);""",
+                options = listOf("""a""", """b""", """c""", """1"""),
+                correctIndex = 1
             )
         )
     }
