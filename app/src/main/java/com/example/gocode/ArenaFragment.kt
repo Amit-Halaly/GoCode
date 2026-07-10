@@ -559,19 +559,7 @@ class ArenaFragment : Fragment(), ArenaRealtimeClient.Listener {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply { topMargin = dp(12) })
 
-            addView(TextView(requireContext()).apply {
-                text = "${arenaQuestionCountFor(language)} output questions"
-                setTextColor(ContextCompat.getColor(requireContext(), R.color.gc_text_secondary))
-                textSize = 12f
-            }, LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(3) })
         }
-    }
-
-    private fun arenaQuestionCountFor(language: String): Int {
-        return arenaQuestions.count { arenaLanguageMatches(it.language, language) }
     }
 
     private fun arenaLanguageCardBackground(selected: Boolean, accent: Int): GradientDrawable {
