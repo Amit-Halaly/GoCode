@@ -32,5 +32,8 @@ class LanguagePickerBottomSheet(
         view.findViewById<MaterialCardView>(R.id.cardC).setOnClickListener {
             onPicked("c"); dismiss()
         }
+        view.findViewById<MaterialCardView>(R.id.cardCpp).setOnClickListener {
+            onPicked("cpp"); dismiss()
+        }
     }
 }

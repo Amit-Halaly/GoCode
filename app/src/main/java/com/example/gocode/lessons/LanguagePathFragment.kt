@@ -165,6 +165,7 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
         val displayName = when (language.lowercase()) {
             "python" -> "Python"
             "c" -> "C"
+            "cpp" -> "C++"
             else -> language.replaceFirstChar { it.uppercase() }
         }
 
@@ -196,12 +197,13 @@ class LanguagePathFragment : Fragment(R.layout.fragment_language_path) {
     private fun sectionInfo(sectionNumber: Int): SectionInfo {
         val isPython = language.lowercase() == "python"
         val isC = language.lowercase() == "c"
+        val isCpp = language.lowercase() == "cpp"
         return when (sectionNumber) {
             2 -> SectionInfo(2, "If / Else Statements", R.color.section_two)
             3 -> SectionInfo(3, "Loops", R.color.section_three)
-            4 -> SectionInfo(4, if (isPython) "Lists" else "Arrays", R.color.section_four)
-            5 -> SectionInfo(5, if (isPython) "Functions" else if (isC) "Functions" else "Methods", R.color.section_five)
-            6 -> SectionInfo(6, if (isPython) "Input" else if (isC) "scanf Input" else "Scanner Input", R.color.section_six)
+            4 -> SectionInfo(4, if (isPython) "Lists" else if (isCpp) "Vectors" else "Arrays", R.color.section_four)
+            5 -> SectionInfo(5, if (isPython) "Functions" else if (isC || isCpp) "Functions" else "Methods", R.color.section_five)
+            6 -> SectionInfo(6, if (isPython) "Input" else if (isC) "scanf Input" else if (isCpp) "cin Input" else "Scanner Input", R.color.section_six)
             7 -> SectionInfo(7, if (isC) "C Strings" else "String Tools", R.color.section_seven)
             8 -> SectionInfo(8, if (isPython) "Dictionaries" else if (isC) "Pointers" else "Classes & Objects", R.color.section_eight)
             9 -> SectionInfo(9, "Debugging Basics", R.color.section_nine)
