@@ -92,6 +92,7 @@ class GoCodeLanguage(language: String) : Language {
             return when (language) {
                 "python" -> pythonSnippets()
                 "c", "clang" -> cSnippets()
+                "csharp", "c#", "cs" -> csharpSnippets()
                 else -> javaSnippets()
             }
         }
@@ -177,6 +178,26 @@ class GoCodeLanguage(language: String) : Language {
             s("do", "do while", "Run once, then check", "do {\n    \n} while (condition);"),
             s("size|sizeof", "sizeof array length", "Count array items", "sizeof(numbers) / sizeof(numbers[0])"),
             s("malloc", "malloc", "Allocate memory", "int *numbers = malloc(count * sizeof(int));")
+        )
+
+        private fun csharpSnippets() = listOf(
+            s("using", "using System", "Add console APIs", "using System;"),
+            s("main", "Main method", "C# program entry point", "static void Main() {\n    \n}"),
+            s("wh|while", "while loop", "Repeat while a condition is true", "while (condition) {\n    \n}"),
+            s("for|fori", "for loop", "Count with an index", "for (int i = 0; i < count; i++) {\n    \n}"),
+            s("fore|foreach", "foreach", "Loop over an array", "foreach (int value in values) {\n    \n}"),
+            s("if", "if block", "Run code when a condition is true", "if (condition) {\n    \n}"),
+            s("ife|ifelse", "if / else", "Choose between two paths", "if (condition) {\n    \n} else {\n    \n}"),
+            s("cw|write|print", "Console.WriteLine", "Print output", "Console.WriteLine(value);"),
+            s("cr|read|input", "Console.ReadLine", "Read input", "string text = Console.ReadLine();"),
+            s("parse|intparse", "int.Parse", "Convert text to int", "int number = int.Parse(Console.ReadLine());"),
+            s("met|method", "static method", "Create a reusable method", "static void MethodName() {\n    \n}"),
+            s("ret|return", "return", "Return from a method", "return value;"),
+            s("arr|array", "int array", "Create an int array", "int[] numbers = {1, 2, 3};"),
+            s("str|string", "string variable", "Create text", "string text = \"\";"),
+            s("cls|class", "class", "Define a class", "class Student {\n    public string Name;\n}"),
+            s("new", "new object", "Create an object", "Student student = new Student();"),
+            s("try", "try / catch", "Handle risky code", "try {\n    \n} catch (Exception) {\n    Console.WriteLine(\"Invalid\");\n}")
         )
     }
 }

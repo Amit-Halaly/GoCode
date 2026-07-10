@@ -6,6 +6,7 @@ object CurriculumRepository {
             "python" -> pythonSection1()
             "java" -> javaSection1()
             "c" -> cSection1()
+            "csharp", "c#", "cs" -> csharpSection1()
             else -> pythonSection1()
         }
     }
@@ -452,6 +453,22 @@ object CurriculumRepository {
             SectionNodes("Strings as char arrays", "Practice: strings", "String checks", "Practice: text", "Quiz: strings", "Code: Name checker"),
             SectionNodes("Pointers", "Practice: pointers", "Pointers + arrays", "Practice: addresses", "Quiz: pointers", "Code: Swap values"),
             SectionNodes("Reading errors", "Practice: errors", "Debugging C", "Practice: debugging", "Quiz: debugging", "Code: Safe divide"),
+            SectionNodes("Final review", "Practice: review", "Build confidence", "Practice: mixed", "Final quiz", "Code: Final check")
+        )
+    )
+
+    private fun csharpSection1(): List<PathNodeItem> = path(
+        prefix = "cs",
+        sections = listOf(
+            SectionNodes("Program shape + print", "Practice: first program", "Variables + types", "Practice: variables", "Quiz: basics", "Code: Hello C#"),
+            SectionNodes("Comparisons + if", "Practice: if", "else + logic", "Practice: decisions", "Quiz: decisions", "Code: Access check"),
+            SectionNodes("while loops", "Practice: while", "for loops", "Practice: loops", "Quiz: loops", "Code: Count loop"),
+            SectionNodes("Arrays", "Practice: arrays", "Array indexes", "Practice: indexes", "Quiz: arrays", "Code: Scores array"),
+            SectionNodes("Methods", "Practice: methods", "Parameters + return", "Practice: return", "Quiz: methods", "Code: Helper method"),
+            SectionNodes("Console input", "Practice: input", "Input decisions", "Practice: ReadLine", "Quiz: input", "Code: Ask age"),
+            SectionNodes("String tools", "Practice: strings", "String checks", "Practice: text", "Quiz: strings", "Code: Name checker"),
+            SectionNodes("Classes", "Practice: classes", "Objects", "Practice: objects", "Quiz: objects", "Code: Student object"),
+            SectionNodes("Reading errors", "Practice: errors", "try / catch", "Practice: debugging", "Quiz: debugging", "Code: Safe parse"),
             SectionNodes("Final review", "Practice: review", "Build confidence", "Practice: mixed", "Final quiz", "Code: Final check")
         )
     )
